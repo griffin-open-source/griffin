@@ -1,8 +1,16 @@
-import { GET, POST, ApiCheckBuilder, JSON, START, END, Frequency, Wait } from "../1test-test-system/src/index";
+import { GET, POST, ApiCheckBuilder, JSON, START, END, Frequency, Wait, env } from "../1test-ts/src/index";
+
+const endpointHost = (() => {
+  try {
+    return env('endpoint_host');
+  } catch {
+    return "http://localhost:3000"; // fallback
+  }
+})();
 
 const builder = new ApiCheckBuilder({
   name: "example-check",
-  endpoint_host: "http://localhost:3000"
+  endpoint_host: endpointHost
 });
 
 const plan = builder

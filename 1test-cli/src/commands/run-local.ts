@@ -1,9 +1,28 @@
 import { findTestFiles } from '../test-discovery';
 import { runTestFile } from '../test-runner';
+import { loadEnvironmentConfig } from '../env-loader';
+import * as path from 'path';
+import * as fs from 'fs';
 
-export async function executeRunLocal(): Promise<void> {
+export async function executeRunLocal(environment?: string): Promise<void> {
   console.log('Running tests locally');
+  if (environment) {
+    console.log(`Using environment: ${environment}`);
+  }
   console.log('');
+
+  // Load environment config if environment is specified
+  let envConfig: Record<string, any> | undefined;
+  if (environment) {
+    const workspaceRoot = findWorkspaceRoot();
+    try {
+      envConfig = loadEnvironmentConfig(workspaceRoot, environment);
+      console.log(`Loaded environment configuration for "${environment}"`);
+    } catch (error: any) {
+      console.error(`ERROR: ${error.message || String(error)}`);
+      process.exit(1);
+    }
+  }
 
   const testFiles = findTestFiles();
 
@@ -20,7 +39,7 @@ export async function executeRunLocal(): Promise<void> {
     testFiles.map(async (file) => {
       const fileName = require('path').basename(file);
       console.log(`Running ${fileName}`);
-      const result = await runTest(file);
+      const result = await runTest(file, envConfig);
       return result;
     })
   );
@@ -37,9 +56,12 @@ export async function executeRunLocal(): Promise<void> {
   }
 }
 
-async function runTest(file: string): Promise<{ success: boolean }> {
+async function runTest(
+  file: string,
+  envConfig?: Record<string, any>
+): Promise<{ success: boolean }> {
   try {
-    const result = await runTestFile(file);
+    const result = await runTestFile(file, envConfig);
     const testSuccess = displayResults(result.result);
     // Use the actual test execution result, not just whether the file ran
     return { success: testSuccess };
@@ -48,6 +70,19 @@ async function runTest(file: string): Promise<{ success: boolean }> {
     console.error(error.message || String(error));
     return { success: false };
   }
+}
+
+function findWorkspaceRoot(): string {
+  let current = process.cwd();
+  while (current !== path.dirname(current)) {
+    const testCliPath = path.join(current, '1test-cli');
+    const testSystemPath = path.join(current, '1test-ts');
+    if (fs.existsSync(testCliPath) && fs.existsSync(testSystemPath)) {
+      return current;
+    }
+    current = path.dirname(current);
+  }
+  return process.cwd();
 }
 
 function displayResults(result: any): boolean {

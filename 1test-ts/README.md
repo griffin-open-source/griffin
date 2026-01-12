@@ -7,6 +7,7 @@ The 1test Test System provides a TypeScript DSL for defining API tests. Tests ar
 - TypeScript DSL for defining API checks
 - Chainable API for building test plans
 - Support for endpoints, waits, assertions, and edges
+- Environment variable injection via `env()` and `envString()` helpers
 - Outputs JSON test plans for execution
 
 ## Installation
@@ -29,11 +30,11 @@ Create test files in `__1test__` directories. When executed, they output JSON te
 ### Basic Example
 
 ```typescript
-import { GET, ApiCheckBuilder, JSON, START, END, Frequency } from "../1test-test-system/src/index";
+import { GET, ApiCheckBuilder, JSON, START, END, Frequency } from "../1test-ts/src/index";
 
 const builder = new ApiCheckBuilder({
   name: "health-check",
-  endpoint_host: "http://localhost"
+  endpoint_host: "http://localhost:3000"
 });
 
 const plan = builder
@@ -50,10 +51,67 @@ plan.create({
 });
 ```
 
+### Example with Environment Variables
+
+```typescript
+import { GET, ApiCheckBuilder, JSON, START, END, Frequency, env } from "../1test-ts/src/index";
+
+// Use environment variables with fallback
+const endpointHost = (() => {
+  try {
+    return env('endpoint_host');
+  } catch {
+    return "http://localhost:3000"; // fallback when --env is not used
+  }
+})();
+
+const builder = new ApiCheckBuilder({
+  name: "health-check",
+  endpoint_host: endpointHost
+});
+
+const plan = builder
+  .addEndpoint("health", {
+    method: GET,
+    response_format: JSON,
+    path: "/health"
+  })
+  .addEdge(START, "health")
+  .addEdge("health", END);
+
+plan.create({
+  frequency: Frequency.every(1).minute()
+});
+```
+
+### Environment Variable Helpers
+
+The test system provides two helper functions for accessing environment variables:
+
+- **`env(key: string)`**: Returns any value from the environment configuration. Supports dot notation for nested access.
+- **`envString(key: string)`**: Returns a string value from the environment configuration, throwing an error if the value is not a string.
+
+**Dot Notation Support**: Access nested values using dot notation:
+```typescript
+const baseUrl = env('api.baseUrl');        // Accesses api.baseUrl
+const timeout = env('api.timeout');        // Accesses api.timeout
+const endpoint = envString('endpoint_host'); // Ensures string type
+```
+
+**Error Handling**: If an environment variable is not found, `env()` throws an error. Always wrap in try-catch when using fallbacks:
+```typescript
+try {
+  const host = env('endpoint_host');
+} catch {
+  // Environment not available, use fallback
+  const host = "http://localhost:3000";
+}
+```
+
 ### Advanced Example with Waits
 
 ```typescript
-import { GET, POST, ApiCheckBuilder, JSON, START, END, Frequency, Wait } from "../1test-test-system/src/index";
+import { GET, POST, ApiCheckBuilder, JSON, START, END, Frequency, Wait } from "../1test-ts/src/index";
 
 const builder = new ApiCheckBuilder({
   name: "foo-bar-check",

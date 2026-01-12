@@ -9,6 +9,7 @@ The 1test CLI tool allows developers to run API tests locally and manage their t
 - Run tests locally against development servers
 - Execute TypeScript test files and run JSON test plans
 - Display test execution results with detailed error reporting
+- Environment injection & parity via `--env` flag
 - Configure runner hosts for remote execution
 
 🚧 **Coming Soon**:
@@ -20,7 +21,7 @@ The 1test CLI tool allows developers to run API tests locally and manage their t
 
 - Node.js 20+
 - `tsx` installed globally or available via `npx` (for executing TypeScript files)
-- Built `1test-test-system` and `1test-plan-executor` projects (see main README)
+- Built `1test-ts` and `1test-plan-executor` projects (see main README)
 
 ## Installation
 
@@ -60,22 +61,59 @@ npm run dev run-local 3000
 ### Run Tests Locally
 
 ```bash
+# Run without environment (uses fallbacks in test files)
 npx 1test-cli run-local
 # or
 node dist/cli.js run-local
+
+# Run with environment configuration
+npx 1test-cli run-local --env=production
+npx 1test-cli run-local --env=staging
+npx 1test-cli run-local --env=development
 ```
 
 The CLI will:
 1. Discover all `.ts` files in `__1test__` directories
-2. Execute each test file (which outputs JSON)
-3. Run the JSON test plan using the `endpoint_host` specified in each test file
-4. Display results with pass/fail status
+2. Load environment configuration from `__1test__/env.ts` if `--env` flag is provided
+3. Execute each test file (which outputs JSON) with environment variables injected
+4. Run the JSON test plan using the `endpoint_host` specified in each test file
+5. Display results with pass/fail status
 
-**Note**: Each test file specifies its own `endpoint_host` (including port) in the `ApiCheckBuilder` configuration. For example:
+**Environment Configuration**: Create `__1test__/env.ts` to define environment-specific variables:
+
 ```typescript
+export default {
+  production: {
+    endpoint_host: "https://api.production.example.com",
+    api: { baseUrl: "https://api.production.example.com" }
+  },
+  staging: {
+    endpoint_host: "https://api.staging.example.com",
+    api: { baseUrl: "https://api.staging.example.com" }
+  },
+  development: {
+    endpoint_host: "http://localhost:3000",
+    api: { baseUrl: "http://localhost:3000" }
+  }
+};
+```
+
+**Note**: Each test file can use the `env()` helper to access environment variables. If `--env` is not specified, tests should provide fallback values:
+
+```typescript
+import { env, ApiCheckBuilder } from "../1test-ts/src/index";
+
+const endpointHost = (() => {
+  try {
+    return env('endpoint_host');
+  } catch {
+    return "http://localhost:3000"; // fallback
+  }
+})();
+
 const builder = new ApiCheckBuilder({
   name: "my-check",
-  endpoint_host: "http://localhost:3000"  // Port is specified here
+  endpoint_host: endpointHost
 });
 ```
 
@@ -138,10 +176,18 @@ npm run dev run-local 3000
 
 ## Troubleshooting
 
-**"Test system not built"**: Make sure you've built `1test-test-system`:
+**"Test system not built"**: Make sure you've built `1test-ts`:
 ```bash
-cd ../1test-test-system && npm install && npm run build
+cd ../1test-ts && npm install && npm run build
 ```
+
+**"Environment file not found"**: If using `--env` flag, make sure `__1test__/env.ts` exists:
+```bash
+# Create the file with your environment configurations
+touch __1test__/env.ts
+```
+
+**"Environment not found in env.ts"**: Make sure the environment name specified in `--env` exists in your `env.ts` file. Available environments are shown in the error message.
 
 **"Plan executor not built"**: Make sure you've built `1test-plan-executor`:
 ```bash

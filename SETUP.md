@@ -16,7 +16,7 @@ First, install dependencies for the test system and plan executor:
 
 ```bash
 # Install test system dependencies
-cd 1test-test-system
+cd 1test-ts
 npm install
 npm run build
 
@@ -50,24 +50,63 @@ You can create additional tests by:
 2. Adding `.ts` files that use the test system DSL
 3. The CLI will automatically discover and run them
 
+### 4a. Configure Environment Variables (Optional)
+
+Create `__1test__/env.ts` to define environment-specific configurations:
+
+```typescript
+export default {
+  production: {
+    endpoint_host: "https://api.production.example.com",
+    api: {
+      baseUrl: "https://api.production.example.com",
+      timeout: 30000,
+    },
+  },
+  staging: {
+    endpoint_host: "https://api.staging.example.com",
+    api: {
+      baseUrl: "https://api.staging.example.com",
+      timeout: 30000,
+    },
+  },
+  development: {
+    endpoint_host: "http://localhost:3000",
+    api: {
+      baseUrl: "http://localhost:3000",
+      timeout: 10000,
+    },
+  },
+};
+```
+
+Then use the `env()` helper in your test files to access these values. See the test system README for more details.
+
 ### 5. Run Tests Locally
 
 The CLI will automatically discover all test files in `__1test__` directories. Each test file specifies its own `endpoint_host` (including port):
 
 ```bash
-# Using the built CLI
+# Using the built CLI (without environment - uses fallbacks)
 node 1test-cli/dist/cli.js run-local
+
+# With environment configuration
+node 1test-cli/dist/cli.js run-local --env=production
+node 1test-cli/dist/cli.js run-local --env=staging
+node 1test-cli/dist/cli.js run-local --env=development
 
 # Or using npm scripts (development mode)
 cd 1test-cli
 npm run dev run-local
-
-# The CLI will:
-# - Discover all .ts files in __1test__ directories
-# - Execute each test file (which outputs JSON)
-# - Run the JSON test plan using the endpoint_host from each test file
-# - Display results with pass/fail status
+npm run dev run-local -- --env=production
 ```
+
+The CLI will:
+- Discover all `.ts` files in `__1test__` directories
+- Load environment configuration from `__1test__/env.ts` if `--env` flag is provided
+- Execute each test file (which outputs JSON) with environment variables injected
+- Run the JSON test plan using the `endpoint_host` from each test file
+- Display results with pass/fail status
 
 **Note**: Make sure you have servers running on the ports specified in your test files' `endpoint_host` configurations, or the endpoint requests will fail (which is expected behavior for testing).
 
@@ -97,12 +136,20 @@ Or the script will automatically try to use `npx tsx` as a fallback.
 
 ### "Test system not built" error
 
-Make sure you've built both `1test-test-system` and `1test-plan-executor`:
+Make sure you've built both `1test-ts` and `1test-plan-executor`:
 
 ```bash
-cd 1test-test-system && npm install && npm run build
+cd 1test-ts && npm install && npm run build
 cd ../1test-plan-executor && npm install && npm run build
 ```
+
+### "Environment file not found" error
+
+If using the `--env` flag, make sure `__1test__/env.ts` exists. Create it with your environment configurations (see step 4a above).
+
+### "Environment not found in env.ts" error
+
+Make sure the environment name you specified with `--env` exists in your `__1test__/env.ts` file. The error message will show available environments.
 
 ### "Plan executor not found" error
 
@@ -120,8 +167,9 @@ Same as above - ensure both TypeScript projects are built.
 bastion/
 ├── 1test-cli/          # TypeScript CLI tool
 ├── 1test-runner/       # TypeScript orchestration service
-├── 1test-test-system/  # TypeScript DSL library
-├── 1test-plan-executor/# TypeScript plan executor
+├── 1test-ts/           # TypeScript DSL library (formerly 1test-test-system)
+├── 1test-plan-executor/ # TypeScript plan executor
 └── __1test__/          # Test files directory
-    └── example-check.ts
+    ├── example-check.ts
+    └── env.ts           # Environment configurations (optional)
 ```

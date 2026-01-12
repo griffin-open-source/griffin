@@ -10,18 +10,19 @@ type ExecutionResult = any;
  * Runs a TypeScript test file and executes the resulting JSON plan.
  */
 export async function runTestFile(
-  filePath: string
+  filePath: string,
+  envConfig?: Record<string, any>
 ): Promise<{ success: boolean; output: string; result?: any }> {
   const absoluteFilePath = path.resolve(filePath);
   
   // Check if test system and executor are built
   const workspaceRoot = findWorkspaceRoot();
-  const testSystemPath = path.join(workspaceRoot, '1test-test-system', 'dist');
+  const testSystemPath = path.join(workspaceRoot, '1test-ts', 'dist');
   const executorPath = path.join(workspaceRoot, '1test-plan-executor', 'dist');
   
   if (!fs.existsSync(testSystemPath)) {
     throw new Error(
-      'Test system not built. Please run: cd 1test-test-system && npm install && npm run build'
+      'Test system not built. Please run: cd 1test-ts && npm install && npm run build'
     );
   }
   
@@ -40,14 +41,22 @@ export async function runTestFile(
       tsxCmd = 'npx tsx';
     }
     
+    // Prepare environment variables
+    const envVars: Record<string, string> = {
+      ...process.env,
+      NODE_PATH: `${testSystemPath}:${process.env.NODE_PATH || ''}`,
+    };
+    
+    // If envConfig is provided, serialize it and pass via _1TEST_ENV_VARS
+    if (envConfig) {
+      envVars._1TEST_ENV_VARS = JSON.stringify(envConfig);
+    }
+    
     // Run the test file and capture output
     const output = execSync(`${tsxCmd} "${absoluteFilePath}"`, {
       encoding: 'utf-8',
       cwd: path.dirname(absoluteFilePath),
-      env: {
-        ...process.env,
-        NODE_PATH: `${testSystemPath}:${process.env.NODE_PATH || ''}`,
-      },
+      env: envVars,
     });
     
     // Parse JSON from output (the test system outputs JSON via console.log)
@@ -95,7 +104,7 @@ function findWorkspaceRoot(): string {
   let current = process.cwd();
   while (current !== path.dirname(current)) {
     const testCliPath = path.join(current, '1test-cli');
-    const testSystemPath = path.join(current, '1test-test-system');
+    const testSystemPath = path.join(current, '1test-ts');
     if (fs.existsSync(testCliPath) && fs.existsSync(testSystemPath)) {
       return current;
     }

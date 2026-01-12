@@ -6,4 +6,5 @@ export { JSON, XML, TEXT } from './response-formats';
 export { Frequency } from './frequency';
 export { Wait } from './wait';
 export { Assertions } from './assertions';
+export { env, envString } from './env';
 export type { TestPlan, Endpoint, WaitNode, AssertionNode, Edge } from './types';

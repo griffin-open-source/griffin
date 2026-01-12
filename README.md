@@ -12,6 +12,7 @@ The CLI tool written in TypeScript that allows developers to run tests locally a
 **Key Features:**
 - Discovers `.ts` test files in `__1test__` subdirectories
 - Runs tests locally against development servers
+- Environment injection & parity - run production tests locally with `--env` flag
 - Configures runner hosts for remote execution
 - Deploys tests to remote runners (coming soon)
 - Views logs and executes tests remotely (coming soon)
@@ -25,12 +26,13 @@ The orchestration service responsible for scheduling and executing tests. Ensure
 - Stores execution results and logs in PostgreSQL
 - Provides REST API for CLI interactions
 
-### 3. [1test-test-system](./1test-test-system/)
+### 3. [1test-ts](./1test-ts/) (formerly 1test-test-system)
 The TypeScript DSL library for defining API tests. Tests are written in TypeScript and output JSON test plans that can be executed by the plan executor.
 
 **Key Features:**
 - Chainable API for building test plans
 - Support for endpoints, waits, assertions, and edges
+- Environment variable injection via `env()` helper
 - Outputs JSON test plans for execution
 
 ### 4. [1test-plan-executor](./1test-plan-executor/)
@@ -59,7 +61,7 @@ A simple JSON API server for testing 1test functionality. Provides basic CRUD op
 
 1. **Build the TypeScript projects**:
    ```bash
-   cd 1test-test-system && npm install && npm run build
+   cd 1test-ts && npm install && npm run build
    cd ../1test-plan-executor && npm install && npm run build
    cd ../1test-cli && npm install && npm run build
    ```
@@ -72,11 +74,20 @@ A simple JSON API server for testing 1test functionality. Provides basic CRUD op
 2. **Create a test file** in a `__1test__` directory:
    ```typescript
    // __1test__/my-test.ts
-   import { GET, ApiCheckBuilder, JSON, START, END, Frequency } from "../1test-test-system/src/index";
+   import { GET, ApiCheckBuilder, JSON, START, END, Frequency, env } from "../1test-ts/src/index";
+   
+   // Use environment variables with fallback
+   const endpointHost = (() => {
+     try {
+       return env('endpoint_host');
+     } catch {
+       return "http://localhost:3000"; // fallback
+     }
+   })();
    
    const builder = new ApiCheckBuilder({
      name: "my-check",
-     endpoint_host: "http://localhost"
+     endpoint_host: endpointHost
    });
    
    const plan = builder
@@ -86,17 +97,40 @@ A simple JSON API server for testing 1test functionality. Provides basic CRUD op
    
    plan.create({ frequency: Frequency.every(1).minute() });
    ```
+   
+   **Optional**: Create `__1test__/env.ts` for environment configurations:
+   ```typescript
+   export default {
+     production: {
+       endpoint_host: "https://api.production.example.com",
+       api: { baseUrl: "https://api.production.example.com" }
+     },
+     staging: {
+       endpoint_host: "https://api.staging.example.com",
+       api: { baseUrl: "https://api.staging.example.com" }
+     },
+     development: {
+       endpoint_host: "http://localhost:3000",
+       api: { baseUrl: "http://localhost:3000" }
+     }
+   };
+   ```
 
 3. **Run tests locally**:
    ```bash
-   # Using the built CLI
+   # Using the built CLI (without environment - uses fallbacks)
    node 1test-cli/dist/cli.js run-local
    
+   # With environment configuration
+   node 1test-cli/dist/cli.js run-local --env=production
+   node 1test-cli/dist/cli.js run-local --env=staging
+   node 1test-cli/dist/cli.js run-local --env=development
+   
    # Or using npx (once published)
-   npx 1test-cli run-local
+   npx 1test-cli run-local --env=production
    ```
    
-   **Note**: The port is specified in each test file's `endpoint_host` configuration, not as a CLI argument.
+   **Note**: The `--env` flag loads environment variables from `__1test__/env.ts`. If not specified, tests will use fallback values or throw errors if `env()` is called without a fallback.
 
 ## Current Status
 
@@ -105,6 +139,7 @@ A simple JSON API server for testing 1test functionality. Provides basic CRUD op
 - TypeScript DSL for creating test plans
 - JSON plan execution with endpoints and waits
 - Local test execution against development servers
+- Environment injection & parity - run production tests locally with environment configurations
 
 🚧 **In Development**:
 - Assertion evaluation (structure in place, needs implementation)
@@ -114,8 +149,9 @@ A simple JSON API server for testing 1test functionality. Provides basic CRUD op
 
 ## Workflow
 
-1. **Write Tests**: Create `.ts` files in `__1test__` subdirectories using the test system DSL. Each test specifies its own `endpoint_host` (including port) in the `ApiCheckBuilder` configuration.
-2. **Run Locally**: Use `node 1test-cli/dist/cli.js run-local` or `npx 1test-cli run-local` to run all tests using their configured endpoint hosts
+1. **Write Tests**: Create `.ts` files in `__1test__` subdirectories using the test system DSL. Each test specifies its own `endpoint_host` (including port) in the `ApiCheckBuilder` configuration. Use `env()` helper to inject environment variables.
+2. **Configure Environments** (optional): Create `__1test__/env.ts` with environment configurations for production, staging, development, etc.
+3. **Run Locally**: Use `node 1test-cli/dist/cli.js run-local` or `npx 1test-cli run-local` to run all tests. Add `--env=<environment>` to use environment-specific configurations.
 3. **Configure Runner** (coming soon): Use `npx 1test-cli configure-runner-host <host>` to set up remote execution
 4. **Deploy** (coming soon): Use `npx 1test-cli deploy` to deploy tests to a runner
 5. **Monitor** (coming soon): Use `npx 1test-cli logs <check-name>` to view execution logs

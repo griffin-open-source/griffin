@@ -81,11 +81,20 @@ curl -X POST http://localhost:3000/api/items -H "Content-Type: application/json"
 Create a test file in `__1test__/` directory:
 
 ```typescript
-import { GET, POST, ApiCheckBuilder, JSON, START, END, Frequency } from "../1test-test-system/src/index";
+import { GET, POST, ApiCheckBuilder, JSON, START, END, Frequency, env } from "../1test-ts/src/index";
+
+// Use environment variables with fallback
+const endpointHost = (() => {
+  try {
+    return env('endpoint_host');
+  } catch {
+    return "http://localhost:3000"; // fallback
+  }
+})();
 
 const builder = new ApiCheckBuilder({
   name: "sample-api-test",
-  endpoint_host: "http://localhost:3000"
+  endpoint_host: endpointHost
 });
 
 const plan = builder
@@ -110,5 +119,21 @@ plan.create({
 
 Then run:
 ```bash
+# Without environment (uses fallback)
 node 1test-cli/dist/cli.js run-local
+
+# With environment configuration
+node 1test-cli/dist/cli.js run-local --env=development
+```
+
+**Optional**: Create `__1test__/env.ts` to configure different environments:
+```typescript
+export default {
+  development: {
+    endpoint_host: "http://localhost:3000"
+  },
+  production: {
+    endpoint_host: "https://api.production.example.com"
+  }
+};
 ```

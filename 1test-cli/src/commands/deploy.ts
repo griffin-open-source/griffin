@@ -16,11 +16,11 @@ export async function executeDeploy(): Promise<void> {
 
   const testFiles = findTestFiles();
   const workspaceRoot = findWorkspaceRoot();
-  const testSystemPath = path.join(workspaceRoot, '1test-test-system', 'dist');
+  const testSystemPath = path.join(workspaceRoot, '1test-ts', 'dist');
 
   if (!fs.existsSync(testSystemPath)) {
     throw new Error(
-      'Test system not built. Please run: cd 1test-test-system && npm install && npm run build'
+      'Test system not built. Please run: cd 1test-ts && npm install && npm run build'
     );
   }
 
@@ -36,9 +36,9 @@ export async function executeDeploy(): Promise<void> {
 function findWorkspaceRoot(): string {
   let current = process.cwd();
   while (current !== path.dirname(current)) {
-    const 1testCliPath = path.join(current, '1test-cli');
-    const testSystemPath = path.join(current, '1test-test-system');
-    if (fs.existsSync(1testCliPath) && fs.existsSync(testSystemPath)) {
+    const testCliPath = path.join(current, '1test-cli');
+    const testSystemPath = path.join(current, '1test-ts');
+    if (fs.existsSync(testCliPath) && fs.existsSync(testSystemPath)) {
       return current;
     }
     current = path.dirname(current);

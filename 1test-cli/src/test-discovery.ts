@@ -9,24 +9,24 @@ export function findTestFiles(basePath: string = '.'): string[] {
   const absolutePath = path.resolve(basePath);
   
   // Find all __1test__ directories
-  const 1testDirs = find1testDirectories(absolutePath);
+  const testDirs = findTestDirectories(absolutePath);
   
   // Find all .ts files in those directories
   const testFiles: string[] = [];
-  for (const 1testDir of 1testDirs) {
-    const tsFiles = findTsFiles(1testDir);
+  for (const testDir of testDirs) {
+    const tsFiles = findTsFiles(testDir);
     testFiles.push(...tsFiles);
   }
   
   return testFiles;
 }
 
-function find1testDirectories(basePath: string): string[] {
+function findTestDirectories(basePath: string): string[] {
   const pattern = path.join(basePath, '**', '__1test__');
   return glob.sync(pattern, { absolute: true });
 }
 
-function findTsFiles(1testDir: string): string[] {
-  const pattern = path.join(1testDir, '*.ts');
+function findTsFiles(testDir: string): string[] {
+  const pattern = path.join(testDir, '*.ts');
   return glob.sync(pattern, { absolute: true });
 }

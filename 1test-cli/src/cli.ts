@@ -17,8 +17,9 @@ program
 program
   .command('run-local')
   .description('Run tests locally using endpoint_host from test files')
-  .action(async () => {
-    await executeRunLocal();
+  .option('--env <environment>', 'Environment to use (loads from __1test__/env.ts)')
+  .action(async (options) => {
+    await executeRunLocal(options.env);
   });
 
 program

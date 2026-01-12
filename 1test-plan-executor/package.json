@@ -1,0 +1,22 @@
+{
+  "name": "1test-plan-executor",
+  "version": "0.1.0",
+  "description": "Executor for 1test JSON test plans",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest"
+  },
+  "keywords": ["1test", "api", "testing", "executor"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3"
+  }
+}

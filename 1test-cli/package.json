@@ -1,0 +1,32 @@
+{
+  "name": "1test-cli",
+  "version": "0.1.0",
+  "description": "CLI tool for running and managing 1test API tests",
+  "main": "dist/index.js",
+  "bin": {
+    "1test": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts",
+    "start": "node dist/cli.js",
+    "test": "jest"
+  },
+  "keywords": ["1test", "api", "testing", "cli"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.1.0",
+    "tsx": "^4.7.0",
+    "axios": "^1.6.2",
+    "glob": "^10.3.10"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}

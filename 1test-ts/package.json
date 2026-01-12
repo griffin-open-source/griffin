@@ -1,5 +1,5 @@
 {
-  "name": "1test-test-system",
+  "name": "1test",
   "version": "0.1.0",
   "description": "TypeScript DSL for defining 1test API tests",
   "main": "dist/index.js",

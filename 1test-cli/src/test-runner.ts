@@ -94,9 +94,9 @@ export async function runTestFile(
 function findWorkspaceRoot(): string {
   let current = process.cwd();
   while (current !== path.dirname(current)) {
-    const 1testCliPath = path.join(current, '1test-cli');
+    const testCliPath = path.join(current, '1test-cli');
     const testSystemPath = path.join(current, '1test-test-system');
-    if (fs.existsSync(1testCliPath) && fs.existsSync(testSystemPath)) {
+    if (fs.existsSync(testCliPath) && fs.existsSync(testSystemPath)) {
       return current;
     }
     current = path.dirname(current);

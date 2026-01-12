@@ -1,46 +1,43 @@
-import { StorageBackend, Repository, JobQueue } from '../../ports.js';
-import { SqliteRepository } from './repository.js';
-import { SqliteJobQueue } from './job-queue.js';
+import { RepositoryBackend, Repository } from "../../ports.js";
+import { SqliteRepository } from "./repository.js";
 
 /**
- * SQLite storage backend.
- * 
+ * SQLite repository backend.
+ *
+ * Note: SQLite is NOT suitable for job queues due to lack of proper row-level
+ * locking (SELECT FOR UPDATE SKIP LOCKED). Use Postgres or an in-memory queue instead.
+ *
  * TODO: Implement using better-sqlite3 (sync) or sql.js (async)
- * 
+ *
  * Recommended: better-sqlite3
  * - Much faster than async alternatives
  * - Simpler API (no callback/promise overhead)
  * - Works great for single-node deployments
  * - Enable WAL mode for better concurrency: PRAGMA journal_mode=WAL
- * 
+ *
  * Connection options to consider:
  * - File path or ':memory:' for in-memory DB
  * - Enable foreign keys: PRAGMA foreign_keys=ON
  * - Set busy timeout for lock handling
  */
-export class SqliteStorage implements StorageBackend {
+export class SqliteRepositoryBackend implements RepositoryBackend {
   private db: any; // TODO: Type this as Database from better-sqlite3
   private repositories: Map<string, SqliteRepository<any>> = new Map();
-  private jobQueue: SqliteJobQueue | null = null;
 
-  constructor(private dbPath: string = ':memory:') {}
+  constructor(private dbPath: string = ":memory:") {}
 
   repository<T extends { id: string }>(collection: string): Repository<T> {
     if (!this.repositories.has(collection)) {
-      this.repositories.set(collection, new SqliteRepository<T>(this.db, collection));
+      this.repositories.set(
+        collection,
+        new SqliteRepository<T>(this.db, collection),
+      );
     }
     return this.repositories.get(collection)!;
   }
 
-  queue<T = any>(): JobQueue<T> {
-    if (!this.jobQueue) {
-      this.jobQueue = new SqliteJobQueue<T>(this.db);
-    }
-    return this.jobQueue as JobQueue<T>;
-  }
-
   async connect(): Promise<void> {
-    throw new Error('SqliteStorage.connect not yet implemented');
+    throw new Error("SqliteRepositoryBackend.connect not yet implemented");
     // TODO:
     // const Database = require('better-sqlite3');
     // this.db = new Database(this.dbPath);
@@ -49,15 +46,15 @@ export class SqliteStorage implements StorageBackend {
   }
 
   async disconnect(): Promise<void> {
-    throw new Error('SqliteStorage.disconnect not yet implemented');
+    throw new Error("SqliteRepositoryBackend.disconnect not yet implemented");
     // TODO:
     // if (this.db) {
     //   this.db.close();
     // }
   }
 
-  async transaction<R>(fn: (tx: StorageBackend) => Promise<R>): Promise<R> {
-    throw new Error('SqliteStorage.transaction not yet implemented');
+  async transaction<R>(fn: (tx: RepositoryBackend) => Promise<R>): Promise<R> {
+    throw new Error("SqliteRepositoryBackend.transaction not yet implemented");
     // TODO: Wrap in BEGIN/COMMIT/ROLLBACK
     // better-sqlite3 has: db.transaction(() => { ... })
   }

@@ -1,12 +1,23 @@
-import { test } from 'node:test'
-import * as assert from 'node:assert'
-import { build } from '../helper'
+import { test, expect, afterEach } from "vitest";
+import Fastify from "fastify";
+import App from "../../dist/app.js";
 
-test('default root route', async (t) => {
-  const app = await build(t)
+let app: Awaited<ReturnType<typeof Fastify>>;
+
+afterEach(async () => {
+  if (app) {
+    await app.close();
+  }
+});
+
+test("default root route", async () => {
+  app = Fastify();
+  await app.register(App);
 
   const res = await app.inject({
-    url: '/'
-  })
-  assert.deepStrictEqual(JSON.parse(res.payload), { root: true })
-})
+    url: "/",
+  });
+
+  expect(res.statusCode).toBe(200);
+  expect(res.json()).toEqual({ root: true });
+});

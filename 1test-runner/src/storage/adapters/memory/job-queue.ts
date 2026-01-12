@@ -1,5 +1,5 @@
-import { randomUUID } from 'node:crypto';
-import { JobQueue, Job, JobStatus, EnqueueOptions } from '../../ports.js';
+import { randomUUID } from "node:crypto";
+import { JobQueue, Job, JobStatus, EnqueueOptions } from "../../ports.js";
 
 /**
  * In-memory implementation of JobQueue.
@@ -26,12 +26,14 @@ export class MemoryJobQueue<T = any> implements JobQueue<T> {
 
   async dequeue(): Promise<Job<T> | null> {
     const now = new Date();
-    
+
     // Find eligible jobs (PENDING or RETRYING, scheduled for now or earlier)
     const eligible = Array.from(this.jobs.values())
-      .filter(job => 
-        (job.status === JobStatus.PENDING || job.status === JobStatus.RETRYING) &&
-        job.scheduledFor <= now
+      .filter(
+        (job) =>
+          (job.status === JobStatus.PENDING ||
+            job.status === JobStatus.RETRYING) &&
+          job.scheduledFor <= now,
       )
       .sort((a, b) => {
         // Sort by priority (higher first), then by scheduledFor (earlier first)
@@ -63,7 +65,11 @@ export class MemoryJobQueue<T = any> implements JobQueue<T> {
     job.completedAt = new Date();
   }
 
-  async fail(jobId: string, error: Error, retry: boolean = true): Promise<void> {
+  async fail(
+    jobId: string,
+    error: Error,
+    retry: boolean = true,
+  ): Promise<void> {
     const job = this.jobs.get(jobId);
     if (!job) {
       throw new Error(`Job ${jobId} not found`);

@@ -1,14 +1,16 @@
-import { randomUUID } from 'node:crypto';
-import { Repository, QueryOptions, Filter } from '../../ports.js';
+import { randomUUID } from "node:crypto";
+import { Repository, QueryOptions, Filter } from "../../ports.js";
 
 /**
  * In-memory implementation of Repository.
  * Useful for testing and development.
  */
-export class MemoryRepository<T extends { id: string }> implements Repository<T> {
+export class MemoryRepository<
+  T extends { id: string },
+> implements Repository<T> {
   private data: Map<string, T> = new Map();
 
-  async create(data: Omit<T, 'id'>): Promise<T> {
+  async create(data: Omit<T, "id">): Promise<T> {
     const id = randomUUID();
     const entity = { ...data, id } as T;
     this.data.set(id, entity);
@@ -24,7 +26,9 @@ export class MemoryRepository<T extends { id: string }> implements Repository<T>
 
     // Apply filter
     if (options?.filter) {
-      results = results.filter(item => this.matchesFilter(item, options.filter!));
+      results = results.filter((item) =>
+        this.matchesFilter(item, options.filter!),
+      );
     }
 
     // Apply sort
@@ -34,14 +38,14 @@ export class MemoryRepository<T extends { id: string }> implements Repository<T>
         const aVal = a[field];
         const bVal = b[field];
         const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-        return order === 'asc' ? comparison : -comparison;
+        return order === "asc" ? comparison : -comparison;
       });
     }
 
     // Apply pagination
     const offset = options?.offset ?? 0;
     const limit = options?.limit;
-    
+
     if (limit !== undefined) {
       results = results.slice(offset, offset + limit);
     } else if (offset > 0) {
@@ -51,7 +55,7 @@ export class MemoryRepository<T extends { id: string }> implements Repository<T>
     return results;
   }
 
-  async update(id: string, data: Partial<Omit<T, 'id'>>): Promise<T> {
+  async update(id: string, data: Partial<Omit<T, "id">>): Promise<T> {
     const existing = this.data.get(id);
     if (!existing) {
       throw new Error(`Entity with id ${id} not found`);
@@ -73,7 +77,7 @@ export class MemoryRepository<T extends { id: string }> implements Repository<T>
       return this.data.size;
     }
     const results = Array.from(this.data.values());
-    return results.filter(item => this.matchesFilter(item, filter)).length;
+    return results.filter((item) => this.matchesFilter(item, filter)).length;
   }
 
   /**
@@ -84,7 +88,7 @@ export class MemoryRepository<T extends { id: string }> implements Repository<T>
       const itemValue = item[key as keyof T];
 
       // Simple equality
-      if (typeof condition !== 'object' || condition === null) {
+      if (typeof condition !== "object" || condition === null) {
         if (itemValue !== condition) {
           return false;
         }
@@ -94,22 +98,22 @@ export class MemoryRepository<T extends { id: string }> implements Repository<T>
       // Operator-based conditions
       const operators = condition as any;
 
-      if ('$in' in operators && !operators.$in.includes(itemValue)) {
+      if ("$in" in operators && !operators.$in.includes(itemValue)) {
         return false;
       }
-      if ('$gt' in operators && !(itemValue > operators.$gt)) {
+      if ("$gt" in operators && !(itemValue > operators.$gt)) {
         return false;
       }
-      if ('$gte' in operators && !(itemValue >= operators.$gte)) {
+      if ("$gte" in operators && !(itemValue >= operators.$gte)) {
         return false;
       }
-      if ('$lt' in operators && !(itemValue < operators.$lt)) {
+      if ("$lt" in operators && !(itemValue < operators.$lt)) {
         return false;
       }
-      if ('$lte' in operators && !(itemValue <= operators.$lte)) {
+      if ("$lte" in operators && !(itemValue <= operators.$lte)) {
         return false;
       }
-      if ('$ne' in operators && itemValue === operators.$ne) {
+      if ("$ne" in operators && itemValue === operators.$ne) {
         return false;
       }
     }

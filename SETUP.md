@@ -161,6 +161,21 @@ Same as above - ensure both TypeScript projects are built.
 - Verify the server is running on the specified port
 - Check that endpoint paths in your test match your server's API routes
 
+### Running CLI Tests
+
+The CLI includes a test suite to verify environment injection functionality:
+
+```bash
+cd 1test-cli
+npm install  # Installs vitest
+npm test     # Run all tests
+```
+
+The test suite verifies:
+- Environment configuration loading
+- Test files output expected JSON plans
+- Environment variable substitution works correctly
+
 ## Project Structure
 
 ```

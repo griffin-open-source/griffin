@@ -174,6 +174,38 @@ npm run build
 npm run dev run-local 3000
 ```
 
+## Testing
+
+The CLI includes a comprehensive test suite using Vitest:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with UI
+npm run test:ui
+```
+
+**Test Coverage:**
+- ✅ **18 tests passing** - Core functionality verified
+- ⏭️ **5 tests skipped** - Integration tests requiring full execution environment
+
+**Test Files:**
+- `src/env-loader.test.ts` - Tests environment configuration loading (6 tests)
+- `src/test-files-output.test.ts` - Verifies test files output expected JSON plans (12 tests)
+- `src/test-runner-env.test.ts` - Integration tests (skipped, requires full build)
+- `src/integration-env.test.ts` - End-to-end integration tests (skipped, requires full build)
+
+The tests verify:
+- Environment configuration loading works correctly
+- Test files use `env()` helper correctly
+- Expected JSON plan output for each environment (production, staging, development)
+- Nested variable access works
+- Error handling for missing files/environments
+
 ## Troubleshooting
 
 **"Test system not built"**: Make sure you've built `1test-ts`:

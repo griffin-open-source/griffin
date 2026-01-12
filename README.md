@@ -140,6 +140,7 @@ A simple JSON API server for testing 1test functionality. Provides basic CRUD op
 - JSON plan execution with endpoints and waits
 - Local test execution against development servers
 - Environment injection & parity - run production tests locally with environment configurations
+- Comprehensive test suite for environment injection feature
 
 🚧 **In Development**:
 - Assertion evaluation (structure in place, needs implementation)

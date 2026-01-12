@@ -4,8 +4,6 @@ import { RepositoryBackend, JobQueueBackend } from "../storage/ports.js";
 import {
   createRepositoryBackend,
   createJobQueueBackend,
-  loadRepositoryConfig,
-  loadJobQueueConfig,
 } from "../storage/factory.js";
 
 // Extend Fastify's type system to include storage
@@ -18,22 +16,10 @@ declare module "fastify" {
 
 /**
  * Fastify plugin that initializes and registers the storage backends.
- *
- * Repository backend is configured via environment variables:
- * - REPOSITORY_BACKEND: 'memory' | 'sqlite' | 'postgres' (default: 'memory')
- * - REPOSITORY_CONNECTION_STRING: connection string for the backend
- * - SQLITE_PATH: (alias for SQLite)
- * - POSTGRESQL_URL: (alias for Postgres)
- *
- * Job queue backend is configured via environment variables:
- * - JOBQUEUE_BACKEND: 'memory' | 'postgres' (default: 'memory')
- * - JOBQUEUE_CONNECTION_STRING: connection string for the backend
- * - POSTGRESQL_URL: (alias for Postgres)
+ * Configuration is loaded from fastify.config (provided by the config plugin).
  */
 const storagePlugin: FastifyPluginAsync = async (fastify) => {
-  // Load configurations from environment
-  const repoConfig = loadRepositoryConfig();
-  const queueConfig = loadJobQueueConfig();
+  const { repository: repoConfig, jobQueue: queueConfig } = fastify.config;
 
   fastify.log.info(
     {
@@ -44,8 +30,14 @@ const storagePlugin: FastifyPluginAsync = async (fastify) => {
   );
 
   // Create backends
-  const repository = createRepositoryBackend(repoConfig);
-  const jobQueue = createJobQueueBackend(queueConfig);
+  const repository = createRepositoryBackend({
+    backend: repoConfig.backend,
+    connectionString: repoConfig.connectionString,
+  });
+  const jobQueue = createJobQueueBackend({
+    backend: queueConfig.backend,
+    connectionString: queueConfig.connectionString,
+  });
 
   // Connect to backends
   await repository.connect();
@@ -64,4 +56,5 @@ const storagePlugin: FastifyPluginAsync = async (fastify) => {
 
 export default fp(storagePlugin, {
   name: "storage",
+  dependencies: ["config"],
 });

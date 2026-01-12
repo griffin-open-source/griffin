@@ -59,57 +59,47 @@ class FetchHttpClient implements HttpClientAdapter {
 
 /**
  * Fastify plugin that initializes and manages the scheduler and worker services.
- *
- * Configuration via environment variables:
- * - SCHEDULER_TICK_INTERVAL: Milliseconds between scheduler ticks (default: 30000)
- * - WORKER_EMPTY_DELAY: Initial delay when queue is empty (default: 1000)
- * - WORKER_MAX_EMPTY_DELAY: Max delay when queue is empty (default: 30000)
- * - SCHEDULER_ENABLED: Enable/disable scheduler on startup (default: true)
- * - WORKER_ENABLED: Enable/disable worker on startup (default: true)
+ * Configuration is loaded from fastify.config (provided by the config plugin).
  */
 const schedulerPlugin: FastifyPluginAsync = async (fastify) => {
-  const schedulerEnabled = process.env.SCHEDULER_ENABLED !== "false";
-  const workerEnabled = process.env.WORKER_ENABLED !== "false";
+  const {
+    scheduler: schedulerConfig,
+    worker: workerConfig,
+    planExecution,
+    repository,
+  } = fastify.config;
 
   fastify.log.info(
     {
-      schedulerEnabled,
-      workerEnabled,
+      schedulerEnabled: schedulerConfig.enabled,
+      workerEnabled: workerConfig.enabled,
     },
     "Initializing scheduler and worker services",
   );
 
   // Create scheduler service
   const scheduler = new SchedulerService(fastify.repository, fastify.jobQueue, {
-    tickInterval: process.env.SCHEDULER_TICK_INTERVAL
-      ? parseInt(process.env.SCHEDULER_TICK_INTERVAL, 10)
-      : 30000,
-    backendType: (process.env.REPOSITORY_BACKEND as any) || "memory",
+    tickInterval: schedulerConfig.tickInterval,
+    backendType: repository.backend,
   });
 
   // Create worker service
   const worker = new WorkerService(fastify.repository, fastify.jobQueue, {
-    emptyDelay: process.env.WORKER_EMPTY_DELAY
-      ? parseInt(process.env.WORKER_EMPTY_DELAY, 10)
-      : 1000,
-    maxEmptyDelay: process.env.WORKER_MAX_EMPTY_DELAY
-      ? parseInt(process.env.WORKER_MAX_EMPTY_DELAY, 10)
-      : 30000,
+    emptyDelay: workerConfig.emptyDelay,
+    maxEmptyDelay: workerConfig.maxEmptyDelay,
     httpClient: new FetchHttpClient(),
-    baseUrl: process.env.PLAN_EXECUTION_BASE_URL,
-    timeout: process.env.PLAN_EXECUTION_TIMEOUT
-      ? parseInt(process.env.PLAN_EXECUTION_TIMEOUT, 10)
-      : 30000,
+    baseUrl: planExecution.baseUrl,
+    timeout: planExecution.timeout,
   });
 
   // Start services when server is ready
   fastify.addHook("onReady", async () => {
-    if (schedulerEnabled) {
+    if (schedulerConfig.enabled) {
       fastify.log.info("Starting scheduler service");
       scheduler.start();
     }
 
-    if (workerEnabled) {
+    if (workerConfig.enabled) {
       fastify.log.info("Starting worker service");
       worker.start();
     }
@@ -128,5 +118,5 @@ const schedulerPlugin: FastifyPluginAsync = async (fastify) => {
 
 export default fp(schedulerPlugin, {
   name: "scheduler",
-  dependencies: ["storage"], // Requires storage plugin to be loaded first
+  dependencies: ["config", "storage"], // Requires config and storage plugins to be loaded first
 });

@@ -1,4 +1,12 @@
-export type JSONValue = string | number | boolean | null | { [key: string]: JSONValue } | JSONValue[];
+import type { ExecutionEventEmitter } from "./events/index.js";
+
+export type JSONValue =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: JSONValue }
+  | JSONValue[];
 
 export interface HttpRequest {
   method: string;
@@ -20,10 +28,16 @@ export interface HttpClientAdapter {
 }
 
 export interface ExecutionOptions {
-  mode: 'local' | 'remote';
+  mode: "local" | "remote";
   baseUrl?: string;
   timeout?: number;
   httpClient: HttpClientAdapter;
+
+  /** Optional event emitter for execution observability */
+  eventEmitter?: ExecutionEventEmitter;
+
+  /** Unique execution ID for correlating events (generated if not provided) */
+  executionId?: string;
 }
 
 export interface NodeResult {

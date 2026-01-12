@@ -1,9 +1,9 @@
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-export type ResponseFormat = 'JSON' | 'XML' | 'TEXT';
+export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+export type ResponseFormat = "JSON" | "XML" | "TEXT";
 
 export interface Endpoint {
   id: string;
-  type: 'endpoint';
+  type: "endpoint";
   method: HttpMethod;
   path: string;
   response_format: ResponseFormat;
@@ -13,13 +13,13 @@ export interface Endpoint {
 
 export interface WaitNode {
   id: string;
-  type: 'wait';
+  type: "wait";
   duration_ms: number;
 }
 
 export interface AssertionNode {
   id: string;
-  type: 'assertion';
+  type: "assertion";
   assertions: Assertion[];
 }
 
@@ -37,7 +37,7 @@ export interface Edge {
 
 export interface Frequency {
   every: number;
-  unit: 'minute' | 'hour' | 'day';
+  unit: "minute" | "hour" | "day";
 }
 
 export interface TestPlan {

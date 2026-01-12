@@ -1,4 +1,4 @@
-import type { HttpClientAdapter, HttpRequest, HttpResponse } from '../types.js';
+import type { HttpClientAdapter, HttpRequest, HttpResponse } from "../types.js";
 
 export interface StubResponse {
   /** URL pattern to match (string for exact, RegExp for pattern, or function for custom logic) */
@@ -35,8 +35,8 @@ export class StubAdapter implements HttpClientAdapter {
     throw new Error(`No stub matched request: ${req.method} ${req.url}`);
   }
 
-  private matches(match: StubResponse['match'], req: HttpRequest): boolean {
-    if (typeof match === 'string') {
+  private matches(match: StubResponse["match"], req: HttpRequest): boolean {
+    if (typeof match === "string") {
       return req.url === match;
     }
     if (match instanceof RegExp) {

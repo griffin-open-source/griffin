@@ -5,6 +5,7 @@ The 1test Plan Executor takes JSON test plans (output from the test system DSL) 
 ## Features
 
 ✅ **Currently Working**:
+
 - Execute JSON test plans
 - Support for HTTP endpoints (GET, POST, PUT, DELETE, PATCH)
 - Support for wait nodes
@@ -13,6 +14,7 @@ The 1test Plan Executor takes JSON test plans (output from the test system DSL) 
 - Detailed error reporting with node-by-node results
 
 🚧 **In Development**:
+
 - Assertion evaluation (structure in place)
 - Remote execution mode
 - Advanced error handling and retries
@@ -29,8 +31,8 @@ npm run build
 ### Programmatic Usage
 
 ```typescript
-import { executePlan } from './dist/executor';
-import type { TestPlan } from './dist/test-plan-types';
+import { executePlan } from "./dist/executor";
+import type { TestPlan } from "./dist/test-plan-types";
 
 const testPlan: TestPlan = {
   name: "my-test",
@@ -41,19 +43,19 @@ const testPlan: TestPlan = {
       type: "endpoint",
       method: "GET",
       path: "/health",
-      response_format: "JSON"
-    }
+      response_format: "JSON",
+    },
   ],
   edges: [
     { from: "__START__", to: "health" },
-    { from: "health", to: "__END__" }
-  ]
+    { from: "health", to: "__END__" },
+  ],
 };
 
 const results = await executePlan(testPlan, {
-  mode: 'local',
-  baseUrl: 'http://localhost:3000',
-  timeout: 30000
+  mode: "local",
+  baseUrl: "http://localhost:3000",
+  timeout: 30000,
 });
 
 console.log(results);
@@ -76,9 +78,9 @@ console.log(results);
 
 ```typescript
 interface ExecutionOptions {
-  mode: 'local' | 'remote';  // Currently only 'local' is fully supported
-  baseUrl?: string;           // Base URL for endpoints (overrides plan's endpoint_host)
-  timeout?: number;           // Request timeout in ms (default: 30000)
+  mode: "local" | "remote"; // Currently only 'local' is fully supported
+  baseUrl?: string; // Base URL for endpoints (overrides plan's endpoint_host)
+  timeout?: number; // Request timeout in ms (default: 30000)
 }
 ```
 
@@ -96,15 +98,18 @@ interface ExecutionOptions {
 ## Node Types
 
 ### Endpoint Nodes
+
 - Makes HTTP requests using axios
 - Supports all HTTP methods (GET, POST, PUT, DELETE, PATCH)
 - Parses JSON, XML, or TEXT responses
 - Stores response for use in subsequent nodes
 
 ### Wait Nodes
+
 - Pauses execution for specified duration
 - Duration specified in milliseconds
 
 ### Assertion Nodes
+
 - Currently structure is in place but evaluation needs implementation
 - Will evaluate assertions with access to all previous endpoint responses

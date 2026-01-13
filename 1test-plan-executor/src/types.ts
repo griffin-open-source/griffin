@@ -1,4 +1,5 @@
 import type { ExecutionEventEmitter } from "./events/index.js";
+import type { SecretProviderRegistry } from "./secrets/index.js";
 
 export type JSONValue =
   | string
@@ -38,6 +39,13 @@ export interface ExecutionOptions {
 
   /** Unique execution ID for correlating events (generated if not provided) */
   executionId?: string;
+
+  /**
+   * Optional secret provider registry for resolving secret references.
+   * If provided, secrets in the plan will be resolved before execution.
+   * If not provided, any secret references in the plan will cause an error.
+   */
+  secretRegistry?: SecretProviderRegistry;
 }
 
 export interface NodeResult {

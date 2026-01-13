@@ -6,4 +6,6 @@ export { JSON, XML, TEXT } from './response-formats';
 export { Frequency } from './frequency';
 export { Wait } from './wait';
 export { Assertions } from './assertions';
-export type { TestPlan, Endpoint, WaitNode, AssertionNode, Edge } from './types';
+export { secret, isSecretRef } from './secrets';
+export type { TestPlan, Endpoint, WaitNode, AssertionNode, Edge, SecretRef, SecretOrValue } from './types';
+export type { SecretRefData, SecretOptions } from './secrets';

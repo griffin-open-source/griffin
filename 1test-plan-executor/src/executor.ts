@@ -19,6 +19,11 @@ import type {
 import { createStateGraph, graphStore, StateGraphRegistry } from "ts-edge";
 import type { ExecutionEvent, BaseEvent } from "./events/index.js";
 import { randomUUID } from "crypto";
+import {
+  resolveSecretsInPlan,
+  planHasSecrets,
+  SecretResolutionError,
+} from "./secrets/index.js";
 
 // Define context type that matches ts-edge's GraphNodeExecuteContext (not exported from library)
 interface NodeExecuteContext {
@@ -353,17 +358,56 @@ export async function executePlanV1(
   );
 
   try {
+    // Resolve secrets if the plan contains any
+    let resolvedPlan = plan;
+    if (planHasSecrets(plan)) {
+      if (!options.secretRegistry) {
+        throw new SecretResolutionError(
+          "Plan contains secret references but no secret registry was provided",
+          { provider: "unknown", ref: "unknown" }
+        );
+      }
+
+      executionContext.emit({
+        type: "NODE_START",
+        nodeId: "__SECRETS__",
+        nodeType: "endpoint", // Using endpoint as closest match
+      });
+
+      try {
+        resolvedPlan = await resolveSecretsInPlan(plan, options.secretRegistry);
+
+        executionContext.emit({
+          type: "NODE_END",
+          nodeId: "__SECRETS__",
+          nodeType: "endpoint",
+          success: true,
+          duration_ms: Date.now() - startTime,
+        });
+      } catch (error) {
+        executionContext.emit({
+          type: "NODE_END",
+          nodeId: "__SECRETS__",
+          nodeType: "endpoint",
+          success: false,
+          duration_ms: Date.now() - startTime,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        throw error;
+      }
+    }
+
     // Emit PLAN_START event
     executionContext.emit({
       type: "PLAN_START",
-      planName: plan.name,
-      planVersion: plan.version,
-      nodeCount: plan.nodes.length,
-      edgeCount: plan.edges.length,
+      planName: resolvedPlan.name,
+      planVersion: resolvedPlan.version,
+      nodeCount: resolvedPlan.nodes.length,
+      edgeCount: resolvedPlan.edges.length,
     });
 
     // Build execution graph (state-based)
-    const graph = buildGraph(plan, options, executionContext);
+    const graph = buildGraph(resolvedPlan, options, executionContext);
 
     // Compile and run the state graph
     const app = graph.compile("__START__", "__END__");
@@ -465,6 +509,10 @@ async function executeEndpoint(
   // For now, we always attempt once (attempt: 1)
   const attempt = 1;
 
+  // After secret resolution, headers are guaranteed to be plain strings
+  // Cast is safe because resolveSecretsInPlan substitutes all SecretRefs
+  const resolvedHeaders = endpoint.headers as Record<string, string> | undefined;
+
   // Emit HTTP_REQUEST event before making the call
   context.emit({
     type: "HTTP_REQUEST",
@@ -472,7 +520,7 @@ async function executeEndpoint(
     attempt,
     method: httpMethodToString(endpoint.method),
     url,
-    headers: endpoint.headers,
+    headers: resolvedHeaders,
     hasBody: endpoint.body !== undefined,
   });
 
@@ -480,7 +528,7 @@ async function executeEndpoint(
     const response = await options.httpClient.request({
       method: httpMethodToString(endpoint.method),
       url,
-      headers: endpoint.headers,
+      headers: resolvedHeaders,
       body: endpoint.body,
       timeout: options.timeout || 30000,
     });

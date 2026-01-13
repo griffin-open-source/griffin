@@ -45,6 +45,39 @@ export const ConfigSchema = Type.Object({
     baseUrl: Type.Optional(Type.String()),
     timeout: Type.Number({ default: 30000, minimum: 0 }),
   }),
+
+  // Secret provider configuration
+  secrets: Type.Object({
+    // Comma-separated list of enabled providers (e.g., "env,aws,vault")
+    providers: Type.Array(Type.String(), { default: ["env"] }),
+
+    // Environment provider config (always available)
+    env: Type.Object({
+      prefix: Type.Optional(Type.String()),
+    }),
+
+    // AWS Secrets Manager config
+    aws: Type.Optional(
+      Type.Object({
+        region: Type.String(),
+        prefix: Type.Optional(Type.String()),
+        // For multi-tenant: roleArn to assume
+        roleArn: Type.Optional(Type.String()),
+        externalId: Type.Optional(Type.String()),
+      }),
+    ),
+
+    // HashiCorp Vault config
+    vault: Type.Optional(
+      Type.Object({
+        address: Type.String(),
+        token: Type.Optional(Type.String()),
+        namespace: Type.Optional(Type.String()),
+        kvVersion: Type.Optional(Type.Union([Type.Literal(1), Type.Literal(2)])),
+        prefix: Type.Optional(Type.String()),
+      }),
+    ),
+  }),
 });
 
 export type Config = Static<typeof ConfigSchema>;
@@ -126,6 +159,37 @@ export function loadConfigFromEnv(): Config {
     }
   }
 
+  // Parse secret providers configuration
+  const secretProviders = process.env.SECRET_PROVIDERS
+    ? process.env.SECRET_PROVIDERS.split(",").map((p) => p.trim().toLowerCase())
+    : ["env"];
+
+  // AWS config (only if "aws" is in providers)
+  const awsConfig = secretProviders.includes("aws")
+    ? {
+        region: process.env.AWS_SECRETS_REGION || process.env.AWS_REGION || "us-east-1",
+        prefix: process.env.AWS_SECRETS_PREFIX,
+        roleArn: process.env.AWS_SECRETS_ROLE_ARN,
+        externalId: process.env.AWS_SECRETS_EXTERNAL_ID,
+      }
+    : undefined;
+
+  // Vault config (only if "vault" is in providers)
+  const vaultConfig = secretProviders.includes("vault")
+    ? {
+        address: process.env.VAULT_ADDR || "",
+        token: process.env.VAULT_TOKEN,
+        namespace: process.env.VAULT_NAMESPACE,
+        kvVersion: (process.env.VAULT_KV_VERSION === "1" ? 1 : 2) as 1 | 2,
+        prefix: process.env.VAULT_PREFIX,
+      }
+    : undefined;
+
+  // Validate required config for enabled providers
+  if (secretProviders.includes("vault") && !vaultConfig?.address) {
+    throw new Error("VAULT_ADDR is required when vault secret provider is enabled");
+  }
+
   const config: Config = {
     repository: {
       backend: repositoryBackend,
@@ -147,6 +211,14 @@ export function loadConfigFromEnv(): Config {
     planExecution: {
       baseUrl: process.env.PLAN_EXECUTION_BASE_URL,
       timeout: parseInteger(process.env.PLAN_EXECUTION_TIMEOUT, 30000),
+    },
+    secrets: {
+      providers: secretProviders,
+      env: {
+        prefix: process.env.SECRET_ENV_PREFIX,
+      },
+      aws: awsConfig,
+      vault: vaultConfig,
     },
   };
 

@@ -14,7 +14,8 @@
     "build:ts": "tsc",
     "watch:ts": "tsc -w",
     "dev": "npm run build:ts && concurrently -k -p \"[{name}]\" -n \"TypeScript,App\" -c \"yellow.bold,cyan.bold\" \"npm:watch:ts\" \"npm:dev:start\"",
-    "dev:start": "fastify start --ignore-watch=.ts$ -w -l info -P dist/app.js"
+    "dev:start": "fastify start --ignore-watch=.ts$ -w -l info -P dist/app.js",
+    "generate:openapi": "npm run build:ts && node dist/generate-openapi-spec.js"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +23,8 @@
   "dependencies": {
     "@fastify/autoload": "^6.3.1",
     "@fastify/sensible": "^6.0.0",
+    "@fastify/swagger": "^9.6.1",
+    "@fastify/swagger-ui": "^5.2.4",
     "@fastify/type-provider-typebox": "^6.1.0",
     "1test-plan-executor": "file:../1test-plan-executor",
     "fastify": "^5.0.0",

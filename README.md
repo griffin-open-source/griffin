@@ -24,6 +24,7 @@ The orchestration service responsible for scheduling and executing tests. Ensure
 - Executes test plans using the plan executor
 - Stores execution results and logs in PostgreSQL
 - Provides REST API for CLI interactions
+- Supports multiple secret providers (env, AWS Secrets Manager, HashiCorp Vault)
 
 ### 3. [griffin-ts](./griffin-ts/)
 The TypeScript DSL library for defining API tests. Tests are written in TypeScript and output JSON test plans that can be executed by the plan executor.
@@ -31,6 +32,7 @@ The TypeScript DSL library for defining API tests. Tests are written in TypeScri
 **Key Features:**
 - Chainable API for building test plans
 - Support for endpoints, waits, assertions, and edges
+- Secrets management for secure credential handling
 - Outputs JSON test plans for execution
 
 ### 4. [griffin-plan-executor](./griffin-plan-executor/)
@@ -40,6 +42,7 @@ The executor that takes JSON test plans (output from the test system DSL) and ex
 - Executes JSON test plans
 - Graph-based execution following edges
 - Support for endpoints, waits, and assertions
+- Secrets resolution at runtime
 - Local and remote execution modes
 
 ### 5. [sample-apis](./sample-apis/)

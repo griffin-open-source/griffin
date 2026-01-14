@@ -69,6 +69,98 @@ fastify.config.scheduler.tickInterval;
 | `PLAN_EXECUTION_BASE_URL` | string | -       | Base URL for plan execution (optional)              |
 | `PLAN_EXECUTION_TIMEOUT`  | number | `30000` | Timeout in milliseconds for plan execution requests |
 
+### Secrets Configuration
+
+griffin supports multiple secret providers for securely managing API keys, tokens, and other credentials used in test plans. Secrets are referenced in test plans using the `secret()` function and resolved at runtime.
+
+| Variable                    | Type   | Default | Description                                                          |
+| --------------------------- | ------ | ------- | -------------------------------------------------------------------- |
+| `SECRET_PROVIDERS`          | string | `env`   | Comma-separated list of enabled providers (e.g., `"env,aws,vault"`) |
+
+#### Environment Provider (always available)
+
+The environment provider reads secrets from environment variables.
+
+| Variable            | Type   | Default | Description                                    |
+| ------------------- | ------ | ------- | ---------------------------------------------- |
+| `SECRET_ENV_PREFIX` | string | -       | Optional prefix for all environment variables  |
+
+**Example:**
+```bash
+SECRET_PROVIDERS=env
+SECRET_ENV_PREFIX=GRIFFIN_  # Optional: prefix all env var names
+```
+
+**Usage in test plans:**
+```typescript
+secret("env:API_KEY")  // Reads from API_KEY environment variable
+secret("env:GRIFFIN_API_KEY")  // Or with prefix: GRIFFIN_API_KEY
+```
+
+#### AWS Secrets Manager Provider
+
+The AWS provider retrieves secrets from AWS Secrets Manager. Requires AWS credentials configured via IAM role, environment variables, or AWS credentials file.
+
+| Variable                    | Type   | Default     | Description                                                          |
+| --------------------------- | ------ | ----------- | -------------------------------------------------------------------- |
+| `AWS_SECRETS_REGION`        | string | `us-east-1` | AWS region for Secrets Manager (falls back to `AWS_REGION`)         |
+| `AWS_SECRETS_PREFIX`        | string | -           | Optional prefix for all secret names                                 |
+| `AWS_SECRETS_ROLE_ARN`      | string | -           | IAM role ARN to assume (for multi-tenant scenarios)                 |
+| `AWS_SECRETS_EXTERNAL_ID`   | string | -           | External ID for role assumption (optional, for additional security) |
+
+**Prerequisites:**
+- `@aws-sdk/client-secrets-manager` package installed
+- `@aws-sdk/client-sts` package installed (if using role assumption)
+- AWS credentials configured (IAM role, environment variables, or credentials file)
+
+**Example:**
+```bash
+SECRET_PROVIDERS=env,aws
+AWS_SECRETS_REGION=us-east-1
+AWS_SECRETS_PREFIX=myapp/  # Optional: prefix all secret names
+# Optional: for multi-tenant scenarios
+AWS_SECRETS_ROLE_ARN=arn:aws:iam::123456789012:role/griffin-secrets-role
+AWS_SECRETS_EXTERNAL_ID=unique-external-id
+```
+
+**Usage in test plans:**
+```typescript
+secret("aws:prod/api-key")  // Retrieves secret named "myapp/prod/api-key" (with prefix)
+secret("aws:prod/api-key", { field: "apiKey" })  // Extract field from JSON secret
+secret("aws:prod/api-key", { version: "AWSPREVIOUS" })  // Pin to specific version
+```
+
+#### HashiCorp Vault Provider
+
+The Vault provider retrieves secrets from HashiCorp Vault using the KV secrets engine.
+
+| Variable            | Type   | Default | Description                                                          |
+| ------------------- | ------ | ------- | -------------------------------------------------------------------- |
+| `VAULT_ADDR`        | string | -       | **Required** - Vault server address (e.g., `https://vault.example.com:8200`) |
+| `VAULT_TOKEN`       | string | -       | Vault authentication token                                           |
+| `VAULT_NAMESPACE`   | string | -       | Vault Enterprise namespace (optional)                                |
+| `VAULT_KV_VERSION`  | `1` \| `2` | `2` | KV secrets engine version                                             |
+| `VAULT_PREFIX`      | string | -       | Optional prefix for all secret paths                                 |
+
+**Example:**
+```bash
+SECRET_PROVIDERS=env,vault
+VAULT_ADDR=https://vault.example.com:8200
+VAULT_TOKEN=hvs.xxxxxxxxxxxxx
+VAULT_NAMESPACE=myteam  # Optional: for Vault Enterprise
+VAULT_KV_VERSION=2  # Optional: defaults to 2
+VAULT_PREFIX=griffin/  # Optional: prefix all secret paths
+```
+
+**Usage in test plans:**
+```typescript
+secret("vault:secret/data/api")  // KV v2 path
+secret("vault:secret/data/api", { field: "apiKey" })  // Extract field from secret data
+secret("vault:secret/data/api", { version: "2" })  // Pin to specific version
+```
+
+**Note:** The Vault provider validates the connection at startup. If validation fails, the runner will not start.
+
 ## Example Configurations
 
 ### Development (In-Memory)
@@ -98,6 +190,11 @@ WORKER_MAX_EMPTY_DELAY=60000
 
 PLAN_EXECUTION_BASE_URL=https://api.example.com
 PLAN_EXECUTION_TIMEOUT=60000
+
+# Secrets configuration
+SECRET_PROVIDERS=env,aws
+AWS_SECRETS_REGION=us-east-1
+AWS_SECRETS_PREFIX=griffin/
 ```
 
 ### Disable Services

@@ -83,10 +83,72 @@ plan.create({
 });
 ```
 
+### Using Secrets
+
+griffin supports secure secret management for API keys, tokens, and other credentials. Secrets are referenced in your test plans and resolved at runtime by the configured secret providers.
+
+```typescript
+import { GET, POST, ApiCheckBuilder, JSON, START, END, Frequency, secret } from "../griffin-ts/src/index";
+
+const builder = new ApiCheckBuilder({
+  name: "authenticated-check",
+  endpoint_host: "https://api.example.com"
+});
+
+const plan = builder
+  .addEndpoint("authenticated_request", {
+    method: GET,
+    response_format: JSON,
+    path: "/api/protected",
+    headers: {
+      // Use environment variable
+      "X-API-Key": secret("env:API_KEY"),
+      // Use AWS Secrets Manager
+      "Authorization": secret("aws:prod/api-token"),
+      // Extract field from JSON secret
+      "X-Custom-Header": secret("aws:prod/config", { field: "customHeader" }),
+    },
+    body: {
+      // Secrets can also be used in request bodies
+      apiKey: secret("env:API_KEY"),
+    }
+  })
+  .addEdge(START, "authenticated_request")
+  .addEdge("authenticated_request", END);
+
+plan.create({
+  frequency: Frequency.every(5).minute()
+});
+```
+
+#### Secret Providers
+
+**Environment Variables** (always available):
+```typescript
+secret("env:VARIABLE_NAME")
+```
+
+**AWS Secrets Manager** (requires AWS configuration):
+```typescript
+secret("aws:secret-name")
+secret("aws:secret-name", { field: "key" })  // Extract field from JSON secret
+secret("aws:secret-name", { version: "AWSPREVIOUS" })  // Pin to specific version
+```
+
+**HashiCorp Vault** (requires Vault configuration):
+```typescript
+secret("vault:secret/data/path")
+secret("vault:secret/data/path", { field: "key" })
+secret("vault:secret/data/path", { version: "2" })
+```
+
+See the [griffin-runner CONFIG.md](../griffin-runner/CONFIG.md) for configuration details.
+
 ### Notes
 
 - **Frequency**: Use `Frequency.every(n).minute()`, `.hour()`, or `.day()` (note the parentheses)
 - **Waits**: Use `Wait.seconds(n)` or `Wait.minutes(n)`
+- **Secrets**: Use `secret("provider:path")` to reference secrets that are resolved at runtime
 - **Assertions**: Currently in development - assertion functions are stored but not yet evaluated during execution
 - **Output**: The `plan.create()` call outputs JSON to stdout, which is captured by the CLI
 

@@ -79,6 +79,8 @@ const builder = new ApiCheckBuilder({
 });
 ```
 
+**Secrets**: If your test plans use secrets (via the `secret()` function), they will be resolved using environment variables when running locally. For AWS Secrets Manager or Vault, configure the appropriate environment variables or credentials. See [griffin-runner CONFIG.md](../griffin-runner/CONFIG.md) for details.
+
 **Example Output**:
 ```
 Running tests locally

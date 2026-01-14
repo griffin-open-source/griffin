@@ -1,4 +1,22 @@
-import { Type, type Static } from "typebox";
+import { Type, type Static, type TSchema } from "typebox";
+
+// Secret reference schema for values that may contain secrets
+export const SecretRefDataSchema = Type.Object({
+  provider: Type.String(),
+  ref: Type.String(),
+  version: Type.Optional(Type.String()),
+  field: Type.Optional(Type.String()),
+});
+
+export const SecretRefSchema = Type.Object({
+  $secret: SecretRefDataSchema,
+});
+
+// Union type for values that can be either a literal or a secret reference
+export const SecretOrStringSchema = Type.Union([
+  Type.String(),
+  SecretRefSchema,
+]);
 
 export enum FrequencyUnit {
   MINUTE,
@@ -50,8 +68,8 @@ export const EndpointSchema = Type.Object({
   type: Type.Literal(NodeType.ENDPOINT),
   method: HttpMethodSchema,
   path: Type.String(),
-  headers: Type.Optional(Type.Record(Type.String(), Type.String())),
-  body: Type.Optional(Type.Any()),
+  headers: Type.Optional(Type.Record(Type.String(), SecretOrStringSchema)),
+  body: Type.Optional(Type.Any()), // Body can contain nested SecretRefs
   response_format: ResponseFormatSchema,
 });
 export type Endpoint = Static<typeof EndpointSchema>;

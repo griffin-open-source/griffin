@@ -1,3 +1,5 @@
+import type { SecretRef, SecretOrValue } from './secrets';
+
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 export type ResponseFormat = 'JSON' | 'XML' | 'TEXT';
 
@@ -7,9 +9,11 @@ export interface Endpoint {
   method: HttpMethod;
   path: string;
   response_format: ResponseFormat;
-  headers?: Record<string, string>;
-  body?: any;
+  headers?: Record<string, SecretOrValue<string>>;
+  body?: any; // Body can contain nested SecretRefs
 }
+
+export type { SecretRef, SecretOrValue };
 
 export interface WaitNode {
   id: string;

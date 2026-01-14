@@ -1,5 +1,5 @@
 import type { RepositoryBackend, JobQueueBackend } from "../storage/ports.js";
-import type { TestPlanV1 } from "1test-plan-executor";
+import type { TestPlanV1, SecretProviderRegistry } from "1test-plan-executor";
 import { JobRunStatus, type JobRun } from "../schemas/job-run.js";
 import type { ExecutionJobData } from "./service.js";
 import { executePlanV1 } from "1test-plan-executor";
@@ -34,6 +34,11 @@ export interface WorkerConfig {
    * Default: 30000 (30 seconds)
    */
   timeout?: number;
+
+  /**
+   * Secret provider registry for resolving secrets in plans.
+   */
+  secretRegistry?: SecretProviderRegistry;
 }
 
 /**
@@ -48,6 +53,7 @@ export class WorkerService {
   private httpClient: HttpClientAdapter;
   private baseUrl?: string;
   private timeout: number;
+  private secretRegistry?: SecretProviderRegistry;
 
   constructor(
     private repository: RepositoryBackend,
@@ -60,6 +66,7 @@ export class WorkerService {
     this.httpClient = config.httpClient;
     this.baseUrl = config.baseUrl;
     this.timeout = config.timeout ?? 30000;
+    this.secretRegistry = config.secretRegistry;
   }
 
   /**
@@ -161,6 +168,7 @@ export class WorkerService {
         httpClient: this.httpClient,
         baseUrl: this.baseUrl,
         timeout: this.timeout,
+        secretRegistry: this.secretRegistry,
       };
 
       const result = await executePlanV1(plan, executionOptions);

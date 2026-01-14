@@ -90,6 +90,7 @@ const schedulerPlugin: FastifyPluginAsync = async (fastify) => {
     httpClient: new FetchHttpClient(),
     baseUrl: planExecution.baseUrl,
     timeout: planExecution.timeout,
+    secretRegistry: fastify.secretRegistry,
   });
 
   // Start services when server is ready
@@ -118,5 +119,5 @@ const schedulerPlugin: FastifyPluginAsync = async (fastify) => {
 
 export default fp(schedulerPlugin, {
   name: "scheduler",
-  dependencies: ["config", "storage"], // Requires config and storage plugins to be loaded first
+  dependencies: ["config", "storage", "secrets"], // Requires config, storage, and secrets plugins to be loaded first
 });

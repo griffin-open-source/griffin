@@ -29,6 +29,9 @@ export {
   UnaryPredicate,
   BinaryPredicateOperator,
   TestPlanV1Schema,
+  SecretRefSchema,
+  SecretRefDataSchema,
+  SecretOrStringSchema,
   type TestPlanV1,
   type Node,
   type Assertions,
@@ -57,3 +60,29 @@ export type {
   NodeStreamEvent,
   ErrorEvent,
 } from "./events/types.js";
+
+// Export secrets system
+export {
+  // Core types and utilities
+  type SecretProvider,
+  type SecretRef,
+  type SecretRefData,
+  type SecretResolveOptions,
+  SecretResolutionError,
+  isSecretRef,
+  // Registry
+  SecretProviderRegistry,
+  // Resolution utilities
+  resolveSecretsInPlan,
+  collectSecretsFromPlan,
+  planHasSecrets,
+  // Providers
+  EnvSecretProvider,
+  type EnvSecretProviderOptions,
+  AwsSecretsManagerProvider,
+  type AwsSecretsManagerProviderOptions,
+  type AwsSecretsManagerClient,
+  VaultProvider,
+  type VaultProviderOptions,
+  type VaultHttpClient,
+} from "./secrets/index.js";

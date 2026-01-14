@@ -36,6 +36,11 @@ const configPlugin: FastifyPluginAsync = async (fastify) => {
         hasBaseUrl: !!config.planExecution.baseUrl,
         timeout: config.planExecution.timeout,
       },
+      secrets: {
+        providers: config.secrets.providers,
+        hasAwsConfig: !!config.secrets.aws,
+        hasVaultConfig: !!config.secrets.vault,
+      },
     },
     "Configuration loaded",
   );

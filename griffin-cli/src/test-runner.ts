@@ -8,6 +8,9 @@ import {
   ExecutionResult,
 } from "griffin-plan-executor";
 import { TestPlanV1Schema } from "griffin/schema";
+import { Type } from "typebox";
+import { randomUUID } from "crypto";
+const RawTestSchema = Type.Omit(TestPlanV1Schema, ["id", "environment"]);
 
 /**
  * Runs a TypeScript test file and executes the resulting JSON plan.
@@ -18,9 +21,15 @@ export async function runTestFile(
 ): Promise<ExecutionResult> {
   const defaultExport = await import(filePath);
   const plan = defaultExport.default;
+  console.log(JSON.stringify(plan, null, 2));
   try {
-    const parsedPlan = Value.Parse(TestPlanV1Schema, plan);
-    const result = await executePlanV1(parsedPlan, {
+    const parsedPlan = Value.Parse(RawTestSchema, plan);
+    const syntheticPlan = {
+      ...parsedPlan,
+      id: randomUUID(),
+      environment: "local",
+    };
+    const result = await executePlanV1(syntheticPlan, {
       mode: "local",
       httpClient: new AxiosAdapter(),
       targetResolver: async (key) => {
@@ -29,7 +38,7 @@ export async function runTestFile(
     });
     return result;
   } catch (error) {
-    const errors = Value.Errors(TestPlanV1Schema, plan);
+    const errors = Value.Errors(RawTestSchema, plan);
     console.error("ERROR: Invalid plan", JSON.stringify(errors, null, 2));
     throw new Error(`Invalid plan: ${(error as Error).message}`);
   }

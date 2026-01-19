@@ -1,5 +1,4 @@
 import { Type, type Static, type TSchema } from "typebox";
-import { Ref, UnionOneOf } from "./shared.js";
 
 export const TEST_PLAN_VERSION = "1.0";
 
@@ -83,12 +82,12 @@ export const EndpointSchema = Type.Object(
   {
     id: Type.String(),
     type: Type.Literal(NodeType.ENDPOINT),
-    method: Ref(HttpMethodSchema),
+    method: HttpMethodSchema,
     path: Type.String(),
     base: TargetRefSchema,
     headers: Type.Optional(Type.Record(Type.String(), SecretOrStringSchema)),
     body: Type.Optional(Type.Any()), // Body can contain nested SecretRefs
-    response_format: Ref(ResponseFormatSchema),
+    response_format: ResponseFormatSchema,
   },
   { $id: "Endpoint" },
 );
@@ -178,7 +177,7 @@ export const BinaryPredicateOperatorSchema = Type.Union(
 export const BinaryPredicateSchema = Type.Object(
   {
     expected: Type.Any(),
-    operator: Ref(BinaryPredicateOperatorSchema),
+    operator: BinaryPredicateOperatorSchema,
   },
   { $id: "BinaryPredicate" },
 );
@@ -240,7 +239,7 @@ export const AssertionsSchema = Type.Object(
   {
     id: Type.String(),
     type: Type.Literal(NodeType.ASSERTION),
-    assertions: Type.Array(Ref(AssertionSchema)),
+    assertions: Type.Array(AssertionSchema),
   },
   { $id: "Assertions" },
 );
@@ -256,7 +255,7 @@ export const NodeTypeSchema = Type.Union(
 );
 
 export const NodeSchema = Type.Union(
-  [Ref(EndpointSchema), Ref(WaitSchema), Ref(AssertionsSchema)],
+  [EndpointSchema, WaitSchema, AssertionsSchema],
   { $id: "Node" },
 );
 
@@ -278,10 +277,10 @@ export const TestPlanV1Schema = Type.Object(
     id: Type.Readonly(Type.String()),
     name: Type.String(),
     version: Type.Literal("1.0"),
-    frequency: Type.Optional(Ref(FrequencySchema)),
+    frequency: Type.Optional(FrequencySchema),
     environment: Type.String({ default: "default" }),
-    nodes: Type.Array(Ref(NodeSchema)),
-    edges: Type.Array(Ref(EdgeSchema)),
+    nodes: Type.Array(NodeSchema),
+    edges: Type.Array(EdgeSchema),
   },
   {
     $id: "TestPlanV1",

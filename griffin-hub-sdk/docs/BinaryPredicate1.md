@@ -6,7 +6,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **expected** | **any** |  | [default to undefined]
-**operator** | [**BinaryPredicateOperator**](BinaryPredicateOperator.md) |  | [default to undefined]
+**operator** | **string** |  | [default to undefined]
 
 ## Example
 

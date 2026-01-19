@@ -1,4 +1,4 @@
-# Endpoint
+# Node1
 
 
 ## Properties
@@ -13,13 +13,15 @@ Name | Type | Description | Notes
 **headers** | [**{ [key: string]: Endpoint1HeadersValue; }**](Endpoint1HeadersValue.md) |  | [optional] [default to undefined]
 **body** | **any** |  | [optional] [default to undefined]
 **response_format** | **string** |  | [default to undefined]
+**duration_ms** | **number** |  | [default to undefined]
+**assertions** | [**Array&lt;Assertion1&gt;**](Assertion1.md) |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { Endpoint } from 'griffin-hub-sdk';
+import { Node1 } from 'griffin-hub-sdk';
 
-const instance: Endpoint = {
+const instance: Node1 = {
     id,
     type,
     method,
@@ -28,6 +30,8 @@ const instance: Endpoint = {
     headers,
     body,
     response_format,
+    duration_ms,
+    assertions,
 };
 ```
 

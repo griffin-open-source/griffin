@@ -1,4 +1,4 @@
-# Assertions
+# Wait1
 
 
 ## Properties
@@ -7,17 +7,17 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **string** |  | [default to undefined]
 **type** | **string** |  | [default to undefined]
-**assertions** | [**Array&lt;Assertion1&gt;**](Assertion1.md) |  | [default to undefined]
+**duration_ms** | **number** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { Assertions } from 'griffin-hub-sdk';
+import { Wait1 } from 'griffin-hub-sdk';
 
-const instance: Assertions = {
+const instance: Wait1 = {
     id,
     type,
-    assertions,
+    duration_ms,
 };
 ```
 

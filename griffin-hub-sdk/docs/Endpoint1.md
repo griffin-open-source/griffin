@@ -1,4 +1,4 @@
-# Endpoint
+# Endpoint1
 
 
 ## Properties
@@ -17,9 +17,9 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { Endpoint } from 'griffin-hub-sdk';
+import { Endpoint1 } from 'griffin-hub-sdk';
 
-const instance: Endpoint = {
+const instance: Endpoint1 = {
     id,
     type,
     method,

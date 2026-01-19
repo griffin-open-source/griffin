@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **nodeId** | **string** |  | [default to undefined]
 **accessor** | **string** |  | [default to undefined]
 **path** | **Array&lt;string&gt;** |  | [default to undefined]
-**predicate** | [**JSONAssertionPredicate**](JSONAssertionPredicate.md) |  | [default to undefined]
+**predicate** | [**JSONAssertion1Predicate**](JSONAssertion1Predicate.md) |  | [default to undefined]
 
 ## Example
 

@@ -1,21 +1,21 @@
-# BinaryPredicate
+# Edge1
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**expected** | **any** |  | [default to undefined]
-**operator** | **string** |  | [default to undefined]
+**from** | **string** |  | [default to undefined]
+**to** | **string** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { BinaryPredicate } from 'griffin-hub-sdk';
+import { Edge1 } from 'griffin-hub-sdk';
 
-const instance: BinaryPredicate = {
-    expected,
-    operator,
+const instance: Edge1 = {
+    from,
+    to,
 };
 ```
 

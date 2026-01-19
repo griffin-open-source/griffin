@@ -1,4 +1,4 @@
-# EndpointHeadersValueAnyOfSecret
+# Endpoint1HeadersValueAnyOfSecret
 
 
 ## Properties
@@ -13,9 +13,9 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { EndpointHeadersValueAnyOfSecret } from 'griffin-hub-sdk';
+import { Endpoint1HeadersValueAnyOfSecret } from 'griffin-hub-sdk';
 
-const instance: EndpointHeadersValueAnyOfSecret = {
+const instance: Endpoint1HeadersValueAnyOfSecret = {
     provider,
     ref,
     version,

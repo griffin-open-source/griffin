@@ -1,4 +1,4 @@
-# AssertionAnyOfAllOfPredicate
+# JSONAssertion1Predicate
 
 
 ## Properties
@@ -6,14 +6,14 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **expected** | **any** |  | [default to undefined]
-**operator** | [**BinaryPredicateOperator**](BinaryPredicateOperator.md) |  | [default to undefined]
+**operator** | **string** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { AssertionAnyOfAllOfPredicate } from 'griffin-hub-sdk';
+import { JSONAssertion1Predicate } from 'griffin-hub-sdk';
 
-const instance: AssertionAnyOfAllOfPredicate = {
+const instance: JSONAssertion1Predicate = {
     expected,
     operator,
 };

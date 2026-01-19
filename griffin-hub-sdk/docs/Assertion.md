@@ -5,11 +5,11 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**nodeType** | **string** |  | [default to undefined]
+**assertionType** | **string** |  | [default to undefined]
 **nodeId** | **string** |  | [default to undefined]
 **accessor** | **string** |  | [default to undefined]
 **path** | **string** |  | [default to undefined]
-**predicate** | [**AssertionAnyOfAllOfPredicate**](AssertionAnyOfAllOfPredicate.md) |  | [default to undefined]
+**predicate** | [**JSONAssertion1Predicate**](JSONAssertion1Predicate.md) |  | [default to undefined]
 **expected** | **any** |  | [default to undefined]
 
 ## Example
@@ -18,7 +18,7 @@ Name | Type | Description | Notes
 import { Assertion } from 'griffin-hub-sdk';
 
 const instance: Assertion = {
-    nodeType,
+    assertionType,
     nodeId,
     accessor,
     path,

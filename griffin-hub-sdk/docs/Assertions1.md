@@ -1,4 +1,4 @@
-# Assertions
+# Assertions1
 
 
 ## Properties
@@ -12,9 +12,9 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { Assertions } from 'griffin-hub-sdk';
+import { Assertions1 } from 'griffin-hub-sdk';
 
-const instance: Assertions = {
+const instance: Assertions1 = {
     id,
     type,
     assertions,

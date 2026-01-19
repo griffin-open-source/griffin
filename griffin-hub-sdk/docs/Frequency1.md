@@ -1,21 +1,21 @@
-# JSONAssertionPredicate
+# Frequency1
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**expected** | **any** |  | [default to undefined]
-**operator** | [**BinaryPredicateOperator**](BinaryPredicateOperator.md) |  | [default to undefined]
+**every** | **number** |  | [default to undefined]
+**unit** | **string** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { JSONAssertionPredicate } from 'griffin-hub-sdk';
+import { Frequency1 } from 'griffin-hub-sdk';
 
-const instance: JSONAssertionPredicate = {
-    expected,
-    operator,
+const instance: Frequency1 = {
+    every,
+    unit,
 };
 ```
 

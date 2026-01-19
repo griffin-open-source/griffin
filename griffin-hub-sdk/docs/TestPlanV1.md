@@ -11,10 +11,10 @@ Name | Type | Description | Notes
 **id** | **string** |  | [default to undefined]
 **name** | **string** |  | [default to undefined]
 **version** | **string** |  | [default to undefined]
-**frequency** | [**Frequency**](Frequency.md) |  | [optional] [default to undefined]
+**frequency** | [**Frequency1**](Frequency1.md) |  | [optional] [default to undefined]
 **environment** | **string** |  | [default to 'default']
-**nodes** | [**Array&lt;Node&gt;**](Node.md) |  | [default to undefined]
-**edges** | [**Array&lt;Edge&gt;**](Edge.md) |  | [default to undefined]
+**nodes** | [**Array&lt;Node1&gt;**](Node1.md) |  | [default to undefined]
+**edges** | [**Array&lt;Edge1&gt;**](Edge1.md) |  | [default to undefined]
 
 ## Example
 

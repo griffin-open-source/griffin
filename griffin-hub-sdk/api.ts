@@ -73,19 +73,19 @@ export interface AgentsRegisterPostRequest {
     'metadata'?: { [key: string]: string; };
 }
 export interface Assertion {
-    'nodeType': AssertionNodeTypeEnum;
+    'assertionType': AssertionAssertionTypeEnum;
     'nodeId': string;
     'accessor': AssertionAccessorEnum;
     'path': string;
-    'predicate': AssertionAnyOfAllOfPredicate;
+    'predicate': JSONAssertion1Predicate;
     'expected': any;
 }
 
-export const AssertionNodeTypeEnum = {
+export const AssertionAssertionTypeEnum = {
     Text: 'TEXT'
 } as const;
 
-export type AssertionNodeTypeEnum = typeof AssertionNodeTypeEnum[keyof typeof AssertionNodeTypeEnum];
+export type AssertionAssertionTypeEnum = typeof AssertionAssertionTypeEnum[keyof typeof AssertionAssertionTypeEnum];
 export const AssertionAccessorEnum = {
     Body: 'body',
     Headers: 'headers',
@@ -94,67 +94,77 @@ export const AssertionAccessorEnum = {
 
 export type AssertionAccessorEnum = typeof AssertionAccessorEnum[keyof typeof AssertionAccessorEnum];
 
-export interface AssertionAnyOf {
-    'nodeType': AssertionAnyOfNodeTypeEnum;
+export interface Assertion1 {
+    'assertionType': Assertion1AssertionTypeEnum;
     'nodeId': string;
-    'accessor': AssertionAnyOfAccessorEnum;
-    'path': Array<string>;
-    'predicate': AssertionAnyOfAllOfPredicate;
+    'accessor': Assertion1AccessorEnum;
+    'path': string;
+    'predicate': JSONAssertion1Predicate;
+    'expected': any;
 }
 
-export const AssertionAnyOfNodeTypeEnum = {
-    Json: 'JSON'
+export const Assertion1AssertionTypeEnum = {
+    Text: 'TEXT'
 } as const;
 
-export type AssertionAnyOfNodeTypeEnum = typeof AssertionAnyOfNodeTypeEnum[keyof typeof AssertionAnyOfNodeTypeEnum];
-export const AssertionAnyOfAccessorEnum = {
+export type Assertion1AssertionTypeEnum = typeof Assertion1AssertionTypeEnum[keyof typeof Assertion1AssertionTypeEnum];
+export const Assertion1AccessorEnum = {
     Body: 'body',
     Headers: 'headers',
     Status: 'status'
 } as const;
 
-export type AssertionAnyOfAccessorEnum = typeof AssertionAnyOfAccessorEnum[keyof typeof AssertionAnyOfAccessorEnum];
+export type Assertion1AccessorEnum = typeof Assertion1AccessorEnum[keyof typeof Assertion1AccessorEnum];
 
-export interface AssertionAnyOf1 {
-    'nodeType': AssertionAnyOf1NodeTypeEnum;
+export interface Assertion1AnyOf {
+    'assertionType': Assertion1AnyOfAssertionTypeEnum;
+    'nodeId': string;
+    'accessor': Assertion1AnyOfAccessorEnum;
+    'path': Array<string>;
+    'predicate': JSONAssertion1Predicate;
+}
+
+export const Assertion1AnyOfAssertionTypeEnum = {
+    Json: 'JSON'
+} as const;
+
+export type Assertion1AnyOfAssertionTypeEnum = typeof Assertion1AnyOfAssertionTypeEnum[keyof typeof Assertion1AnyOfAssertionTypeEnum];
+export const Assertion1AnyOfAccessorEnum = {
+    Body: 'body',
+    Headers: 'headers',
+    Status: 'status'
+} as const;
+
+export type Assertion1AnyOfAccessorEnum = typeof Assertion1AnyOfAccessorEnum[keyof typeof Assertion1AnyOfAccessorEnum];
+
+export interface Assertion1AnyOf1 {
+    'assertionType': Assertion1AnyOf1AssertionTypeEnum;
     'path': Array<string>;
     'expected': any;
 }
 
-export const AssertionAnyOf1NodeTypeEnum = {
+export const Assertion1AnyOf1AssertionTypeEnum = {
     Xml: 'XML'
 } as const;
 
-export type AssertionAnyOf1NodeTypeEnum = typeof AssertionAnyOf1NodeTypeEnum[keyof typeof AssertionAnyOf1NodeTypeEnum];
+export type Assertion1AnyOf1AssertionTypeEnum = typeof Assertion1AnyOf1AssertionTypeEnum[keyof typeof Assertion1AnyOf1AssertionTypeEnum];
 
-export interface AssertionAnyOf2 {
-    'nodeType': AssertionAnyOf2NodeTypeEnum;
+export interface Assertion1AnyOf2 {
+    'assertionType': Assertion1AnyOf2AssertionTypeEnum;
     'path': string;
     'expected': any;
 }
 
-export const AssertionAnyOf2NodeTypeEnum = {
+export const Assertion1AnyOf2AssertionTypeEnum = {
     Text: 'TEXT'
 } as const;
 
-export type AssertionAnyOf2NodeTypeEnum = typeof AssertionAnyOf2NodeTypeEnum[keyof typeof AssertionAnyOf2NodeTypeEnum];
-
-export interface AssertionAnyOfAllOfPredicate {
-    'expected': any;
-    'operator': BinaryPredicateOperator;
-}
-
-
-export interface AssertionAnyOfAllOfPredicateAnyOf {
-    'expected': any;
-    'operator': BinaryPredicateOperator;
-}
-
+export type Assertion1AnyOf2AssertionTypeEnum = typeof Assertion1AnyOf2AssertionTypeEnum[keyof typeof Assertion1AnyOf2AssertionTypeEnum];
 
 export interface Assertions {
     'id': string;
     'type': AssertionsTypeEnum;
-    'assertions': Array<Assertion>;
+    'assertions': Array<Assertion1>;
 }
 
 export const AssertionsTypeEnum = {
@@ -163,17 +173,61 @@ export const AssertionsTypeEnum = {
 
 export type AssertionsTypeEnum = typeof AssertionsTypeEnum[keyof typeof AssertionsTypeEnum];
 
-export interface BinaryPredicate {
-    'expected': any;
-    'operator': BinaryPredicateOperator;
+export interface Assertions1 {
+    'id': string;
+    'type': Assertions1TypeEnum;
+    'assertions': Array<Assertion1>;
 }
 
+export const Assertions1TypeEnum = {
+    Assertion: 'ASSERTION'
+} as const;
+
+export type Assertions1TypeEnum = typeof Assertions1TypeEnum[keyof typeof Assertions1TypeEnum];
+
+export interface BinaryPredicate {
+    'expected': any;
+    'operator': BinaryPredicateOperatorEnum;
+}
+
+export const BinaryPredicateOperatorEnum = {
+    Equal: 'EQUAL',
+    NotEqual: 'NOT_EQUAL',
+    GreaterThan: 'GREATER_THAN',
+    LessThan: 'LESS_THAN',
+    GreaterThanOrEqual: 'GREATER_THAN_OR_EQUAL',
+    LessThanOrEqual: 'LESS_THAN_OR_EQUAL',
+    Contains: 'CONTAINS',
+    NotContains: 'NOT_CONTAINS',
+    StartsWith: 'STARTS_WITH',
+    EndsWith: 'ENDS_WITH',
+    NotStartsWith: 'NOT_STARTS_WITH',
+    NotEndsWith: 'NOT_ENDS_WITH'
+} as const;
+
+export type BinaryPredicateOperatorEnum = typeof BinaryPredicateOperatorEnum[keyof typeof BinaryPredicateOperatorEnum];
 
 export interface BinaryPredicate1 {
     'expected': any;
-    'operator': BinaryPredicateOperator;
+    'operator': BinaryPredicate1OperatorEnum;
 }
 
+export const BinaryPredicate1OperatorEnum = {
+    Equal: 'EQUAL',
+    NotEqual: 'NOT_EQUAL',
+    GreaterThan: 'GREATER_THAN',
+    LessThan: 'LESS_THAN',
+    GreaterThanOrEqual: 'GREATER_THAN_OR_EQUAL',
+    LessThanOrEqual: 'LESS_THAN_OR_EQUAL',
+    Contains: 'CONTAINS',
+    NotContains: 'NOT_CONTAINS',
+    StartsWith: 'STARTS_WITH',
+    EndsWith: 'ENDS_WITH',
+    NotStartsWith: 'NOT_STARTS_WITH',
+    NotEndsWith: 'NOT_ENDS_WITH'
+} as const;
+
+export type BinaryPredicate1OperatorEnum = typeof BinaryPredicate1OperatorEnum[keyof typeof BinaryPredicate1OperatorEnum];
 
 
 export const BinaryPredicateOperator = {
@@ -221,15 +275,19 @@ export interface Edge {
     'from': string;
     'to': string;
 }
+export interface Edge1 {
+    'from': string;
+    'to': string;
+}
 export interface Endpoint {
     'id': string;
     'type': EndpointTypeEnum;
-    'method': HttpMethod;
+    'method': EndpointMethodEnum;
     'path': string;
-    'base': EndpointBase;
-    'headers'?: { [key: string]: EndpointHeadersValue; };
+    'base': Endpoint1Base;
+    'headers'?: { [key: string]: Endpoint1HeadersValue; };
     'body'?: any;
-    'response_format': ResponseFormat;
+    'response_format': EndpointResponseFormatEnum;
 }
 
 export const EndpointTypeEnum = {
@@ -237,25 +295,82 @@ export const EndpointTypeEnum = {
 } as const;
 
 export type EndpointTypeEnum = typeof EndpointTypeEnum[keyof typeof EndpointTypeEnum];
+export const EndpointMethodEnum = {
+    Get: 'GET',
+    Post: 'POST',
+    Put: 'PUT',
+    Delete: 'DELETE',
+    Patch: 'PATCH',
+    Head: 'HEAD',
+    Options: 'OPTIONS',
+    Connect: 'CONNECT',
+    Trace: 'TRACE'
+} as const;
 
-export interface EndpointBase {
-    'type': EndpointBaseTypeEnum;
+export type EndpointMethodEnum = typeof EndpointMethodEnum[keyof typeof EndpointMethodEnum];
+export const EndpointResponseFormatEnum = {
+    Json: 'JSON',
+    Xml: 'XML',
+    Text: 'TEXT'
+} as const;
+
+export type EndpointResponseFormatEnum = typeof EndpointResponseFormatEnum[keyof typeof EndpointResponseFormatEnum];
+
+export interface Endpoint1 {
+    'id': string;
+    'type': Endpoint1TypeEnum;
+    'method': Endpoint1MethodEnum;
+    'path': string;
+    'base': Endpoint1Base;
+    'headers'?: { [key: string]: Endpoint1HeadersValue; };
+    'body'?: any;
+    'response_format': Endpoint1ResponseFormatEnum;
+}
+
+export const Endpoint1TypeEnum = {
+    Endpoint: 'ENDPOINT'
+} as const;
+
+export type Endpoint1TypeEnum = typeof Endpoint1TypeEnum[keyof typeof Endpoint1TypeEnum];
+export const Endpoint1MethodEnum = {
+    Get: 'GET',
+    Post: 'POST',
+    Put: 'PUT',
+    Delete: 'DELETE',
+    Patch: 'PATCH',
+    Head: 'HEAD',
+    Options: 'OPTIONS',
+    Connect: 'CONNECT',
+    Trace: 'TRACE'
+} as const;
+
+export type Endpoint1MethodEnum = typeof Endpoint1MethodEnum[keyof typeof Endpoint1MethodEnum];
+export const Endpoint1ResponseFormatEnum = {
+    Json: 'JSON',
+    Xml: 'XML',
+    Text: 'TEXT'
+} as const;
+
+export type Endpoint1ResponseFormatEnum = typeof Endpoint1ResponseFormatEnum[keyof typeof Endpoint1ResponseFormatEnum];
+
+export interface Endpoint1Base {
+    'type': Endpoint1BaseTypeEnum;
     'key': string;
 }
 
-export const EndpointBaseTypeEnum = {
+export const Endpoint1BaseTypeEnum = {
     Target: 'target'
 } as const;
 
-export type EndpointBaseTypeEnum = typeof EndpointBaseTypeEnum[keyof typeof EndpointBaseTypeEnum];
+export type Endpoint1BaseTypeEnum = typeof Endpoint1BaseTypeEnum[keyof typeof Endpoint1BaseTypeEnum];
 
-export interface EndpointHeadersValue {
-    '$secret': EndpointHeadersValueAnyOfSecret;
+export interface Endpoint1HeadersValue {
+    '$secret': Endpoint1HeadersValueAnyOfSecret;
 }
-export interface EndpointHeadersValueAnyOf {
-    '$secret': EndpointHeadersValueAnyOfSecret;
+export interface Endpoint1HeadersValueAnyOf {
+    '$secret': Endpoint1HeadersValueAnyOfSecret;
 }
-export interface EndpointHeadersValueAnyOfSecret {
+export interface Endpoint1HeadersValueAnyOfSecret {
     'provider': string;
     'ref': string;
     'version'?: string;
@@ -273,6 +388,19 @@ export const FrequencyUnitEnum = {
 } as const;
 
 export type FrequencyUnitEnum = typeof FrequencyUnitEnum[keyof typeof FrequencyUnitEnum];
+
+export interface Frequency1 {
+    'every': number;
+    'unit': Frequency1UnitEnum;
+}
+
+export const Frequency1UnitEnum = {
+    Minute: 'MINUTE',
+    Hour: 'HOUR',
+    Day: 'DAY'
+} as const;
+
+export type Frequency1UnitEnum = typeof Frequency1UnitEnum[keyof typeof Frequency1UnitEnum];
 
 
 export const HttpMethod = {
@@ -294,7 +422,7 @@ export interface JSONAssertion {
     'nodeId': string;
     'accessor': JSONAssertionAccessorEnum;
     'path': Array<string>;
-    'predicate': JSONAssertionPredicate;
+    'predicate': JSONAssertion1Predicate;
 }
 
 export const JSONAssertionAccessorEnum = {
@@ -305,16 +433,73 @@ export const JSONAssertionAccessorEnum = {
 
 export type JSONAssertionAccessorEnum = typeof JSONAssertionAccessorEnum[keyof typeof JSONAssertionAccessorEnum];
 
-export interface JSONAssertionPredicate {
+export interface JSONAssertion1Predicate {
     'expected': any;
-    'operator': BinaryPredicateOperator;
+    'operator': JSONAssertion1PredicateOperatorEnum;
 }
 
+export const JSONAssertion1PredicateOperatorEnum = {
+    Equal: 'EQUAL',
+    NotEqual: 'NOT_EQUAL',
+    GreaterThan: 'GREATER_THAN',
+    LessThan: 'LESS_THAN',
+    GreaterThanOrEqual: 'GREATER_THAN_OR_EQUAL',
+    LessThanOrEqual: 'LESS_THAN_OR_EQUAL',
+    Contains: 'CONTAINS',
+    NotContains: 'NOT_CONTAINS',
+    StartsWith: 'STARTS_WITH',
+    EndsWith: 'ENDS_WITH',
+    NotStartsWith: 'NOT_STARTS_WITH',
+    NotEndsWith: 'NOT_ENDS_WITH'
+} as const;
+
+export type JSONAssertion1PredicateOperatorEnum = typeof JSONAssertion1PredicateOperatorEnum[keyof typeof JSONAssertion1PredicateOperatorEnum];
 
 /**
  * @type Node
  */
-export type Node = Assertions | Endpoint | Wait;
+export type Node = Assertions1 | Endpoint1 | Wait1;
+
+export interface Node1 {
+    'id': string;
+    'type': Node1TypeEnum;
+    'method': Node1MethodEnum;
+    'path': string;
+    'base': Endpoint1Base;
+    'headers'?: { [key: string]: Endpoint1HeadersValue; };
+    'body'?: any;
+    'response_format': Node1ResponseFormatEnum;
+    'duration_ms': number;
+    'assertions': Array<Assertion1>;
+}
+
+export const Node1TypeEnum = {
+    Endpoint: 'ENDPOINT',
+    Wait: 'WAIT',
+    Assertion: 'ASSERTION'
+} as const;
+
+export type Node1TypeEnum = typeof Node1TypeEnum[keyof typeof Node1TypeEnum];
+export const Node1MethodEnum = {
+    Get: 'GET',
+    Post: 'POST',
+    Put: 'PUT',
+    Delete: 'DELETE',
+    Patch: 'PATCH',
+    Head: 'HEAD',
+    Options: 'OPTIONS',
+    Connect: 'CONNECT',
+    Trace: 'TRACE'
+} as const;
+
+export type Node1MethodEnum = typeof Node1MethodEnum[keyof typeof Node1MethodEnum];
+export const Node1ResponseFormatEnum = {
+    Json: 'JSON',
+    Xml: 'XML',
+    Text: 'TEXT'
+} as const;
+
+export type Node1ResponseFormatEnum = typeof Node1ResponseFormatEnum[keyof typeof Node1ResponseFormatEnum];
 
 export interface PlanGet200Response {
     'data': Array<TestPlanV1>;
@@ -433,10 +618,10 @@ export interface TestPlanV1 {
     'id': string;
     'name': string;
     'version': TestPlanV1VersionEnum;
-    'frequency'?: Frequency;
+    'frequency'?: Frequency1;
     'environment': string;
-    'nodes': Array<Node>;
-    'edges': Array<Edge>;
+    'nodes': Array<Node1>;
+    'edges': Array<Edge1>;
 }
 
 export const TestPlanV1VersionEnum = {
@@ -469,6 +654,18 @@ export const WaitTypeEnum = {
 } as const;
 
 export type WaitTypeEnum = typeof WaitTypeEnum[keyof typeof WaitTypeEnum];
+
+export interface Wait1 {
+    'id': string;
+    'type': Wait1TypeEnum;
+    'duration_ms': number;
+}
+
+export const Wait1TypeEnum = {
+    Wait: 'WAIT'
+} as const;
+
+export type Wait1TypeEnum = typeof Wait1TypeEnum[keyof typeof Wait1TypeEnum];
 
 
 /**

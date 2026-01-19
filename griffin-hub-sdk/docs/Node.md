@@ -7,14 +7,14 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **string** |  | [default to undefined]
 **type** | **string** |  | [default to undefined]
-**method** | [**HttpMethod**](HttpMethod.md) |  | [default to undefined]
+**method** | **string** |  | [default to undefined]
 **path** | **string** |  | [default to undefined]
-**base** | [**EndpointBase**](EndpointBase.md) |  | [default to undefined]
-**headers** | [**{ [key: string]: EndpointHeadersValue; }**](EndpointHeadersValue.md) |  | [optional] [default to undefined]
+**base** | [**Endpoint1Base**](Endpoint1Base.md) |  | [default to undefined]
+**headers** | [**{ [key: string]: Endpoint1HeadersValue; }**](Endpoint1HeadersValue.md) |  | [optional] [default to undefined]
 **body** | **any** |  | [optional] [default to undefined]
-**response_format** | [**ResponseFormat**](ResponseFormat.md) |  | [default to undefined]
+**response_format** | **string** |  | [default to undefined]
 **duration_ms** | **number** |  | [default to undefined]
-**assertions** | [**Array&lt;Assertion&gt;**](Assertion.md) |  | [default to undefined]
+**assertions** | [**Array&lt;Assertion1&gt;**](Assertion1.md) |  | [default to undefined]
 
 ## Example
 

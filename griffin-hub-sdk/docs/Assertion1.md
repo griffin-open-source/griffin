@@ -1,22 +1,28 @@
-# AssertionAnyOf2
+# Assertion1
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**nodeType** | **string** |  | [default to undefined]
+**assertionType** | **string** |  | [default to undefined]
+**nodeId** | **string** |  | [default to undefined]
+**accessor** | **string** |  | [default to undefined]
 **path** | **string** |  | [default to undefined]
+**predicate** | [**JSONAssertion1Predicate**](JSONAssertion1Predicate.md) |  | [default to undefined]
 **expected** | **any** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { AssertionAnyOf2 } from 'griffin-hub-sdk';
+import { Assertion1 } from 'griffin-hub-sdk';
 
-const instance: AssertionAnyOf2 = {
-    nodeType,
+const instance: Assertion1 = {
+    assertionType,
+    nodeId,
+    accessor,
     path,
+    predicate,
     expected,
 };
 ```

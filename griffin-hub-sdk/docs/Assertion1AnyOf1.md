@@ -1,21 +1,21 @@
-# AssertionAnyOf1
+# Assertion1AnyOf1
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**nodeType** | **string** |  | [default to undefined]
+**assertionType** | **string** |  | [default to undefined]
 **path** | **Array&lt;string&gt;** |  | [default to undefined]
 **expected** | **any** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { AssertionAnyOf1 } from 'griffin-hub-sdk';
+import { Assertion1AnyOf1 } from 'griffin-hub-sdk';
 
-const instance: AssertionAnyOf1 = {
-    nodeType,
+const instance: Assertion1AnyOf1 = {
+    assertionType,
     path,
     expected,
 };

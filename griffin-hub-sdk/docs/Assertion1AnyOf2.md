@@ -1,21 +1,23 @@
-# AssertionAnyOfAllOfPredicateAnyOf
+# Assertion1AnyOf2
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**assertionType** | **string** |  | [default to undefined]
+**path** | **string** |  | [default to undefined]
 **expected** | **any** |  | [default to undefined]
-**operator** | [**BinaryPredicateOperator**](BinaryPredicateOperator.md) |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { AssertionAnyOfAllOfPredicateAnyOf } from 'griffin-hub-sdk';
+import { Assertion1AnyOf2 } from 'griffin-hub-sdk';
 
-const instance: AssertionAnyOfAllOfPredicateAnyOf = {
+const instance: Assertion1AnyOf2 = {
+    assertionType,
+    path,
     expected,
-    operator,
 };
 ```
 

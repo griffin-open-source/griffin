@@ -45,20 +45,16 @@ export const ListPlansEndpoint = {
 
 export default function (fastify: FastifyTypeBox) {
   fastify.addSchema(TestPlanV1Schema);
-  fastify.addSchema(NodeSchema);
-  fastify.addSchema(EdgeSchema);
-  fastify.addSchema(FrequencySchema);
-  fastify.addSchema(EndpointSchema);
-  fastify.addSchema(HttpMethodSchema);
-  fastify.addSchema(ResponseFormatSchema);
-  fastify.addSchema(WaitSchema);
-  fastify.addSchema(AssertionsSchema);
-  fastify.addSchema(AssertionSchema);
-
-  //fastify.addSchema(UnaryPredicateSchema);
-  fastify.addSchema(BinaryPredicateOperatorSchema);
-  //fastify.addSchema(AssertionsSchema);
+  //fastify.addSchema(NodeSchema);
   //fastify.addSchema(EdgeSchema);
+  //fastify.addSchema(FrequencySchema);
+  //fastify.addSchema(EndpointSchema);
+  //fastify.addSchema(HttpMethodSchema);
+  //fastify.addSchema(ResponseFormatSchema);
+  //fastify.addSchema(WaitSchema);
+  //fastify.addSchema(AssertionsSchema);
+  //fastify.addSchema(AssertionSchema);
+  //fastify.addSchema(BinaryPredicateOperatorSchema);
 
   fastify.post(
     "/",

@@ -28,10 +28,12 @@
     "griffin": "file:../griffin-ts",
     "griffin-hub-sdk": "file:../griffin-hub-sdk",
     "griffin-plan-executor": "file:../griffin-plan-executor",
+    "object-hash": "^3.0.0",
     "typebox": "^1.0.78"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
+    "@types/object-hash": "^3.0.6",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^4.0.17"

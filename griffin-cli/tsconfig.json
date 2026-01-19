@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "commonjs",
+    "module": "ES2022",
     "lib": ["ES2022"],
     "outDir": "./dist",
     "rootDir": "./src",
@@ -10,8 +10,9 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
-    "declaration": true
+    "moduleResolution": "bundler",
+    "declaration": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

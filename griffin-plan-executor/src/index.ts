@@ -20,25 +20,6 @@ export {
   type StubResponse,
 } from "./adapters/index.js";
 
-// Export schema types and enums
-export {
-  FrequencyUnit,
-  ResponseFormat,
-  HttpMethod,
-  NodeType,
-  UnaryPredicate,
-  BinaryPredicateOperator,
-  TestPlanV1Schema,
-  SecretRefSchema,
-  SecretRefDataSchema,
-  SecretOrStringSchema,
-  type TestPlanV1,
-  type Node,
-  type Assertions,
-  type Wait,
-} from "./schemas.js";
-
-// Export event system
 export {
   LocalEventEmitter,
   DurableEventEmitter,

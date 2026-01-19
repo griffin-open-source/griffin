@@ -1,7 +1,8 @@
 {
   "name": "griffin-cli",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "CLI tool for running and managing griffin API tests",
+  "type": "module",
   "main": "dist/index.js",
   "bin": {
     "griffin": "./dist/cli.js"
@@ -10,20 +11,32 @@
     "build": "tsc",
     "dev": "tsx src/cli.ts",
     "start": "node dist/cli.js",
-    "test": "jest"
+    "test": "vitest run"
   },
-  "keywords": ["griffin", "api", "testing", "cli"],
+  "keywords": [
+    "griffin",
+    "api",
+    "testing",
+    "cli",
+    "monitoring"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "commander": "^11.1.0",
-    "tsx": "^4.7.0",
-    "axios": "^1.6.2",
-    "glob": "^10.3.10"
+    "commander": "^12.1.0",
+    "glob": "^11.0.0",
+    "griffin": "file:../griffin-ts",
+    "griffin-hub-sdk": "file:../griffin-hub-sdk",
+    "griffin-plan-executor": "file:../griffin-plan-executor",
+    "object-hash": "^3.0.0",
+    "typebox": "^1.0.78"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
-    "typescript": "^5.3.3"
+    "@types/node": "^22.10.5",
+    "@types/object-hash": "^3.0.6",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.17"
   },
   "files": [
     "dist",

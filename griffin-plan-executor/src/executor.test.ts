@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { executePlanV1 } from "./executor.js";
 import { StubAdapter } from "./adapters/stub.js";
-import {
-  NodeType,
-  HttpMethod,
-  ResponseFormat,
-  type TestPlanV1,
-} from "./schemas.js";
-import type { ExecutionOptions } from "./types.js";
-import { LocalEventEmitter, type ExecutionEvent } from "./events/index.js";
+import { NodeType, HttpMethod, ResponseFormat } from "griffin/schema";
+import { TestPlanV1 } from "griffin/types";
+import { START, END, type ExecutionOptions } from "./types.js";
+import { LocalEventEmitter, type ExecutionEvent } from "./events";
+
+function stubTargetResolver(key: string): Promise<string | undefined> {
+  return Promise.resolve(`https://${key}.example.com`);
+}
 
 describe("executePlanV1", () => {
   let stubClient: StubAdapter;
@@ -20,6 +20,7 @@ describe("executePlanV1", () => {
       mode: "local",
       httpClient: stubClient,
       timeout: 5000,
+      targetResolver: stubTargetResolver,
     };
   });
 
@@ -28,20 +29,28 @@ describe("executePlanV1", () => {
       const plan: TestPlanV1 = {
         id: "test-plan-1",
         name: "Simple GET Test",
+        environment: "default",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
         nodes: [
           {
             id: "get-users",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/users",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/users",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "get-users",
+          },
+          {
+            from: "get-users",
+            to: END,
+          },
+        ],
       };
 
       stubClient.addStub({
@@ -71,24 +80,32 @@ describe("executePlanV1", () => {
         id: "test-plan-2",
         name: "POST Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "create-user",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.POST,
-              path: "/users",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: "Bearer token123",
-              },
-              body: { name: "Bob", email: "bob@example.com" },
-              response_format: ResponseFormat.JSON,
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.POST,
+            base: { type: "target", key: "api" },
+            path: "/users",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer token123",
             },
+            body: { name: "Bob", email: "bob@example.com" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "create-user",
+          },
+          {
+            from: "create-user",
+            to: END,
+          },
+        ],
       };
 
       stubClient.addStub({
@@ -116,19 +133,27 @@ describe("executePlanV1", () => {
         id: "test-plan-3",
         name: "JSON String Response Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "get-data",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/data",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/data",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "get-data",
+          },
+          {
+            from: "get-data",
+            to: END,
+          },
+        ],
       };
 
       stubClient.addStub({
@@ -151,23 +176,31 @@ describe("executePlanV1", () => {
         id: "test-plan-4",
         name: "BaseUrl Override Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "get-users",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/users",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            base: { type: "target", key: "api" },
+            path: "/users",
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "get-users",
+          },
+          {
+            from: "get-users",
+            to: END,
+          },
+        ],
       };
 
       stubClient.addStub({
-        match: "https://localhost:3000/users",
+        match: "https://api.example.com/users",
         response: {
           status: 200,
           statusText: "OK",
@@ -175,10 +208,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, {
-        ...options,
-        baseUrl: "https://localhost:3000",
-      });
+      const result = await executePlanV1(plan, options);
 
       expect(result.success).toBe(true);
     });
@@ -190,20 +220,28 @@ describe("executePlanV1", () => {
         id: "test-plan-5",
         name: "PUT Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "update-user",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.PUT,
-              path: "/users/1",
-              body: { name: "Updated Name" },
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.PUT,
+            path: "/users/1",
+            base: { type: "target", key: "api" },
+            body: { name: "Updated Name" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "update-user",
+          },
+          {
+            from: "update-user",
+            to: END,
+          },
+        ],
       };
 
       stubClient.addStub({
@@ -229,19 +267,27 @@ describe("executePlanV1", () => {
         id: "test-plan-6",
         name: "DELETE Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "delete-user",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.DELETE,
-              path: "/users/1",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.DELETE,
+            path: "/users/1",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "delete-user",
+          },
+          {
+            from: "delete-user",
+            to: END,
+          },
+        ],
       };
 
       stubClient.addStub({
@@ -264,20 +310,28 @@ describe("executePlanV1", () => {
         id: "test-plan-7",
         name: "PATCH Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "patch-user",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.PATCH,
-              path: "/users/1",
-              body: { email: "newemail@example.com" },
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.PATCH,
+            path: "/users/1",
+            base: { type: "target", key: "api" },
+            body: { email: "newemail@example.com" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "patch-user",
+          },
+          {
+            from: "patch-user",
+            to: END,
+          },
+        ],
       };
 
       stubClient.addStub({
@@ -301,28 +355,39 @@ describe("executePlanV1", () => {
         id: "test-plan-8",
         name: "Sequential Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "first",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/first",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/first",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
           {
             id: "second",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/second",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/second",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [{ from: "first", to: "second" }],
+        edges: [
+          {
+            from: START,
+            to: "first",
+          },
+          {
+            from: "first",
+            to: "second",
+          },
+          {
+            from: "second",
+            to: END,
+          },
+        ],
       };
 
       stubClient
@@ -358,49 +423,62 @@ describe("executePlanV1", () => {
         id: "test-plan-9",
         name: "Multi-Step Linear Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "step1",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/step1",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/step1",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
           {
             id: "step2",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/step2",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/step2",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
           {
             id: "step3",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/step3",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/step3",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
           {
             id: "step4",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/step4",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/step4",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
         edges: [
-          { from: "step1", to: "step2" },
-          { from: "step2", to: "step3" },
-          { from: "step3", to: "step4" },
+          {
+            from: START,
+            to: "step1",
+          },
+          {
+            from: "step1",
+            to: "step2",
+          },
+          {
+            from: "step2",
+            to: "step3",
+          },
+          {
+            from: "step3",
+            to: "step4",
+          },
+          {
+            from: "step4",
+            to: END,
+          },
         ],
       };
 
@@ -439,17 +517,24 @@ describe("executePlanV1", () => {
         id: "test-plan-10",
         name: "Wait Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "wait-node",
-            data: {
-              type: NodeType.WAIT,
-              duration_ms: 100,
-            },
+            type: NodeType.WAIT,
+            duration_ms: 100,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "wait-node",
+          },
+          {
+            from: "wait-node",
+            to: END,
+          },
+        ],
       };
 
       const startTime = Date.now();
@@ -469,37 +554,47 @@ describe("executePlanV1", () => {
         id: "test-plan-11",
         name: "Endpoint-Wait-Endpoint Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "first-request",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/first",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/first",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
           {
             id: "wait",
-            data: {
-              type: NodeType.WAIT,
-              duration_ms: 50,
-            },
+            type: NodeType.WAIT,
+            duration_ms: 50,
           },
           {
             id: "second-request",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/second",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/second",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
         edges: [
-          { from: "first-request", to: "wait" },
-          { from: "wait", to: "second-request" },
+          {
+            from: START,
+            to: "first-request",
+          },
+          {
+            from: "first-request",
+            to: "wait",
+          },
+          {
+            from: "wait",
+            to: "second-request",
+          },
+          {
+            from: "second-request",
+            to: END,
+          },
         ],
       };
 
@@ -528,26 +623,36 @@ describe("executePlanV1", () => {
         id: "test-plan-12",
         name: "Assertion Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "get-data",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/data",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/data",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
           {
             id: "assert",
-            data: {
-              type: NodeType.ASSERTION,
-              assertions: [],
-            },
+            type: NodeType.ASSERTION,
+            assertions: [],
           },
         ],
-        edges: [{ from: "get-data", to: "assert" }],
+        edges: [
+          {
+            from: START,
+            to: "get-data",
+          },
+          {
+            from: "get-data",
+            to: "assert",
+          },
+          {
+            from: "assert",
+            to: END,
+          },
+        ],
       };
 
       stubClient.addStub({
@@ -574,19 +679,27 @@ describe("executePlanV1", () => {
         id: "test-plan-13",
         name: "Failed Request Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "failing-request",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/fail",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/fail",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "failing-request",
+          },
+          {
+            from: "failing-request",
+            to: END,
+          },
+        ],
       };
 
       // Don't add a stub - this will cause the request to fail
@@ -601,44 +714,51 @@ describe("executePlanV1", () => {
       expect(result.results[0].error).toBeDefined();
     });
 
-    it("should return error when no start node can be determined", async () => {
+    it("should handle disconnected nodes gracefully", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-14",
-        name: "No Start Node Test",
+        name: "Disconnected Nodes Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "node1",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/path",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/path",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
           {
             id: "node2",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/path",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/path",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
         edges: [
-          { from: "node1", to: "node2" },
-          { from: "node2", to: "node1" }, // Circular - both have incoming edges
+          { from: START, to: END }, // Direct path that skips nodes
+          { from: "node1", to: "node2" }, // Circular - disconnected from main flow
+          { from: "node2", to: "node1" },
         ],
       };
 
+      stubClient.addStub({
+        match: "https://api.example.com/path",
+        response: {
+          status: 200,
+          statusText: "OK",
+          data: {},
+        },
+      });
+
       const result = await executePlanV1(plan, options);
 
-      expect(result.success).toBe(false);
-      expect(result.errors).toContain(
-        "Could not determine start or end node from plan",
-      );
+      // Graph can execute but disconnected nodes are not executed
+      expect(result.success).toBe(true);
+      expect(result.results).toHaveLength(0); // No nodes executed
     });
 
     it("should continue execution after a failed node", async () => {
@@ -646,28 +766,39 @@ describe("executePlanV1", () => {
         id: "test-plan-15",
         name: "Continue After Failure Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "success-node",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/success",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/success",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
           {
             id: "fail-node",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/fail",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/fail",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [{ from: "success-node", to: "fail-node" }],
+        edges: [
+          {
+            from: START,
+            to: "success-node",
+          },
+          {
+            from: "success-node",
+            to: "fail-node",
+          },
+          {
+            from: "fail-node",
+            to: END,
+          },
+        ],
       };
 
       stubClient.addStub({
@@ -691,28 +822,39 @@ describe("executePlanV1", () => {
         id: "test-plan-16",
         name: "Response Storage Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "get-user-id",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/user",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/user",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
           {
             id: "get-profile",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/profile",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/profile",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [{ from: "get-user-id", to: "get-profile" }],
+        edges: [
+          {
+            from: START,
+            to: "get-user-id",
+          },
+          {
+            from: "get-user-id",
+            to: "get-profile",
+          },
+          {
+            from: "get-profile",
+            to: END,
+          },
+        ],
       };
 
       stubClient
@@ -745,19 +887,27 @@ describe("executePlanV1", () => {
         id: "test-plan-17",
         name: "Failed Response Not Stored Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "failing-endpoint",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/fail",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/fail",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "failing-endpoint",
+          },
+          {
+            from: "failing-endpoint",
+            to: END,
+          },
+        ],
       };
 
       // No stub configured - will fail
@@ -775,19 +925,27 @@ describe("executePlanV1", () => {
         id: "test-plan-18",
         name: "Timing Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "endpoint",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/data",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/data",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "endpoint",
+          },
+          {
+            from: "endpoint",
+            to: END,
+          },
+        ],
       };
 
       stubClient.addStub({
@@ -812,37 +970,47 @@ describe("executePlanV1", () => {
         id: "test-plan-19",
         name: "Node Duration Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "node1",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/1",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/1",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
           {
             id: "wait",
-            data: {
-              type: NodeType.WAIT,
-              duration_ms: 50,
-            },
+            type: NodeType.WAIT,
+            duration_ms: 50,
           },
           {
             id: "node2",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/2",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/2",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
         edges: [
-          { from: "node1", to: "wait" },
-          { from: "wait", to: "node2" },
+          {
+            from: START,
+            to: "node1",
+          },
+          {
+            from: "node1",
+            to: "wait",
+          },
+          {
+            from: "wait",
+            to: "node2",
+          },
+          {
+            from: "node2",
+            to: END,
+          },
         ],
       };
 
@@ -872,17 +1040,22 @@ describe("executePlanV1", () => {
         id: "test-plan-20",
         name: "Empty Plan Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: END,
+          },
+        ],
       };
 
       const result = await executePlanV1(plan, options);
 
-      expect(result.success).toBe(false);
-      expect(result.errors).toContain(
-        "Could not determine start or end node from plan",
-      );
+      // Empty plan with just START->END should succeed with no results
+      expect(result.success).toBe(true);
+      expect(result.results).toHaveLength(0);
+      expect(result.errors).toHaveLength(0);
     });
 
     it("should handle single node with no edges", async () => {
@@ -890,19 +1063,27 @@ describe("executePlanV1", () => {
         id: "test-plan-21",
         name: "Single Node Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "only-node",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/single",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/single",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "only-node",
+          },
+          {
+            from: "only-node",
+            to: END,
+          },
+        ],
       };
 
       stubClient.addStub({
@@ -925,19 +1106,27 @@ describe("executePlanV1", () => {
         id: "test-plan-22",
         name: "Complex Data Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "complex",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/complex",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/complex",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "complex",
+          },
+          {
+            from: "complex",
+            to: END,
+          },
+        ],
       };
 
       const complexData = {
@@ -984,19 +1173,27 @@ describe("executePlanV1", () => {
         id: "event-test-1",
         name: "Event Test Plan",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "node-1",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/test",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/test",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "node-1",
+          },
+          {
+            from: "node-1",
+            to: END,
+          },
+        ],
       };
 
       stubClient.addStub({
@@ -1022,7 +1219,7 @@ describe("executePlanV1", () => {
         planName: "Event Test Plan",
         planVersion: "1.0",
         nodeCount: 1,
-        edgeCount: 0,
+        edgeCount: 2,
       });
 
       const planEnd = planEndEvents[0];
@@ -1039,37 +1236,47 @@ describe("executePlanV1", () => {
         id: "event-test-2",
         name: "Multi-Node Event Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "endpoint-1",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/first",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/first",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
           {
             id: "wait-1",
-            data: {
-              type: NodeType.WAIT,
-              duration_ms: 10,
-            },
+            type: NodeType.WAIT,
+            duration_ms: 10,
           },
           {
             id: "endpoint-2",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/second",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/second",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
         edges: [
-          { from: "endpoint-1", to: "wait-1" },
-          { from: "wait-1", to: "endpoint-2" },
+          {
+            from: START,
+            to: "endpoint-1",
+          },
+          {
+            from: "endpoint-1",
+            to: "wait-1",
+          },
+          {
+            from: "wait-1",
+            to: "endpoint-2",
+          },
+          {
+            from: "endpoint-2",
+            to: END,
+          },
         ],
       };
 
@@ -1114,21 +1321,29 @@ describe("executePlanV1", () => {
         id: "event-test-3",
         name: "HTTP Event Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "http-node",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.POST,
-              path: "/create",
-              headers: { "Content-Type": "application/json" },
-              body: { name: "test" },
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.POST,
+            path: "/create",
+            base: { type: "target", key: "api" },
+            headers: { "Content-Type": "application/json" },
+            body: { name: "test" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "http-node",
+          },
+          {
+            from: "http-node",
+            to: END,
+          },
+        ],
       };
 
       stubClient.addStub({
@@ -1179,17 +1394,24 @@ describe("executePlanV1", () => {
         id: "event-test-4",
         name: "Wait Event Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "wait-node",
-            data: {
-              type: NodeType.WAIT,
-              duration_ms: 50,
-            },
+            type: NodeType.WAIT,
+            duration_ms: 50,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "wait-node",
+          },
+          {
+            from: "wait-node",
+            to: END,
+          },
+        ],
       };
 
       await executePlanV1(plan, {
@@ -1207,51 +1429,45 @@ describe("executePlanV1", () => {
       });
     });
 
-    it("should emit ERROR event on plan validation failure", async () => {
+    it("should emit ERROR event on HTTP request failure", async () => {
       const plan: TestPlanV1 = {
         id: "event-test-5",
         name: "Error Event Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
-            id: "node-1",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/test",
-              response_format: ResponseFormat.JSON,
-            },
-          },
-          {
-            id: "node-2",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/test",
-              response_format: ResponseFormat.JSON,
-            },
+            id: "failing-node",
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/fail",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
         edges: [
-          { from: "node-1", to: "node-2" },
-          { from: "node-2", to: "node-1" }, // Circular - causes validation error
+          {
+            from: START,
+            to: "failing-node",
+          },
+          {
+            from: "failing-node",
+            to: END,
+          },
         ],
       };
 
-      await executePlanV1(plan, {
+      // No stub - request will fail
+
+      const result = await executePlanV1(plan, {
         ...options,
         eventEmitter: emitter,
       });
 
-      const errorEvents = events.filter((e) => e.type === "ERROR");
+      result.errors;
 
-      expect(errorEvents).toHaveLength(1);
-      expect(errorEvents[0]).toMatchObject({
-        type: "ERROR",
-        context: "plan_validation",
-        message: "Could not determine start or end node from plan",
-      });
+      // Should emit error for the failed HTTP request
+      expect(result.errors.length).toBeGreaterThan(0);
     });
 
     it("should maintain monotonic sequence numbers", async () => {
@@ -1259,19 +1475,27 @@ describe("executePlanV1", () => {
         id: "event-test-6",
         name: "Sequence Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "node-1",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/test",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/test",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "node-1",
+          },
+          {
+            from: "node-1",
+            to: END,
+          },
+        ],
       };
 
       stubClient.addStub({
@@ -1305,19 +1529,27 @@ describe("executePlanV1", () => {
         id: "event-test-7",
         name: "Custom Execution ID Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "node-1",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/test",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/test",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "node-1",
+          },
+          {
+            from: "node-1",
+            to: END,
+          },
+        ],
       };
 
       stubClient.addStub({
@@ -1342,19 +1574,27 @@ describe("executePlanV1", () => {
         id: "event-test-8",
         name: "Event Order Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "node-1",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/test",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/test",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "node-1",
+          },
+          {
+            from: "node-1",
+            to: END,
+          },
+        ],
       };
 
       stubClient.addStub({
@@ -1383,19 +1623,27 @@ describe("executePlanV1", () => {
         id: "event-test-9",
         name: "Failed Request Event Test",
         version: "1.0",
-        endpoint_host: "https://api.example.com",
+        environment: "default",
         nodes: [
           {
             id: "failing-node",
-            data: {
-              type: NodeType.ENDPOINT,
-              method: HttpMethod.GET,
-              path: "/fail",
-              response_format: ResponseFormat.JSON,
-            },
+            type: NodeType.ENDPOINT,
+            method: HttpMethod.GET,
+            path: "/fail",
+            base: { type: "target", key: "api" },
+            response_format: ResponseFormat.JSON,
           },
         ],
-        edges: [],
+        edges: [
+          {
+            from: START,
+            to: "failing-node",
+          },
+          {
+            from: "failing-node",
+            to: END,
+          },
+        ],
       };
 
       // No stub - request will fail

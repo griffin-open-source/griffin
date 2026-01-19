@@ -1,101 +1,54 @@
-import { execSync } from 'child_process';
-import * as path from 'path';
-import * as fs from 'fs';
-
-// We'll import these dynamically to handle relative paths
-type TestPlan = any;
-type ExecutionResult = any;
+import "tsx";
+import * as path from "path";
+import * as fs from "fs";
+import { Value } from "typebox/value";
+import {
+  executePlanV1,
+  AxiosAdapter,
+  ExecutionResult,
+} from "griffin-plan-executor";
+import { TestPlanV1Schema } from "griffin/schema";
+import { Type } from "typebox";
+import { randomUUID } from "crypto";
+const RawTestSchema = Type.Omit(TestPlanV1Schema, ["id", "environment"]);
 
 /**
  * Runs a TypeScript test file and executes the resulting JSON plan.
  */
 export async function runTestFile(
-  filePath: string
-): Promise<{ success: boolean; output: string; result?: any }> {
-  const absoluteFilePath = path.resolve(filePath);
-  
-  // Check if test system and executor are built
-  const workspaceRoot = findWorkspaceRoot();
-  const testSystemPath = path.join(workspaceRoot, 'griffin-ts', 'dist');
-  const executorPath = path.join(workspaceRoot, 'griffin-plan-executor', 'dist');
-  
-  if (!fs.existsSync(testSystemPath)) {
-    throw new Error(
-      'Test system not built. Please run: cd griffin-ts && npm install && npm run build'
-    );
-  }
-  
-  if (!fs.existsSync(executorPath)) {
-    throw new Error(
-      'Plan executor not built. Please run: cd griffin-plan-executor && npm install && npm run build'
-    );
-  }
-  
+  filePath: string,
+  baseUrl: string,
+): Promise<ExecutionResult> {
+  const defaultExport = await import(filePath);
+  const plan = defaultExport.default;
+  console.log(JSON.stringify(plan, null, 2));
   try {
-    // Try to use tsx if available, otherwise use npx tsx
-    let tsxCmd = 'tsx';
-    try {
-      execSync('which tsx', { stdio: 'ignore' });
-    } catch {
-      tsxCmd = 'npx tsx';
-    }
-    
-    // Run the test file and capture output
-    const output = execSync(`${tsxCmd} "${absoluteFilePath}"`, {
-      encoding: 'utf-8',
-      cwd: path.dirname(absoluteFilePath),
-      env: {
-        ...process.env,
-        NODE_PATH: `${testSystemPath}:${process.env.NODE_PATH || ''}`,
+    const parsedPlan = Value.Parse(RawTestSchema, plan);
+    const syntheticPlan = {
+      ...parsedPlan,
+      id: randomUUID(),
+      environment: "local",
+    };
+    const result = await executePlanV1(syntheticPlan, {
+      mode: "local",
+      httpClient: new AxiosAdapter(),
+      targetResolver: async (key) => {
+        return baseUrl;
       },
     });
-    
-    // Parse JSON from output (the test system outputs JSON via console.log)
-    const lines = output.trim().split('\n');
-    let jsonStart = -1;
-    for (let i = 0; i < lines.length; i++) {
-      const trimmed = lines[i].trim();
-      if (trimmed.startsWith('{')) {
-        jsonStart = i;
-        break;
-      }
-    }
-    
-    if (jsonStart === -1) {
-      throw new Error('No JSON output found from test file');
-    }
-    
-    const jsonStr = lines.slice(jsonStart).join('\n');
-    const plan: TestPlan = JSON.parse(jsonStr);
-    
-    // Execute the plan using the executor
-    // Use the endpoint_host from the plan itself
-    const executorModule = require(path.join(executorPath, 'executor.js'));
-    const { executePlan } = executorModule;
-    
-    const result = await executePlan(plan, {
-      mode: 'local',
-      // Don't override baseUrl - use the plan's endpoint_host
-    });
-    
-    return {
-      success: result.success,
-      output: JSON.stringify(result, null, 2),
-      result,
-    };
-  } catch (error: any) {
-    return {
-      success: false,
-      output: error.message || String(error),
-    };
+    return result;
+  } catch (error) {
+    const errors = Value.Errors(RawTestSchema, plan);
+    console.error("ERROR: Invalid plan", JSON.stringify(errors, null, 2));
+    throw new Error(`Invalid plan: ${(error as Error).message}`);
   }
 }
 
 function findWorkspaceRoot(): string {
   let current = process.cwd();
   while (current !== path.dirname(current)) {
-    const testCliPath = path.join(current, 'griffin-cli');
-    const testSystemPath = path.join(current, 'griffin-ts');
+    const testCliPath = path.join(current, "griffin-cli");
+    const testSystemPath = path.join(current, "griffin-ts");
     if (fs.existsSync(testCliPath) && fs.existsSync(testSystemPath)) {
       return current;
     }

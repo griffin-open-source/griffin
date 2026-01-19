@@ -18,10 +18,7 @@ import { SecretResolutionError } from "../types.js";
  * This allows dependency injection of the actual AWS SDK client.
  */
 export interface AwsSecretsManagerClient {
-  getSecretValue(params: {
-    SecretId: string;
-    VersionStage?: string;
-  }): Promise<{
+  getSecretValue(params: { SecretId: string; VersionStage?: string }): Promise<{
     SecretString?: string;
     SecretBinary?: Uint8Array;
   }>;
@@ -84,7 +81,7 @@ export class AwsSecretsManagerProvider implements SecretProvider {
       if (!response.SecretString) {
         throw new SecretResolutionError(
           `Secret "${secretId}" does not contain a string value (binary secrets are not supported)`,
-          { provider: this.name, ref }
+          { provider: this.name, ref },
         );
       }
 
@@ -126,7 +123,7 @@ export class AwsSecretsManagerProvider implements SecretProvider {
   private extractField(
     secretValue: string,
     field: string | undefined,
-    ref: string
+    ref: string,
   ): string {
     if (!field) {
       return secretValue;
@@ -138,7 +135,7 @@ export class AwsSecretsManagerProvider implements SecretProvider {
       if (typeof parsed !== "object" || parsed === null) {
         throw new SecretResolutionError(
           `Secret "${ref}" is not a JSON object, cannot extract field "${field}"`,
-          { provider: this.name, ref }
+          { provider: this.name, ref },
         );
       }
 
@@ -147,7 +144,7 @@ export class AwsSecretsManagerProvider implements SecretProvider {
       if (value === undefined) {
         throw new SecretResolutionError(
           `Field "${field}" not found in secret "${ref}"`,
-          { provider: this.name, ref }
+          { provider: this.name, ref },
         );
       }
 
@@ -162,7 +159,7 @@ export class AwsSecretsManagerProvider implements SecretProvider {
         `Failed to parse secret "${ref}" as JSON for field extraction: ${
           error instanceof Error ? error.message : String(error)
         }`,
-        { provider: this.name, ref, cause: error }
+        { provider: this.name, ref, cause: error },
       );
     }
   }

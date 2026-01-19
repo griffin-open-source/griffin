@@ -26,77 +26,140 @@ npm run build
 
 Create test files in `__griffin__` directories. When executed, they output JSON test plans.
 
-### Basic Example
+griffin provides two builder APIs:
+
+- **`createTestBuilder`**: Simple sequential tests (recommended for most use cases)
+- **`createGraphBuilder`**: Complex graphs with parallel execution and branching
+
+### Sequential Builder (Recommended for Simple Tests)
+
+The sequential builder automatically connects steps in order - no need to manage edges manually.
 
 ```typescript
-import { GET, ApiCheckBuilder, JSON, START, END, Frequency } from "../griffin-ts/src/index";
+import { GET, createTestBuilder, JSON, Frequency } from "griffin-ts";
 
-const builder = new ApiCheckBuilder({
+const plan = createTestBuilder({
   name: "health-check",
-  endpoint_host: "http://localhost"
-});
-
-const plan = builder
-  .addEndpoint("health", {
+  frequency: Frequency.every(1).minute(),
+})
+  .request({
     method: GET,
     response_format: JSON,
-    path: "/health"
+    path: "/health",
   })
-  .addEdge(START, "health")
-  .addEdge("health", END);
+  .assert([
+    { type: "status", expected: 200 },
+    { type: "body", expected: { status: "ok" } },
+  ])
+  .build();
 
-plan.create({
-  frequency: Frequency.every(1).minute()
-});
+export default plan;
 ```
 
-### Advanced Example with Waits
+#### Sequential Example with Waits
 
 ```typescript
-import { GET, POST, ApiCheckBuilder, JSON, START, END, Frequency, Wait } from "../griffin-ts/src/index";
+import {
+  GET,
+  POST,
+  createTestBuilder,
+  JSON,
+  Frequency,
+  Wait,
+} from "griffin-ts";
 
-const builder = new ApiCheckBuilder({
-  name: "foo-bar-check",
-  endpoint_host: "https://foobar.com"
-});
-
-const plan = builder
-  .addEndpoint("create_foo", {
+const plan = createTestBuilder({
+  name: "create-and-verify-user",
+  frequency: Frequency.every(5).minute(),
+})
+  .request({
     method: POST,
     response_format: JSON,
-    path: "/api/v1/foo",
-    body: { name: "test", value: 42 }
+    path: "/api/v1/users",
+    body: { name: "Test User", email: "test@example.com" },
   })
-  .addEndpoint("get_foo", {
+  .assert([{ type: "status", expected: 201 }])
+  .wait(Wait.seconds(2))
+  .request({
     method: GET,
     response_format: JSON,
-    path: "/api/v1/foo/1"
+    path: "/api/v1/users/test@example.com",
   })
-  .addWait("wait_between", Wait.seconds(2))
+  .assert([
+    { type: "status", expected: 200 },
+    { type: "body.name", expected: "Test User" },
+  ])
+  .build();
+
+export default plan;
+```
+
+### Graph Builder (For Complex Workflows)
+
+The graph builder gives you full control over the test graph, enabling parallel execution and complex branching.
+
+```typescript
+import {
+  GET,
+  POST,
+  createGraphBuilder,
+  Endpoint,
+  Assertion,
+  WaitNode,
+  JSON,
+  START,
+  END,
+  Frequency,
+  Wait,
+} from "griffin-ts";
+
+const plan = createGraphBuilder({
+  name: "foo-bar-check",
+  frequency: Frequency.every(1).minute(),
+})
+  .addNode(
+    "create_foo",
+    Endpoint({
+      method: POST,
+      response_format: JSON,
+      path: "/api/v1/foo",
+      body: { name: "test", value: 42 },
+    }),
+  )
+  .addNode(
+    "get_foo",
+    Endpoint({
+      method: GET,
+      response_format: JSON,
+      path: "/api/v1/foo/1",
+    }),
+  )
+  .addNode("wait_between", WaitNode(Wait.seconds(2)))
+  .addNode("check_status", Assertion([{ type: "status", expected: 200 }]))
   .addEdge(START, "create_foo")
   .addEdge("create_foo", "wait_between")
   .addEdge("wait_between", "get_foo")
-  .addEdge("get_foo", END);
+  .addEdge("get_foo", "check_status")
+  .addEdge("check_status", END)
+  .build();
 
-plan.create({
-  frequency: Frequency.every(1).minute()
-});
+export default plan;
 ```
 
 ### Using Secrets
 
 griffin supports secure secret management for API keys, tokens, and other credentials. Secrets are referenced in your test plans and resolved at runtime by the configured secret providers.
 
+#### With Sequential Builder
+
 ```typescript
-import { GET, POST, ApiCheckBuilder, JSON, START, END, Frequency, secret } from "../griffin-ts/src/index";
+import { GET, createTestBuilder, JSON, Frequency, secret } from "griffin-ts";
 
-const builder = new ApiCheckBuilder({
+const plan = createTestBuilder({
   name: "authenticated-check",
-  endpoint_host: "https://api.example.com"
-});
-
-const plan = builder
-  .addEndpoint("authenticated_request", {
+  frequency: Frequency.every(5).minute(),
+})
+  .request({
     method: GET,
     response_format: JSON,
     path: "/api/protected",
@@ -104,53 +167,107 @@ const plan = builder
       // Use environment variable
       "X-API-Key": secret("env:API_KEY"),
       // Use AWS Secrets Manager
-      "Authorization": secret("aws:prod/api-token"),
+      Authorization: secret("aws:prod/api-token"),
       // Extract field from JSON secret
       "X-Custom-Header": secret("aws:prod/config", { field: "customHeader" }),
     },
     body: {
       // Secrets can also be used in request bodies
       apiKey: secret("env:API_KEY"),
-    }
+    },
   })
-  .addEdge(START, "authenticated_request")
-  .addEdge("authenticated_request", END);
+  .assert([{ type: "status", expected: 200 }])
+  .build();
 
-plan.create({
-  frequency: Frequency.every(5).minute()
-});
+export default plan;
+```
+
+#### With Graph Builder
+
+```typescript
+import {
+  GET,
+  createGraphBuilder,
+  Endpoint,
+  Assertion,
+  JSON,
+  START,
+  END,
+  Frequency,
+  secret,
+} from "griffin-ts";
+
+const plan = createGraphBuilder({
+  name: "authenticated-check",
+  frequency: Frequency.every(5).minute(),
+})
+  .addNode(
+    "authenticated_request",
+    Endpoint({
+      method: GET,
+      response_format: JSON,
+      path: "/api/protected",
+      headers: {
+        "X-API-Key": secret("env:API_KEY"),
+        Authorization: secret("aws:prod/api-token"),
+      },
+    }),
+  )
+  .addNode("verify", Assertion([{ type: "status", expected: 200 }]))
+  .addEdge(START, "authenticated_request")
+  .addEdge("authenticated_request", "verify")
+  .addEdge("verify", END)
+  .build();
+
+export default plan;
 ```
 
 #### Secret Providers
 
 **Environment Variables** (always available):
+
 ```typescript
-secret("env:VARIABLE_NAME")
+secret("env:VARIABLE_NAME");
 ```
 
 **AWS Secrets Manager** (requires AWS configuration):
+
 ```typescript
-secret("aws:secret-name")
-secret("aws:secret-name", { field: "key" })  // Extract field from JSON secret
-secret("aws:secret-name", { version: "AWSPREVIOUS" })  // Pin to specific version
+secret("aws:secret-name");
+secret("aws:secret-name", { field: "key" }); // Extract field from JSON secret
+secret("aws:secret-name", { version: "AWSPREVIOUS" }); // Pin to specific version
 ```
 
 **HashiCorp Vault** (requires Vault configuration):
+
 ```typescript
-secret("vault:secret/data/path")
-secret("vault:secret/data/path", { field: "key" })
-secret("vault:secret/data/path", { version: "2" })
+secret("vault:secret/data/path");
+secret("vault:secret/data/path", { field: "key" });
+secret("vault:secret/data/path", { version: "2" });
 ```
 
 See the [griffin-runner CONFIG.md](../griffin-runner/CONFIG.md) for configuration details.
 
-### Notes
+### API Reference
+
+#### Sequential Builder Methods
+
+- **`.request(config)`**: Add an HTTP endpoint request
+- **`.wait(duration)`**: Add a delay (use `Wait.seconds(n)` or `Wait.minutes(n)`)
+- **`.assert(assertions)`**: Add assertions to validate responses
+- **`.build()`**: Generate the final test plan
+
+#### Graph Builder Methods
+
+- **`.addNode(name, node)`**: Add a node to the graph using `Endpoint()`, `WaitNode()`, or `Assertion()`
+- **`.addEdge(from, to)`**: Connect two nodes (use `START` and `END` constants for entry/exit)
+- **`.build()`**: Generate the final test plan (validates all nodes are connected)
+
+#### General
 
 - **Frequency**: Use `Frequency.every(n).minute()`, `.hour()`, or `.day()` (note the parentheses)
-- **Waits**: Use `Wait.seconds(n)` or `Wait.minutes(n)`
 - **Secrets**: Use `secret("provider:path")` to reference secrets that are resolved at runtime
 - **Assertions**: Currently in development - assertion functions are stored but not yet evaluated during execution
-- **Output**: The `plan.create()` call outputs JSON to stdout, which is captured by the CLI
 
 ## Output
 
@@ -159,7 +276,6 @@ The test system outputs a JSON test plan to stdout when `plan.create()` is calle
 ```json
 {
   "name": "health-check",
-  "endpoint_host": "http://localhost",
   "frequency": {
     "every": 1,
     "unit": "minute"

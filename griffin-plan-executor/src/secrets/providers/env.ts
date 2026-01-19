@@ -44,7 +44,7 @@ export class EnvSecretProvider implements SecretProvider {
     if (value === undefined) {
       throw new SecretResolutionError(
         `Environment variable "${envKey}" is not set`,
-        { provider: this.name, ref }
+        { provider: this.name, ref },
       );
     }
 
@@ -52,7 +52,7 @@ export class EnvSecretProvider implements SecretProvider {
   }
 
   async resolveMany(
-    refs: Array<{ ref: string; options?: SecretResolveOptions }>
+    refs: Array<{ ref: string; options?: SecretResolveOptions }>,
   ): Promise<Map<string, string>> {
     const results = new Map<string, string>();
 

@@ -20,7 +20,7 @@ import { SecretResolutionError } from "../types.js";
 export interface VaultHttpClient {
   get(
     url: string,
-    options: { headers: Record<string, string> }
+    options: { headers: Record<string, string> },
   ): Promise<{
     status: number;
     data: unknown;
@@ -70,7 +70,10 @@ export class VaultProvider implements SecretProvider {
   private readonly prefix: string;
 
   // Simple in-memory cache with TTL
-  private cache = new Map<string, { value: Record<string, unknown>; expires: number }>();
+  private cache = new Map<
+    string,
+    { value: Record<string, unknown>; expires: number }
+  >();
   private readonly cacheTtlMs = 5 * 60 * 1000; // 5 minutes
 
   constructor(options: VaultProviderOptions) {
@@ -113,21 +116,21 @@ export class VaultProvider implements SecretProvider {
       if (response.status === 404) {
         throw new SecretResolutionError(
           `Secret "${secretPath}" not found in Vault`,
-          { provider: this.name, ref }
+          { provider: this.name, ref },
         );
       }
 
       if (response.status === 403) {
         throw new SecretResolutionError(
           `Access denied to secret "${secretPath}". Check Vault policies.`,
-          { provider: this.name, ref }
+          { provider: this.name, ref },
         );
       }
 
       if (response.status !== 200) {
         throw new SecretResolutionError(
           `Vault returned status ${response.status} for secret "${secretPath}"`,
-          { provider: this.name, ref }
+          { provider: this.name, ref },
         );
       }
 
@@ -140,11 +143,13 @@ export class VaultProvider implements SecretProvider {
 
       if (this.kvVersion === 2) {
         // KV v2 wraps data in an extra "data" object
-        const kvData = data?.data as { data?: Record<string, unknown> } | undefined;
+        const kvData = data?.data as
+          | { data?: Record<string, unknown> }
+          | undefined;
         if (!kvData?.data) {
           throw new SecretResolutionError(
             `Invalid KV v2 response structure for secret "${secretPath}"`,
-            { provider: this.name, ref }
+            { provider: this.name, ref },
           );
         }
         secretData = kvData.data;
@@ -153,7 +158,7 @@ export class VaultProvider implements SecretProvider {
         if (!data?.data || typeof data.data !== "object") {
           throw new SecretResolutionError(
             `Invalid KV v1 response structure for secret "${secretPath}"`,
-            { provider: this.name, ref }
+            { provider: this.name, ref },
           );
         }
         secretData = data.data as Record<string, unknown>;
@@ -175,7 +180,7 @@ export class VaultProvider implements SecretProvider {
         `Failed to retrieve secret "${secretPath}" from Vault: ${
           error instanceof Error ? error.message : String(error)
         }`,
-        { provider: this.name, ref, cause: error }
+        { provider: this.name, ref, cause: error },
       );
     }
   }
@@ -187,7 +192,7 @@ export class VaultProvider implements SecretProvider {
   private extractField(
     secretData: Record<string, unknown>,
     field: string | undefined,
-    ref: string
+    ref: string,
   ): string {
     if (!field) {
       // Return entire secret as JSON if no field specified
@@ -199,7 +204,7 @@ export class VaultProvider implements SecretProvider {
     if (value === undefined) {
       throw new SecretResolutionError(
         `Field "${field}" not found in secret "${ref}"`,
-        { provider: this.name, ref }
+        { provider: this.name, ref },
       );
     }
 
@@ -219,7 +224,7 @@ export class VaultProvider implements SecretProvider {
 
       const response = await this.httpClient.get(
         `${this.address}/v1/auth/token/lookup-self`,
-        { headers }
+        { headers },
       );
 
       if (response.status === 403) {
@@ -227,7 +232,9 @@ export class VaultProvider implements SecretProvider {
       }
 
       if (response.status !== 200) {
-        throw new Error(`Vault authentication check failed with status ${response.status}`);
+        throw new Error(
+          `Vault authentication check failed with status ${response.status}`,
+        );
       }
     } catch (error) {
       if (error instanceof Error && error.message.includes("Vault")) {
@@ -236,7 +243,7 @@ export class VaultProvider implements SecretProvider {
       throw new Error(
         `Failed to connect to Vault at ${this.address}: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   }

@@ -48,23 +48,23 @@ export interface SecretOptions {
  * ```
  */
 export function secret(path: string, options?: SecretOptions): SecretRef {
-  const colonIndex = path.indexOf(':');
+  const colonIndex = path.indexOf(":");
 
   if (colonIndex === -1) {
     throw new Error(
-      `Secret path must include provider: "provider:path" (e.g., "aws:my-secret", "env:API_KEY"). Got: "${path}"`
+      `Secret path must include provider: "provider:path" (e.g., "aws:my-secret", "env:API_KEY"). Got: "${path}"`,
     );
   }
 
   if (colonIndex === 0) {
     throw new Error(
-      `Secret path must have a provider name before the colon. Got: "${path}"`
+      `Secret path must have a provider name before the colon. Got: "${path}"`,
     );
   }
 
   if (colonIndex === path.length - 1) {
     throw new Error(
-      `Secret path must have a reference after the colon. Got: "${path}"`
+      `Secret path must have a reference after the colon. Got: "${path}"`,
     );
   }
 
@@ -85,19 +85,23 @@ export function secret(path: string, options?: SecretOptions): SecretRef {
  * Type guard to check if a value is a secret reference.
  */
 export function isSecretRef(value: unknown): value is SecretRef {
-  if (typeof value !== 'object' || value === null) {
+  if (typeof value !== "object" || value === null) {
     return false;
   }
 
   const obj = value as Record<string, unknown>;
-  if (!('$secret' in obj) || typeof obj.$secret !== 'object' || obj.$secret === null) {
+  if (
+    !("$secret" in obj) ||
+    typeof obj.$secret !== "object" ||
+    obj.$secret === null
+  ) {
     return false;
   }
 
   const secretData = obj.$secret as Record<string, unknown>;
   return (
-    typeof secretData.provider === 'string' &&
-    typeof secretData.ref === 'string'
+    typeof secretData.provider === "string" &&
+    typeof secretData.ref === "string"
   );
 }
 

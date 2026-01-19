@@ -1,4 +1,4 @@
-import type { Frequency as FrequencyType } from './types';
+import { Frequency as FrequencyType, FrequencyUnit } from "./schema";
 
 export class FrequencyBuilder {
   private value: number;
@@ -8,27 +8,27 @@ export class FrequencyBuilder {
   }
 
   minute(): FrequencyType {
-    return { every: this.value, unit: 'minute' };
+    return { every: this.value, unit: FrequencyUnit.MINUTE };
   }
 
   minutes(): FrequencyType {
-    return { every: this.value, unit: 'minute' };
+    return { every: this.value, unit: FrequencyUnit.MINUTE };
   }
 
   hour(): FrequencyType {
-    return { every: this.value, unit: 'hour' };
+    return { every: this.value, unit: FrequencyUnit.HOUR };
   }
 
   hours(): FrequencyType {
-    return { every: this.value, unit: 'hour' };
+    return { every: this.value, unit: FrequencyUnit.HOUR };
   }
 
   day(): FrequencyType {
-    return { every: this.value, unit: 'day' };
+    return { every: this.value, unit: FrequencyUnit.DAY };
   }
 
   days(): FrequencyType {
-    return { every: this.value, unit: 'day' };
+    return { every: this.value, unit: FrequencyUnit.DAY };
   }
 }
 

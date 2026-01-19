@@ -2,7 +2,8 @@
  * Secret resolution utilities for test plans.
  */
 
-import type { TestPlanV1 } from "../schemas.js";
+import { TestPlanV1, Node } from "griffin/types";
+import { NodeType } from "griffin/schema";
 import type { SecretProviderRegistry } from "./registry.js";
 import type { SecretRef, SecretRefData } from "./types.js";
 import { isSecretRef } from "./types.js";
@@ -29,7 +30,7 @@ interface CollectedSecrets {
 function collectSecretsFromValue(
   value: unknown,
   currentPath: (string | number)[],
-  collected: CollectedSecrets
+  collected: CollectedSecrets,
 ): void {
   if (value === null || value === undefined) {
     return;
@@ -72,30 +73,29 @@ export function collectSecretsFromPlan(plan: TestPlanV1): CollectedSecrets {
     const node = plan.nodes[nodeIndex];
 
     // Only endpoints can have secrets (in headers and body)
-    if (node.data.type !== 0) {
-      // 0 = NodeType.ENDPOINT
+    if (node.type !== NodeType.ENDPOINT) {
       continue;
     }
 
-    const endpoint = node.data;
+    //const endpoint = node;
 
     // Scan headers
-    if (endpoint.headers) {
-      for (const [headerKey, headerValue] of Object.entries(endpoint.headers)) {
+    if (node.headers) {
+      for (const [headerKey, headerValue] of Object.entries(node.headers)) {
         collectSecretsFromValue(
           headerValue,
-          ["nodes", nodeIndex, "data", "headers", headerKey],
-          collected
+          ["nodes", nodeIndex, "headers", headerKey],
+          collected,
         );
       }
     }
 
     // Scan body
-    if (endpoint.body !== undefined) {
+    if (node.body !== undefined) {
       collectSecretsFromValue(
-        endpoint.body,
-        ["nodes", nodeIndex, "data", "body"],
-        collected
+        node.body,
+        ["nodes", nodeIndex, "body"],
+        collected,
       );
     }
   }
@@ -120,7 +120,11 @@ export function collectSecretsFromPlan(plan: TestPlanV1): CollectedSecrets {
  * Set a value at a path in an object.
  * Creates intermediate objects/arrays as needed.
  */
-function setAtPath(obj: unknown, path: (string | number)[], value: unknown): void {
+function setAtPath(
+  obj: unknown,
+  path: (string | number)[],
+  value: unknown,
+): void {
   if (path.length === 0) {
     return;
   }
@@ -159,7 +163,7 @@ function deepClone<T>(value: T): T {
  */
 export async function resolveSecretsInPlan(
   plan: TestPlanV1,
-  registry: SecretProviderRegistry
+  registry: SecretProviderRegistry,
 ): Promise<TestPlanV1> {
   // Collect all secret references
   const collected = collectSecretsFromPlan(plan);
@@ -183,7 +187,7 @@ export async function resolveSecretsInPlan(
     if (value === undefined) {
       // This shouldn't happen if resolveMany worked correctly
       throw new Error(
-        `Internal error: resolved value not found for secret "${secretRef.provider}:${secretRef.ref}"`
+        `Internal error: resolved value not found for secret "${secretRef.provider}:${secretRef.ref}"`,
       );
     }
 
@@ -199,15 +203,13 @@ export async function resolveSecretsInPlan(
  */
 export function planHasSecrets(plan: TestPlanV1): boolean {
   for (const node of plan.nodes) {
-    if (node.data.type !== 0) {
+    if (node.type !== NodeType.ENDPOINT) {
       continue;
     }
 
-    const endpoint = node.data;
-
     // Check headers
-    if (endpoint.headers) {
-      for (const headerValue of Object.values(endpoint.headers)) {
+    if (node.headers) {
+      for (const headerValue of Object.values(node.headers)) {
         if (isSecretRef(headerValue)) {
           return true;
         }
@@ -215,7 +217,7 @@ export function planHasSecrets(plan: TestPlanV1): boolean {
     }
 
     // Check body (recursive check)
-    if (endpoint.body !== undefined && containsSecretRef(endpoint.body)) {
+    if (node.body !== undefined && containsSecretRef(node.body)) {
       return true;
     }
   }

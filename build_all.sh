@@ -1,0 +1,5 @@
+(cd griffin-ts && npm install && npm run build)
+(cd griffin-plan-executor && npm install && npm run build)
+(cd griffin-cli && npm install && npm run build)
+(cd griffin-runner && npm install && npm run build)
+#(cd griffin-runner-sdk && npm install && npm run build)

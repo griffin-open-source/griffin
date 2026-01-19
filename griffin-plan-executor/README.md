@@ -122,11 +122,13 @@ interface ExecutionOptions {
 If a test plan contains secret references (created using the `secret()` function in the DSL), they are resolved before execution begins. Secrets can be used in endpoint headers and request bodies.
 
 **Supported Providers:**
+
 - **Environment Variables**: Read from process environment
 - **AWS Secrets Manager**: Retrieve secrets from AWS Secrets Manager
 - **HashiCorp Vault**: Retrieve secrets from Vault KV secrets engine
 
 **Example test plan with secrets:**
+
 ```json
 {
   "name": "authenticated-check",

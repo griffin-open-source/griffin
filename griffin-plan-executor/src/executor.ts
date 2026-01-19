@@ -1,13 +1,17 @@
 import {
-  type Node,
-  NodeType,
-  type TestPlanV1,
-  type Endpoint,
-  ResponseFormat,
-  type Wait,
-  type Assertions,
-  HttpMethod,
-} from "./schemas.js";
+  TestPlanV1,
+  Node,
+  Endpoint,
+  Wait,
+  Assertions,
+  JSONAssertion,
+  Assertion,
+} from "griffin/types";
+
+import { HttpMethod, ResponseFormat, NodeType } from "griffin/schema";
+
+import { UnaryPredicate, BinaryPredicateOperator } from "griffin";
+
 import type {
   ExecutionOptions,
   ExecutionResult,
@@ -15,7 +19,9 @@ import type {
   EndpointResult,
   WaitResult,
   JSONValue,
+  NodeResponseData,
 } from "./types.js";
+import { START, END } from "./types.js";
 import { createStateGraph, graphStore, StateGraphRegistry } from "ts-edge";
 import type { ExecutionEvent, BaseEvent } from "./events/index.js";
 import { randomUUID } from "crypto";
@@ -132,7 +138,7 @@ function httpMethodToString(method: HttpMethod): string {
 
 // State shared across all nodes during execution
 interface ExecutionState {
-  responses: Record<string, JSONValue>;
+  responses: Record<string, NodeResponseData>;
   results: NodeResult[];
   errors: string[];
   executionContext: ExecutionContext;
@@ -149,9 +155,8 @@ function buildNode(
     context: NodeExecuteContext,
   ) => Promise<ExecutionState>;
 } {
-  switch (node.data.type) {
+  switch (node.type) {
     case NodeType.ENDPOINT: {
-      const endpointData = node.data;
       return {
         name: node.id,
         execute: async (
@@ -165,7 +170,7 @@ function buildNode(
           executionContext.emit({
             type: "NODE_START",
             nodeId: node.id,
-            nodeType: ExecutionContext.nodeTypeToString(node.data.type),
+            nodeType: ExecutionContext.nodeTypeToString(node.type),
           });
 
           // Handle NODE_STREAM events from ts-edge
@@ -181,15 +186,18 @@ function buildNode(
 
           const result = await executeEndpoint(
             node.id,
-            endpointData,
-            plan.endpoint_host,
+            node,
             options,
             executionContext,
           );
 
-          // Store successful response for downstream nodes
+          // Store complete response data for downstream assertions
           if (result.success && result.response !== undefined) {
-            responses[node.id] = result.response;
+            responses[node.id] = {
+              body: result.response,
+              headers: result.headers || {},
+              status: result.status || 0,
+            };
           }
 
           // Record result in state
@@ -210,7 +218,7 @@ function buildNode(
           executionContext.emit({
             type: "NODE_END",
             nodeId: node.id,
-            nodeType: ExecutionContext.nodeTypeToString(node.data.type),
+            nodeType: ExecutionContext.nodeTypeToString(node.type),
             success: result.success,
             duration_ms: Date.now() - nodeStartTime,
             error: result.error,
@@ -221,7 +229,6 @@ function buildNode(
       };
     }
     case NodeType.WAIT: {
-      const waitData = node.data;
       return {
         name: node.id,
         execute: async (
@@ -235,10 +242,10 @@ function buildNode(
           executionContext.emit({
             type: "NODE_START",
             nodeId: node.id,
-            nodeType: ExecutionContext.nodeTypeToString(node.data.type),
+            nodeType: ExecutionContext.nodeTypeToString(node.type),
           });
 
-          const result = await executeWait(node.id, waitData, executionContext);
+          const result = await executeWait(node.id, node, executionContext);
 
           // Record result in state
           results.push({
@@ -251,7 +258,7 @@ function buildNode(
           executionContext.emit({
             type: "NODE_END",
             nodeId: node.id,
-            nodeType: ExecutionContext.nodeTypeToString(node.data.type),
+            nodeType: ExecutionContext.nodeTypeToString(node.type),
             success: result.success,
             duration_ms: Date.now() - nodeStartTime,
           });
@@ -261,7 +268,6 @@ function buildNode(
       };
     }
     case NodeType.ASSERTION: {
-      const assertionData = node.data;
       return {
         name: node.id,
         execute: async (
@@ -275,12 +281,12 @@ function buildNode(
           executionContext.emit({
             type: "NODE_START",
             nodeId: node.id,
-            nodeType: ExecutionContext.nodeTypeToString(node.data.type),
+            nodeType: ExecutionContext.nodeTypeToString(node.type),
           });
 
           const result = await executeAssertions(
             node.id,
-            assertionData,
+            node,
             responses,
             executionContext,
           );
@@ -297,7 +303,7 @@ function buildNode(
           executionContext.emit({
             type: "NODE_END",
             nodeId: node.id,
-            nodeType: ExecutionContext.nodeTypeToString(node.data.type),
+            nodeType: ExecutionContext.nodeTypeToString(node.type),
             success: result.success,
             duration_ms: Date.now() - nodeStartTime,
             error: result.error,
@@ -323,7 +329,15 @@ function buildGraph(
     executionContext,
   }));
 
-  const graph: DynamicStateGraph = createStateGraph(store) as DynamicStateGraph;
+  const graph: DynamicStateGraph = createStateGraph(store)
+    .addNode({
+      name: START,
+      execute: () => ({}),
+    })
+    .addNode({
+      name: END,
+      execute: () => ({}),
+    }) as DynamicStateGraph;
 
   // Add all nodes - cast back to DynamicStateGraph to maintain our dynamic type
   const graphWithNodes = plan.nodes.reduce<DynamicStateGraph>(
@@ -364,7 +378,7 @@ export async function executePlanV1(
       if (!options.secretRegistry) {
         throw new SecretResolutionError(
           "Plan contains secret references but no secret registry was provided",
-          { provider: "unknown", ref: "unknown" }
+          { provider: "unknown", ref: "unknown" },
         );
       }
 
@@ -410,7 +424,7 @@ export async function executePlanV1(
     const graph = buildGraph(resolvedPlan, options, executionContext);
 
     // Compile and run the state graph
-    const app = graph.compile("__START__", "__END__");
+    const app = graph.compile(START, END);
     const graphResult = await app.run();
 
     // Extract final state - the output is the ExecutionState
@@ -488,7 +502,6 @@ export async function executePlanV1(
 async function executeEndpoint(
   nodeId: string,
   endpoint: Endpoint,
-  baseHost: string,
   options: ExecutionOptions,
   context: ExecutionContext,
 ): Promise<EndpointResult> {
@@ -501,9 +514,14 @@ async function executeEndpoint(
     );
   }
 
-  // Use baseUrl from options if provided, otherwise use the plan's endpoint_host
-  const host = options.baseUrl || baseHost;
-  const url = `${host}${endpoint.path}`;
+  const baseUrl = await options.targetResolver(endpoint.base.key);
+  if (!baseUrl) {
+    throw new Error(
+      `Failed to resolve target "${endpoint.base.key}". Target not found in runner configuration.`,
+    );
+  }
+
+  const url = `${baseUrl}${endpoint.path}`;
 
   // TODO: Add retry configuration from plan (node-level or plan-level)
   // For now, we always attempt once (attempt: 1)
@@ -511,7 +529,9 @@ async function executeEndpoint(
 
   // After secret resolution, headers are guaranteed to be plain strings
   // Cast is safe because resolveSecretsInPlan substitutes all SecretRefs
-  const resolvedHeaders = endpoint.headers as Record<string, string> | undefined;
+  const resolvedHeaders = endpoint.headers as
+    | Record<string, string>
+    | undefined;
 
   // Emit HTTP_REQUEST event before making the call
   context.emit({
@@ -555,6 +575,8 @@ async function executeEndpoint(
     return {
       success: true,
       response: parsedResponse,
+      headers: response.headers || {},
+      status: response.status,
       duration_ms,
     };
   } catch (error: unknown) {
@@ -600,25 +622,360 @@ async function executeWait(
   };
 }
 
+/**
+ * Extract value from response data using JSONPath
+ */
+function extractValue(
+  responses: Record<string, NodeResponseData>,
+  nodeId: string,
+  accessor: "body" | "headers" | "status",
+  path: string[],
+): unknown {
+  const nodeData = responses[nodeId];
+  if (!nodeData) {
+    throw new Error(`No response data found for node: ${nodeId}`);
+  }
+
+  let value: unknown;
+  switch (accessor) {
+    case "body":
+      value = nodeData.body;
+      break;
+    case "headers":
+      value = nodeData.headers;
+      break;
+    case "status":
+      value = nodeData.status;
+      break;
+  }
+
+  // Navigate JSONPath
+  for (const segment of path) {
+    if (value === null || value === undefined) {
+      return undefined;
+    }
+    if (
+      typeof value === "object" &&
+      segment in (value as Record<string, unknown>)
+    ) {
+      value = (value as Record<string, unknown>)[segment];
+    } else {
+      return undefined;
+    }
+  }
+
+  return value;
+}
+
+function evaluateAssertion(
+  assertion: Assertion,
+  responses: Record<string, NodeResponseData>,
+): { passed: boolean; message: string } {
+  switch (assertion.assertionType) {
+    case ResponseFormat.JSON:
+      return evaluateJSONAssertion(assertion, responses);
+    case ResponseFormat.XML:
+      throw new Error(`XML assertions are not supported yet`);
+    case ResponseFormat.TEXT:
+      throw new Error(`Text assertions are not supported yet`);
+  }
+}
+
+/**
+ * Evaluate a single assertion
+ */
+function evaluateJSONAssertion(
+  assertion: JSONAssertion,
+  responses: Record<string, NodeResponseData>,
+): { passed: boolean; message: string } {
+  const { nodeId, accessor, path, predicate } = assertion;
+
+  const value = extractValue(responses, nodeId, accessor, path);
+  const pathStr = path.length > 0 ? path.join(".") : accessor;
+
+  // Check if predicate is unary or binary
+  if (typeof predicate === "string" || typeof predicate === "number") {
+    // Unary predicate (enum value)
+    return evaluateUnaryPredicate(
+      value,
+      predicate as UnaryPredicate,
+      nodeId,
+      accessor,
+      pathStr,
+    );
+  } else {
+    // Binary predicate (object with operator and expected)
+    return evaluateBinaryPredicate(value, predicate, nodeId, accessor, pathStr);
+  }
+}
+
+/**
+ * Evaluate unary predicates
+ */
+function evaluateUnaryPredicate(
+  value: unknown,
+  predicate: UnaryPredicate,
+  nodeId: string,
+  accessor: string,
+  pathStr: string,
+): { passed: boolean; message: string } {
+  switch (predicate) {
+    case UnaryPredicate.IS_NULL:
+      return {
+        passed: value === null,
+        message:
+          value === null
+            ? `${nodeId}.${accessor}.${pathStr} is null`
+            : `Expected ${nodeId}.${accessor}.${pathStr} to be null, got ${JSON.stringify(value)}`,
+      };
+
+    case UnaryPredicate.IS_NOT_NULL:
+      return {
+        passed: value !== null && value !== undefined,
+        message:
+          value !== null && value !== undefined
+            ? `${nodeId}.${accessor}.${pathStr} is not null`
+            : `Expected ${nodeId}.${accessor}.${pathStr} to not be null`,
+      };
+
+    case UnaryPredicate.IS_TRUE:
+      return {
+        passed: value === true,
+        message:
+          value === true
+            ? `${nodeId}.${accessor}.${pathStr} is true`
+            : `Expected ${nodeId}.${accessor}.${pathStr} to be true, got ${JSON.stringify(value)}`,
+      };
+
+    case UnaryPredicate.IS_FALSE:
+      return {
+        passed: value === false,
+        message:
+          value === false
+            ? `${nodeId}.${accessor}.${pathStr} is false`
+            : `Expected ${nodeId}.${accessor}.${pathStr} to be false, got ${JSON.stringify(value)}`,
+      };
+
+    case UnaryPredicate.IS_EMPTY: {
+      const isEmpty =
+        value === "" ||
+        (Array.isArray(value) && value.length === 0) ||
+        (typeof value === "object" &&
+          value !== null &&
+          Object.keys(value).length === 0);
+      return {
+        passed: isEmpty,
+        message: isEmpty
+          ? `${nodeId}.${accessor}.${pathStr} is empty`
+          : `Expected ${nodeId}.${accessor}.${pathStr} to be empty, got ${JSON.stringify(value)}`,
+      };
+    }
+
+    case UnaryPredicate.IS_NOT_EMPTY: {
+      const isNotEmpty =
+        value !== "" &&
+        !(Array.isArray(value) && value.length === 0) &&
+        !(
+          typeof value === "object" &&
+          value !== null &&
+          Object.keys(value).length === 0
+        );
+      return {
+        passed: isNotEmpty,
+        message: isNotEmpty
+          ? `${nodeId}.${accessor}.${pathStr} is not empty`
+          : `Expected ${nodeId}.${accessor}.${pathStr} to not be empty`,
+      };
+    }
+
+    default:
+      throw new Error(`Unknown unary predicate: ${predicate}`);
+  }
+}
+
+/**
+ * Evaluate binary predicates
+ */
+function evaluateBinaryPredicate(
+  value: unknown,
+  predicate: { operator: BinaryPredicateOperator; expected: unknown },
+  nodeId: string,
+  accessor: string,
+  pathStr: string,
+): { passed: boolean; message: string } {
+  const { operator, expected } = predicate;
+
+  switch (operator) {
+    case BinaryPredicateOperator.EQUAL: {
+      const isEqual = JSON.stringify(value) === JSON.stringify(expected);
+      return {
+        passed: isEqual,
+        message: isEqual
+          ? `${nodeId}.${accessor}.${pathStr} equals ${JSON.stringify(expected)}`
+          : `Expected ${nodeId}.${accessor}.${pathStr} to equal ${JSON.stringify(expected)}, got ${JSON.stringify(value)}`,
+      };
+    }
+
+    case BinaryPredicateOperator.NOT_EQUAL: {
+      const isNotEqual = JSON.stringify(value) !== JSON.stringify(expected);
+      return {
+        passed: isNotEqual,
+        message: isNotEqual
+          ? `${nodeId}.${accessor}.${pathStr} does not equal ${JSON.stringify(expected)}`
+          : `Expected ${nodeId}.${accessor}.${pathStr} to not equal ${JSON.stringify(expected)}`,
+      };
+    }
+
+    case BinaryPredicateOperator.GREATER_THAN: {
+      const isGT = typeof value === "number" && value > (expected as number);
+      return {
+        passed: isGT,
+        message: isGT
+          ? `${nodeId}.${accessor}.${pathStr} (${value}) > ${expected}`
+          : `Expected ${nodeId}.${accessor}.${pathStr} to be greater than ${expected}, got ${JSON.stringify(value)}`,
+      };
+    }
+
+    case BinaryPredicateOperator.LESS_THAN: {
+      const isLT = typeof value === "number" && value < (expected as number);
+      return {
+        passed: isLT,
+        message: isLT
+          ? `${nodeId}.${accessor}.${pathStr} (${value}) < ${expected}`
+          : `Expected ${nodeId}.${accessor}.${pathStr} to be less than ${expected}, got ${JSON.stringify(value)}`,
+      };
+    }
+
+    case BinaryPredicateOperator.GREATER_THAN_OR_EQUAL: {
+      const isGTE = typeof value === "number" && value >= (expected as number);
+      return {
+        passed: isGTE,
+        message: isGTE
+          ? `${nodeId}.${accessor}.${pathStr} (${value}) >= ${expected}`
+          : `Expected ${nodeId}.${accessor}.${pathStr} to be >= ${expected}, got ${JSON.stringify(value)}`,
+      };
+    }
+
+    case BinaryPredicateOperator.LESS_THAN_OR_EQUAL: {
+      const isLTE = typeof value === "number" && value <= (expected as number);
+      return {
+        passed: isLTE,
+        message: isLTE
+          ? `${nodeId}.${accessor}.${pathStr} (${value}) <= ${expected}`
+          : `Expected ${nodeId}.${accessor}.${pathStr} to be <= ${expected}, got ${JSON.stringify(value)}`,
+      };
+    }
+
+    case BinaryPredicateOperator.CONTAINS: {
+      const contains =
+        typeof value === "string" && value.includes(expected as string);
+      return {
+        passed: contains,
+        message: contains
+          ? `${nodeId}.${accessor}.${pathStr} contains "${expected}"`
+          : `Expected ${nodeId}.${accessor}.${pathStr} to contain "${expected}", got "${value}"`,
+      };
+    }
+
+    case BinaryPredicateOperator.NOT_CONTAINS: {
+      const notContains =
+        typeof value === "string" && !value.includes(expected as string);
+      return {
+        passed: notContains,
+        message: notContains
+          ? `${nodeId}.${accessor}.${pathStr} does not contain "${expected}"`
+          : `Expected ${nodeId}.${accessor}.${pathStr} to not contain "${expected}", got "${value}"`,
+      };
+    }
+
+    case BinaryPredicateOperator.STARTS_WITH: {
+      const startsWith =
+        typeof value === "string" && value.startsWith(expected as string);
+      return {
+        passed: startsWith,
+        message: startsWith
+          ? `${nodeId}.${accessor}.${pathStr} starts with "${expected}"`
+          : `Expected ${nodeId}.${accessor}.${pathStr} to start with "${expected}", got "${value}"`,
+      };
+    }
+
+    case BinaryPredicateOperator.NOT_STARTS_WITH: {
+      const notStartsWith =
+        typeof value === "string" && !value.startsWith(expected as string);
+      return {
+        passed: notStartsWith,
+        message: notStartsWith
+          ? `${nodeId}.${accessor}.${pathStr} does not start with "${expected}"`
+          : `Expected ${nodeId}.${accessor}.${pathStr} to not start with "${expected}", got "${value}"`,
+      };
+    }
+
+    case BinaryPredicateOperator.ENDS_WITH: {
+      const endsWith =
+        typeof value === "string" && value.endsWith(expected as string);
+      return {
+        passed: endsWith,
+        message: endsWith
+          ? `${nodeId}.${accessor}.${pathStr} ends with "${expected}"`
+          : `Expected ${nodeId}.${accessor}.${pathStr} to end with "${expected}", got "${value}"`,
+      };
+    }
+
+    case BinaryPredicateOperator.NOT_ENDS_WITH: {
+      const notEndsWith =
+        typeof value === "string" && !value.endsWith(expected as string);
+      return {
+        passed: notEndsWith,
+        message: notEndsWith
+          ? `${nodeId}.${accessor}.${pathStr} does not end with "${expected}"`
+          : `Expected ${nodeId}.${accessor}.${pathStr} to not end with "${expected}", got "${value}"`,
+      };
+    }
+
+    default:
+      throw new Error(`Unknown binary predicate operator: ${operator}`);
+  }
+}
+
 async function executeAssertions(
   nodeId: string,
   assertionNode: Assertions,
-  responses: Record<string, JSONValue>,
+  responses: Record<string, NodeResponseData>,
   context: ExecutionContext,
 ): Promise<NodeResult> {
   const startTime = Date.now();
   const errors: string[] = [];
 
-  // TODO: implement assertions
-  // Each assertion in assertionNode.assertions should be evaluated against responses
-  // When implemented, emit ASSERTION_RESULT events like:
-  // context.emit({
-  //   type: 'ASSERTION_RESULT',
-  //   nodeId,
-  //   assertionIndex: i,
-  //   passed: true/false,
-  //   message: 'assertion message'
-  // });
+  for (let i = 0; i < assertionNode.assertions.length; i++) {
+    const assertion = assertionNode.assertions[i];
+
+    try {
+      const result = evaluateAssertion(assertion, responses);
+
+      context.emit({
+        type: "ASSERTION_RESULT",
+        nodeId,
+        assertionIndex: i,
+        passed: result.passed,
+        message: result.message,
+      });
+
+      if (!result.passed) {
+        errors.push(result.message);
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`Assertion ${i} failed: ${message}`);
+
+      context.emit({
+        type: "ASSERTION_RESULT",
+        nodeId,
+        assertionIndex: i,
+        passed: false,
+        message,
+      });
+    }
+  }
 
   return {
     nodeId,

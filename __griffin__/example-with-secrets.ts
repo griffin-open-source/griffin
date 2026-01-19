@@ -16,25 +16,23 @@
 import {
   GET,
   POST,
-  ApiCheckBuilder,
-  JSON,
-  START,
-  END,
+  createTestBuilder,
+  Json,
   Frequency,
   Wait,
   secret,
+  target,
 } from "../griffin-ts/src/index";
 
-const builder = new ApiCheckBuilder({
+const plan = createTestBuilder({
   name: "example-with-secrets",
-  endpoint_host: "http://localhost:3000",
-});
-
-const plan = builder
+  frequency: Frequency.every(5).minute(),
+})
   // Example: GET request with API key in header
-  .addEndpoint("authenticated_get", {
+  .request("authenticated_get", {
     method: GET,
-    response_format: JSON,
+    base: target("sample-api"),
+    response_format: Json,
     path: "/api/protected",
     headers: {
       // Use env provider to get API key from environment variable
@@ -42,11 +40,12 @@ const plan = builder
       "Content-Type": "application/json",
     },
   })
-  .addWait("wait_between_requests", Wait.seconds(1))
+  .wait("wait_between_requests", Wait.seconds(1))
   // Example: POST request with auth token in body
-  .addEndpoint("authenticated_post", {
+  .request("authenticated_post", {
     method: POST,
-    response_format: JSON,
+    base: target("sample-api"),
+    response_format: Json,
     path: "/api/data",
     headers: {
       "Content-Type": "application/json",
@@ -59,14 +58,9 @@ const plan = builder
       apiKey: secret("env:MY_API_KEY"),
     },
   })
-  .addEdge(START, "authenticated_get")
-  .addEdge("authenticated_get", "wait_between_requests")
-  .addEdge("wait_between_requests", "authenticated_post")
-  .addEdge("authenticated_post", END);
+  .build();
 
-plan.create({
-  frequency: Frequency.every(5).minute(),
-});
+console.log(JSON.stringify(plan, null, 2));
 
 /**
  * Secret Provider Reference:

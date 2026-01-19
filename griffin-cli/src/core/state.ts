@@ -1,0 +1,313 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+import { Value } from "typebox/value";
+import {
+  StateFileSchema,
+  type StateFile,
+  createEmptyState,
+  type EnvironmentConfig,
+} from "../schemas/state.js";
+
+export const STATE_DIR = ".griffin";
+export const STATE_FILE = "state.json";
+
+/**
+ * Get the state directory path (in current working directory)
+ */
+export function getStateDirPath(): string {
+  return path.join(process.cwd(), STATE_DIR);
+}
+
+/**
+ * Get the state file path
+ */
+export function getStateFilePath(): string {
+  return path.join(getStateDirPath(), STATE_FILE);
+}
+
+/**
+ * Check if state file exists
+ */
+export async function stateExists(): Promise<boolean> {
+  try {
+    await fs.access(getStateFilePath());
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Load state file from disk
+ * Throws if file doesn't exist or is invalid
+ * Automatically migrates v2 to v3 if needed
+ */
+export async function loadState(): Promise<StateFile> {
+  const stateFilePath = getStateFilePath();
+
+  try {
+    const content = await fs.readFile(stateFilePath, "utf-8");
+    const data = JSON.parse(content);
+
+    // Check if it's v1
+    if (Value.Check(StateFileSchema, data)) {
+      return data;
+    }
+
+    // Invalid schema
+    const errors = [...Value.Errors(StateFileSchema, data)];
+    throw new Error(
+      `Invalid state file schema:\n${errors.map((e) => `  - ${(e as any).path || "unknown"}: ${e.message}`).join("\n")}`,
+    );
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      throw new Error(
+        `State file not found. Run 'griffin init' first.\nExpected: ${stateFilePath}`,
+      );
+    }
+    throw error;
+  }
+}
+
+/**
+ * Save state file to disk
+ */
+export async function saveState(state: StateFile): Promise<void> {
+  const stateDirPath = getStateDirPath();
+  const stateFilePath = getStateFilePath();
+
+  // Ensure directory exists
+  await fs.mkdir(stateDirPath, { recursive: true });
+
+  // Validate before saving
+  if (!Value.Check(StateFileSchema, state)) {
+    const errors = [...Value.Errors(StateFileSchema, state)];
+    throw new Error(
+      `Invalid state data:\n${errors.map((e) => `  - ${(e as any).path || "unknown"}: ${e.message}`).join("\n")}`,
+    );
+  }
+
+  // Write with pretty formatting
+  await fs.writeFile(stateFilePath, JSON.stringify(state, null, 2), "utf-8");
+}
+
+/**
+ * Initialize a new state file
+ */
+export async function initState(projectId: string): Promise<void> {
+  if (await stateExists()) {
+    throw new Error(
+      `State file already exists: ${getStateFilePath()}\nUse 'griffin plan' to see current state.`,
+    );
+  }
+
+  const state = createEmptyState(projectId);
+  await saveState(state);
+}
+
+/**
+ * Add or update an environment
+ */
+export async function addEnvironment(
+  name: string,
+  config: EnvironmentConfig,
+): Promise<void> {
+  const state = await loadState();
+
+  const isNew = !(name in state.environments);
+  state.environments[name] = config;
+
+  // Initialize plans array for new environment
+  if (isNew && !(name in state.plans)) {
+    state.plans[name] = [];
+  }
+
+  // Set as default if it's the first environment
+  if (Object.keys(state.environments).length === 1) {
+    state.defaultEnvironment = name;
+  }
+
+  await saveState(state);
+}
+
+/**
+ * List all environments with their targets
+ */
+export async function listEnvironments(): Promise<
+  Record<string, { targets: Record<string, string>; isDefault: boolean }>
+> {
+  const state = await loadState();
+  const result: Record<
+    string,
+    { targets: Record<string, string>; isDefault: boolean }
+  > = {};
+
+  for (const [envName, config] of Object.entries(state.environments)) {
+    result[envName] = {
+      targets: config.targets,
+      isDefault: envName === state.defaultEnvironment,
+    };
+  }
+
+  return result;
+}
+
+/**
+ * Remove an environment
+ */
+export async function removeEnvironment(name: string): Promise<void> {
+  const state = await loadState();
+
+  if (!(name in state.environments)) {
+    throw new Error(`Environment '${name}' does not exist`);
+  }
+
+  delete state.environments[name];
+  delete state.plans[name];
+
+  // Update default if we removed it
+  if (state.defaultEnvironment === name) {
+    const remaining = Object.keys(state.environments);
+    state.defaultEnvironment = remaining.length > 0 ? remaining[0] : undefined;
+  }
+
+  await saveState(state);
+}
+
+/**
+ * Set the default environment
+ */
+export async function setDefaultEnvironment(name: string): Promise<void> {
+  const state = await loadState();
+
+  if (!(name in state.environments)) {
+    throw new Error(`Environment '${name}' does not exist`);
+  }
+
+  state.defaultEnvironment = name;
+  await saveState(state);
+}
+
+/**
+ * Get the current environment name (from flag, env var, or default)
+ */
+export async function resolveEnvironment(envFlag?: string): Promise<string> {
+  const state = await loadState();
+
+  // Priority: CLI flag > ENV var > default > error
+  const envName =
+    envFlag || process.env.GRIFFIN_ENV || state.defaultEnvironment;
+
+  if (!envName) {
+    throw new Error(
+      "No environment specified. Use --env flag, GRIFFIN_ENV env var, or set a default with 'griffin env default <name>'",
+    );
+  }
+
+  if (!(envName in state.environments)) {
+    throw new Error(
+      `Environment '${envName}' not found. Available: ${Object.keys(state.environments).join(", ")}`,
+    );
+  }
+
+  return envName;
+}
+
+/**
+ * Get environment configuration
+ */
+export async function getEnvironment(name: string): Promise<EnvironmentConfig> {
+  const state = await loadState();
+
+  if (!(name in state.environments)) {
+    throw new Error(`Environment '${name}' does not exist`);
+  }
+
+  return state.environments[name];
+}
+
+/**
+ * Add or update a target in an environment
+ */
+export async function addTarget(
+  envName: string,
+  targetKey: string,
+  url: string,
+): Promise<void> {
+  const state = await loadState();
+
+  // Create environment if it doesn't exist
+  if (!(envName in state.environments)) {
+    state.environments[envName] = { targets: {} };
+    state.plans[envName] = [];
+
+    // Set as default if it's the first environment
+    if (Object.keys(state.environments).length === 1) {
+      state.defaultEnvironment = envName;
+    }
+  }
+
+  state.environments[envName].targets[targetKey] = url;
+  await saveState(state);
+}
+
+/**
+ * Remove a target from an environment
+ */
+export async function removeTarget(
+  envName: string,
+  targetKey: string,
+): Promise<void> {
+  const state = await loadState();
+
+  if (!(envName in state.environments)) {
+    throw new Error(`Environment '${envName}' does not exist`);
+  }
+
+  if (!(targetKey in state.environments[envName].targets)) {
+    throw new Error(
+      `Target '${targetKey}' does not exist in environment '${envName}'`,
+    );
+  }
+
+  delete state.environments[envName].targets[targetKey];
+  await saveState(state);
+}
+
+/**
+ * Get all targets for an environment
+ */
+export async function getTargets(
+  envName: string,
+): Promise<Record<string, string>> {
+  const state = await loadState();
+
+  if (!(envName in state.environments)) {
+    throw new Error(`Environment '${envName}' does not exist`);
+  }
+
+  return state.environments[envName].targets;
+}
+
+/**
+ * Resolve a target URL by environment and key
+ */
+export async function resolveTarget(
+  envName: string,
+  targetKey: string,
+): Promise<string> {
+  const state = await loadState();
+
+  if (!(envName in state.environments)) {
+    throw new Error(`Environment '${envName}' does not exist`);
+  }
+
+  const url = state.environments[envName].targets[targetKey];
+  if (!url) {
+    throw new Error(
+      `Target '${targetKey}' not found in environment '${envName}'.\nAvailable targets: ${Object.keys(state.environments[envName].targets).join(", ")}`,
+    );
+  }
+
+  return url;
+}

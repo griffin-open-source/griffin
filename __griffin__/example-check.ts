@@ -1,21 +1,19 @@
-import { GET, POST, ApiCheckBuilder, JSON, START, END, Frequency, Wait } from "../griffin-ts/src/index";
+import { GET, POST, createTestBuilder, Json, START, END, Frequency, Wait, Assert, target } from "../griffin-ts/src/index";
 
-const builder = new ApiCheckBuilder({
+const plan = createTestBuilder({
   name: "example-check",
-  endpoint_host: "http://localhost:3000"
-});
-
-const plan = builder
-  .addEndpoint("health_check", {
+  frequency: Frequency.every(1).minute(),
+})
+  .request("health_check", {
     method: GET,
-    response_format: JSON,
+    base: target("sample-api"),
+    response_format: Json,
     path: "/health"
   })
-  .addWait("wait_1", Wait.seconds(1))
-  .addEdge(START, "health_check")
-  .addEdge("health_check", "wait_1")
-  .addEdge("wait_1", END);
+  .assert((state) => [
+    Assert(state["health_check"].status).equals(200),
+  ])
+  .wait("wait_1", Wait.seconds(1))
+  .build();
 
-plan.create({
-  frequency: Frequency.every(1).minute(),
-});
+console.log(JSON.stringify(plan, null, 2));

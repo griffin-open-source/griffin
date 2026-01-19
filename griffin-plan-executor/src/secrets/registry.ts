@@ -2,7 +2,11 @@
  * Secret provider registry for managing multiple secret providers.
  */
 
-import type { SecretProvider, SecretRefData, SecretResolveOptions } from "./types.js";
+import type {
+  SecretProvider,
+  SecretRefData,
+  SecretResolveOptions,
+} from "./types.js";
 import { SecretResolutionError } from "./types.js";
 
 /**
@@ -20,7 +24,7 @@ export class SecretProviderRegistry {
   register(provider: SecretProvider): void {
     if (this.providers.has(provider.name)) {
       throw new Error(
-        `Secret provider "${provider.name}" is already registered`
+        `Secret provider "${provider.name}" is already registered`,
       );
     }
     this.providers.set(provider.name, provider);
@@ -48,7 +52,7 @@ export class SecretProviderRegistry {
         `Secret provider "${name}" is not configured. Available providers: ${
           available.length > 0 ? available.join(", ") : "(none)"
         }`,
-        { provider: name, ref: "" }
+        { provider: name, ref: "" },
       );
     }
     return provider;
@@ -94,7 +98,7 @@ export class SecretProviderRegistry {
           provider: secretRef.provider,
           ref: secretRef.ref,
           cause: error,
-        }
+        },
       );
     }
   }
@@ -105,15 +109,16 @@ export class SecretProviderRegistry {
    * @returns Map of "provider:ref" to resolved value
    * @throws SecretResolutionError if any resolution fails (fail-fast)
    */
-  async resolveMany(
-    refs: SecretRefData[]
-  ): Promise<Map<string, string>> {
+  async resolveMany(refs: SecretRefData[]): Promise<Map<string, string>> {
     if (refs.length === 0) {
       return new Map();
     }
 
     // Group refs by provider
-    const byProvider = new Map<string, Array<{ ref: string; options?: SecretResolveOptions; key: string }>>();
+    const byProvider = new Map<
+      string,
+      Array<{ ref: string; options?: SecretResolveOptions; key: string }>
+    >();
 
     for (const secretRef of refs) {
       const key = this.makeKey(secretRef);
@@ -150,7 +155,7 @@ export class SecretProviderRegistry {
             if (value === undefined) {
               throw new SecretResolutionError(
                 `Secret "${providerName}:${providerRef.ref}" not found in batch results`,
-                { provider: providerName, ref: providerRef.ref }
+                { provider: providerName, ref: providerRef.ref },
               );
             }
             results.set(providerRef.key, value);
@@ -163,14 +168,21 @@ export class SecretProviderRegistry {
             `Batch resolution failed for provider "${providerName}": ${
               error instanceof Error ? error.message : String(error)
             }`,
-            { provider: providerName, ref: providerRefs[0]?.ref || "", cause: error }
+            {
+              provider: providerName,
+              ref: providerRefs[0]?.ref || "",
+              cause: error,
+            },
           );
         }
       } else {
         // Resolve individually (fail-fast on first error)
         for (const providerRef of providerRefs) {
           try {
-            const value = await provider.resolve(providerRef.ref, providerRef.options);
+            const value = await provider.resolve(
+              providerRef.ref,
+              providerRef.options,
+            );
             results.set(providerRef.key, value);
           } catch (error) {
             if (error instanceof SecretResolutionError) {
@@ -180,7 +192,7 @@ export class SecretProviderRegistry {
               `Failed to resolve secret "${providerName}:${providerRef.ref}": ${
                 error instanceof Error ? error.message : String(error)
               }`,
-              { provider: providerName, ref: providerRef.ref, cause: error }
+              { provider: providerName, ref: providerRef.ref, cause: error },
             );
           }
         }
@@ -203,7 +215,7 @@ export class SecretProviderRegistry {
           throw new Error(
             `Provider "${name}" validation failed: ${
               error instanceof Error ? error.message : String(error)
-            }`
+            }`,
           );
         }
       }

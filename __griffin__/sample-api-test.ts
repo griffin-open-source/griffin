@@ -1,34 +1,36 @@
-import { GET, POST, ApiCheckBuilder, JSON, START, END, Frequency, Wait } from "../griffin-ts/src/index";
+import { GET, POST, createTestBuilder, Json, START, END, Frequency, Wait, Assert, target} from "../griffin-ts/src/index";
 
-const builder = new ApiCheckBuilder({
+const builder = createTestBuilder({
   name: "sample-api-test",
-  endpoint_host: "http://localhost:3000"
+  frequency: Frequency.every(1).minute(),
 });
 
 const plan = builder
-  .addEndpoint("health", {
+  .request("health", {
     method: GET,
-    response_format: JSON,
+    base: target("sample-api"),
+    response_format: Json,
     path: "/health"
   })
-  .addEndpoint("get_items", {
+  .request("get_items", {
     method: GET,
-    response_format: JSON,
+    base: target("sample-api"),
+    response_format: Json,
     path: "/api/items"
   })
-  .addEndpoint("create_item", {
+  .request("create_item", {
     method: POST,
-    response_format: JSON,
+    base: target("sample-api"),
+    response_format: Json,
     path: "/api/items",
     body: { name: "Test Item", value: 42 }
   })
-  .addWait("wait_1", Wait.seconds(1))
-  .addEdge(START, "health")
-  .addEdge("health", "get_items")
-  .addEdge("get_items", "create_item")
-  .addEdge("create_item", "wait_1")
-  .addEdge("wait_1", END);
+  .wait("wait_1", Wait.seconds(1))
+  .assert((state) => [
+    Assert(state["health"].status).equals(200),
+    Assert(state["get_items"].status).equals(200),
+    Assert(state["create_item"].status).equals(201),
+  ])
+  .build();
 
-plan.create({
-  frequency: Frequency.every(1).minute(),
-});
+console.log(JSON.stringify(plan, null, 2));

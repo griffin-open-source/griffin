@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { secret, isSecretRef } from "./types.js";
+import { isSecretRef } from "./types.js";
 import { SecretProviderRegistry } from "./registry.js";
 import { EnvSecretProvider } from "./providers/env.js";
 import {
@@ -7,7 +7,8 @@ import {
   collectSecretsFromPlan,
   planHasSecrets,
 } from "./resolver.js";
-import { NodeType, ResponseFormat, HttpMethod, type TestPlanV1 } from "../schemas.js";
+import { NodeType, ResponseFormat, HttpMethod } from "griffin/schema";
+import { TestPlanV1 } from "griffin/types";
 
 // Helper to create a secret ref (mirrors the DSL's secret function)
 function createSecretRef(path: string) {
@@ -20,8 +21,14 @@ function createSecretRef(path: string) {
 describe("Secret Types", () => {
   describe("isSecretRef", () => {
     it("should return true for valid secret refs", () => {
-      expect(isSecretRef({ $secret: { provider: "env", ref: "API_KEY" } })).toBe(true);
-      expect(isSecretRef({ $secret: { provider: "aws", ref: "my-secret", version: "1" } })).toBe(true);
+      expect(
+        isSecretRef({ $secret: { provider: "env", ref: "API_KEY" } }),
+      ).toBe(true);
+      expect(
+        isSecretRef({
+          $secret: { provider: "aws", ref: "my-secret", version: "1" },
+        }),
+      ).toBe(true);
     });
 
     it("should return false for non-secret values", () => {
@@ -30,7 +37,9 @@ describe("Secret Types", () => {
       expect(isSecretRef(null)).toBe(false);
       expect(isSecretRef(undefined)).toBe(false);
       expect(isSecretRef({})).toBe(false);
-      expect(isSecretRef({ secret: { provider: "env", ref: "KEY" } })).toBe(false); // wrong key
+      expect(isSecretRef({ secret: { provider: "env", ref: "KEY" } })).toBe(
+        false,
+      ); // wrong key
     });
   });
 });
@@ -104,22 +113,24 @@ describe("EnvSecretProvider", () => {
 });
 
 describe("Plan Secret Resolution", () => {
-  const createTestPlan = (headers?: Record<string, any>, body?: any): TestPlanV1 => ({
+  const createTestPlan = (
+    headers?: Record<string, any>,
+    body?: any,
+  ): TestPlanV1 => ({
     id: "test-plan-1",
     name: "Test Plan",
     version: "1.0",
-    endpoint_host: "http://localhost:3000",
+    environment: "default",
     nodes: [
       {
         id: "endpoint-1",
-        data: {
-          type: NodeType.ENDPOINT,
-          method: HttpMethod.GET,
-          path: "/api/test",
-          response_format: ResponseFormat.JSON,
-          headers,
-          body,
-        },
+        type: NodeType.ENDPOINT,
+        method: HttpMethod.GET,
+        path: "/api/test",
+        base: { type: "target", key: "api-gateway" },
+        response_format: ResponseFormat.JSON,
+        headers,
+        body,
       },
     ],
     edges: [
@@ -159,8 +170,14 @@ describe("Plan Secret Resolution", () => {
       const collected = collectSecretsFromPlan(plan);
 
       expect(collected.refs).toHaveLength(2);
-      expect(collected.refs).toContainEqual({ provider: "env", ref: "API_KEY" });
-      expect(collected.refs).toContainEqual({ provider: "aws", ref: "custom-secret" });
+      expect(collected.refs).toContainEqual({
+        provider: "env",
+        ref: "API_KEY",
+      });
+      expect(collected.refs).toContainEqual({
+        provider: "aws",
+        ref: "custom-secret",
+      });
     });
 
     it("should collect secrets from nested body", () => {
@@ -175,7 +192,10 @@ describe("Plan Secret Resolution", () => {
 
       expect(collected.refs).toHaveLength(2);
       expect(collected.refs).toContainEqual({ provider: "env", ref: "TOKEN" });
-      expect(collected.refs).toContainEqual({ provider: "env", ref: "ITEM_KEY" });
+      expect(collected.refs).toContainEqual({
+        provider: "env",
+        ref: "ITEM_KEY",
+      });
     });
 
     it("should deduplicate secret refs", () => {
@@ -202,14 +222,17 @@ describe("Plan Secret Resolution", () => {
       registry.register(
         new EnvSecretProvider({
           env: { API_KEY: "Bearer secret-token" },
-        })
+        }),
       );
 
       const resolved = await resolveSecretsInPlan(plan, registry);
 
-      const endpoint = resolved.nodes[0].data as any;
-      expect(endpoint.headers.Authorization).toBe("Bearer secret-token");
-      expect(endpoint.headers["Content-Type"]).toBe("application/json");
+      const endpoint = resolved.nodes[0];
+      if (endpoint.type !== NodeType.ENDPOINT) {
+        throw new Error("Endpoint not found");
+      }
+      expect(endpoint.headers?.Authorization).toBe("Bearer secret-token");
+      expect(endpoint.headers?.["Content-Type"]).toBe("application/json");
     });
 
     it("should resolve secrets in body", async () => {
@@ -222,12 +245,15 @@ describe("Plan Secret Resolution", () => {
       registry.register(
         new EnvSecretProvider({
           env: { TOKEN: "resolved-token" },
-        })
+        }),
       );
 
       const resolved = await resolveSecretsInPlan(plan, registry);
 
-      const endpoint = resolved.nodes[0].data as any;
+      const endpoint = resolved.nodes[0];
+      if (endpoint.type !== NodeType.ENDPOINT) {
+        throw new Error("Endpoint not found");
+      }
       expect(endpoint.body.token).toBe("resolved-token");
       expect(endpoint.body.data).toBe("plain-value");
     });
@@ -241,20 +267,26 @@ describe("Plan Secret Resolution", () => {
       registry.register(
         new EnvSecretProvider({
           env: { API_KEY: "secret" },
-        })
+        }),
       );
 
       const resolved = await resolveSecretsInPlan(plan, registry);
 
       // Original should still have secret ref
-      const originalEndpoint = plan.nodes[0].data as any;
-      expect(originalEndpoint.headers.Authorization).toEqual(
-        createSecretRef("env:API_KEY")
+      const originalEndpoint = plan.nodes[0];
+      if (originalEndpoint.type !== NodeType.ENDPOINT) {
+        throw new Error("Endpoint not found");
+      }
+      expect(originalEndpoint.headers?.Authorization).toEqual(
+        createSecretRef("env:API_KEY"),
       );
 
       // Resolved should have string
-      const resolvedEndpoint = resolved.nodes[0].data as any;
-      expect(resolvedEndpoint.headers.Authorization).toBe("secret");
+      const resolvedEndpoint = resolved.nodes[0];
+      if (resolvedEndpoint.type !== NodeType.ENDPOINT) {
+        throw new Error("Endpoint not found");
+      }
+      expect(resolvedEndpoint.headers?.Authorization).toBe("secret");
     });
 
     it("should throw for unregistered provider", async () => {
@@ -266,7 +298,7 @@ describe("Plan Secret Resolution", () => {
       registry.register(new EnvSecretProvider({ env: {} }));
 
       await expect(resolveSecretsInPlan(plan, registry)).rejects.toThrow(
-        /not configured/
+        /not configured/,
       );
     });
 
@@ -279,7 +311,7 @@ describe("Plan Secret Resolution", () => {
       registry.register(new EnvSecretProvider({ env: {} }));
 
       await expect(resolveSecretsInPlan(plan, registry)).rejects.toThrow(
-        /not set/
+        /not set/,
       );
     });
   });

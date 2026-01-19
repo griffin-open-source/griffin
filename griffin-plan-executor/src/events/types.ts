@@ -90,7 +90,7 @@ export interface AssertionResultEvent extends BaseEvent {
   nodeId: string;
   assertionIndex: number;
   passed: boolean;
-  message?: string;
+  message: string;
 }
 
 /** Wait events */

@@ -48,7 +48,7 @@ export interface SecretProvider {
    * Default implementation calls resolve() for each ref.
    */
   resolveMany?(
-    refs: Array<{ ref: string; options?: SecretResolveOptions }>
+    refs: Array<{ ref: string; options?: SecretResolveOptions }>,
   ): Promise<Map<string, string>>;
 
   /**
@@ -68,7 +68,7 @@ export class SecretResolutionError extends Error {
 
   constructor(
     message: string,
-    details: { provider: string; ref: string; cause?: unknown }
+    details: { provider: string; ref: string; cause?: unknown },
   ) {
     super(message);
     this.name = "SecretResolutionError";
@@ -99,6 +99,7 @@ export function isSecretRef(value: unknown): value is SecretRef {
 
   const secretData = obj.$secret as Record<string, unknown>;
   return (
-    typeof secretData.provider === "string" && typeof secretData.ref === "string"
+    typeof secretData.provider === "string" &&
+    typeof secretData.ref === "string"
   );
 }

@@ -7,7 +7,7 @@ import {
   VaultProvider,
   type AwsSecretsManagerClient,
   type VaultHttpClient,
-} from "griffin-plan-executor";
+} from "@griffin-app/griffin-plan-executor";
 import axios from "axios";
 
 // Extend Fastify's type system to include secretRegistry

@@ -10,8 +10,8 @@ import {
   HttpMethodSchema,
   ResponseFormatSchema,
   BinaryPredicateOperatorSchema,
-} from "griffin/schema";
-import { TestPlanV1 } from "griffin/types";
+} from "@griffin-app/griffin-ts/schema";
+import type { TestPlanV1 } from "@griffin-app/griffin-ts/types";
 import { Type } from "typebox";
 import { FastifyTypeBox } from "../../types.js";
 import {
@@ -65,7 +65,7 @@ export default function (fastify: FastifyTypeBox) {
       },
     },
     async (request, reply) => {
-      const planData = request.body;
+      const planData = request.body as TestPlanV1;
 
       // Validate locations if specified
       if (planData.locations && planData.locations.length > 0) {
@@ -73,7 +73,7 @@ export default function (fastify: FastifyTypeBox) {
           await fastify.agentRegistry.getAllLocations();
 
         const invalidLocations = planData.locations.filter(
-          (loc) => !registeredLocations.includes(loc),
+          (loc: string) => !registeredLocations.includes(loc),
         );
 
         if (invalidLocations.length > 0) {

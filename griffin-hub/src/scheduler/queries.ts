@@ -1,5 +1,5 @@
-import type { TestPlanV1 } from "griffin/types";
-import { FrequencyUnit } from "griffin/schema";
+import type { TestPlanV1 } from "@griffin-app/griffin-ts/types";
+import { FrequencyUnit } from "@griffin-app/griffin-ts/schema";
 import type { JobRun } from "../schemas/job-run.js";
 
 /**

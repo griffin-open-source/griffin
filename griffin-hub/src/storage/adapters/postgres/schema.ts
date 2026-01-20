@@ -9,7 +9,11 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-import { type Edge, type Node, type Frequency } from "griffin/types";
+import {
+  type Edge,
+  type Node,
+  type Frequency,
+} from "@griffin-app/griffin-ts/types";
 import { JobStatus } from "../../ports.js";
 import { TriggerType } from "../../../schemas/job-run.js";
 import { AgentStatus } from "../../../schemas/agent.js";

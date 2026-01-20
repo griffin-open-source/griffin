@@ -51,18 +51,7 @@ export interface ExecutionOptions {
   /** Unique execution ID for correlating events (generated if not provided) */
   executionId?: string;
 
-  /**
-   * Optional secret provider registry for resolving secret references.
-   * If provided, secrets in the plan will be resolved before execution.
-   * If not provided, any secret references in the plan will cause an error.
-   */
-  secretRegistry?: SecretProviderRegistry;
-
-  /**
-   * Target resolver for mapping target keys to base URLs.
-   * Required when plan contains target references.
-   */
-  targetResolver: (key: string) => Promise<string | undefined>;
+  secretRegistry: SecretProviderRegistry;
 }
 
 export interface NodeResult {

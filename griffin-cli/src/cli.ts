@@ -7,12 +7,6 @@ import { executeGenerateKey } from "./commands/generate-key.js";
 
 // Local commands
 import { executeRunLocal } from "./commands/local/run.js";
-import {
-  executeConfigList as executeLocalConfigList,
-  executeConfigAddTarget as executeLocalConfigAddTarget,
-  executeConfigRemoveTarget as executeLocalConfigRemoveTarget,
-  executeConfigSetDefaultEnv,
-} from "./commands/local/config.js";
 
 // Hub commands
 import { executeConnect } from "./commands/hub/connect.js";
@@ -21,11 +15,6 @@ import { executeRuns } from "./commands/hub/runs.js";
 import { executePlan } from "./commands/hub/plan.js";
 import { executeApply } from "./commands/hub/apply.js";
 import { executeRun } from "./commands/hub/run.js";
-import {
-  executeConfigList as executeHubConfigList,
-  executeConfigAddTarget as executeHubConfigAddTarget,
-  executeConfigRemoveTarget as executeHubConfigRemoveTarget,
-} from "./commands/hub/config.js";
 
 const program = new Command();
 
@@ -65,51 +54,13 @@ const local = program.command("local").description("Local test execution");
 
 local
   .command("run")
-  .description("Run tests locally against a target environment")
+  .description("Run tests locally against an environment")
   .option(
     "--env <name>",
     "Environment to run against (uses default if not specified)",
   )
   .action(async (options) => {
     await executeRunLocal(options);
-  });
-
-const localConfig = local
-  .command("config")
-  .description("Manage local target configurations");
-
-localConfig
-  .command("list")
-  .description("List all local environments and their targets")
-  .action(async () => {
-    await executeLocalConfigList();
-  });
-
-localConfig
-  .command("add-target")
-  .description("Add a target to a local environment")
-  .requiredOption("--env <name>", "Environment name")
-  .requiredOption("--key <key>", "Target key")
-  .requiredOption("--url <url>", "Target URL")
-  .action(async (options) => {
-    await executeLocalConfigAddTarget(options);
-  });
-
-localConfig
-  .command("remove-target")
-  .description("Remove a target from a local environment")
-  .requiredOption("--env <name>", "Environment name")
-  .requiredOption("--key <key>", "Target key")
-  .action(async (options) => {
-    await executeLocalConfigRemoveTarget(options);
-  });
-
-localConfig
-  .command("set-default-env")
-  .description("Set the default environment")
-  .requiredOption("--env <name>", "Environment name")
-  .action(async (options) => {
-    await executeConfigSetDefaultEnv(options);
   });
 
 // Hub command group
@@ -176,40 +127,6 @@ hub
   .option("--wait", "Wait for run to complete")
   .action(async (options) => {
     await executeRun(options);
-  });
-
-const hubConfig = hub
-  .command("config")
-  .description("Manage hub target configurations");
-
-hubConfig
-  .command("list")
-  .description("List all hub configurations")
-  .option("--org <id>", "Filter by organization ID")
-  .option("--env <name>", "Filter by environment name")
-  .action(async (options) => {
-    await executeHubConfigList(options);
-  });
-
-hubConfig
-  .command("add-target")
-  .description("Add a target to hub configuration")
-  .requiredOption("--org <id>", "Organization ID")
-  .requiredOption("--env <name>", "Environment name")
-  .requiredOption("--key <key>", "Target key")
-  .requiredOption("--url <url>", "Target URL")
-  .action(async (options) => {
-    await executeHubConfigAddTarget(options);
-  });
-
-hubConfig
-  .command("remove-target")
-  .description("Remove a target from hub configuration")
-  .requiredOption("--org <id>", "Organization ID")
-  .requiredOption("--env <name>", "Environment name")
-  .requiredOption("--key <key>", "Target key")
-  .action(async (options) => {
-    await executeHubConfigRemoveTarget(options);
   });
 
 // Parse arguments

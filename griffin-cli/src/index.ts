@@ -20,7 +20,7 @@ export {
   RunnerConfigSchema,
 } from "./schemas/state.js";
 
-export { normalizePlanPayload, hashPlanPayload } from "./schemas/payload.js";
+export { hashPlanPayload } from "./schemas/payload.js";
 
 export {
   getStateDirPath,
@@ -34,11 +34,6 @@ export {
   setDefaultEnvironment,
   resolveEnvironment,
   getEnvironment,
-  addTarget,
-  removeTarget,
-  getTargets,
-  resolveTarget,
-  listEnvironments,
 } from "./core/state.js";
 
 export { discoverPlans, formatDiscoveryErrors } from "./core/discovery.js";
@@ -58,12 +53,6 @@ export { executeGenerateKey } from "./commands/generate-key.js";
 
 // Local commands
 export { executeRunLocal } from "./commands/local/run.js";
-export {
-  executeConfigList as executeLocalConfigList,
-  executeConfigAddTarget as executeLocalConfigAddTarget,
-  executeConfigRemoveTarget as executeLocalConfigRemoveTarget,
-  executeConfigSetDefaultEnv,
-} from "./commands/local/config.js";
 
 // Hub commands
 export { executeConnect } from "./commands/hub/connect.js";
@@ -72,8 +61,3 @@ export { executeRuns } from "./commands/hub/runs.js";
 export { executePlan } from "./commands/hub/plan.js";
 export { executeApply } from "./commands/hub/apply.js";
 export { executeRun } from "./commands/hub/run.js";
-export {
-  executeConfigList as executeHubConfigList,
-  executeConfigAddTarget as executeHubConfigAddTarget,
-  executeConfigRemoveTarget as executeHubConfigRemoveTarget,
-} from "./commands/hub/config.js";

@@ -131,28 +131,6 @@ export async function addEnvironment(
 }
 
 /**
- * List all environments with their targets
- */
-export async function listEnvironments(): Promise<
-  Record<string, { targets: Record<string, string>; isDefault: boolean }>
-> {
-  const state = await loadState();
-  const result: Record<
-    string,
-    { targets: Record<string, string>; isDefault: boolean }
-  > = {};
-
-  for (const [envName, config] of Object.entries(state.environments)) {
-    result[envName] = {
-      targets: config.targets,
-      isDefault: envName === state.defaultEnvironment,
-    };
-  }
-
-  return result;
-}
-
-/**
  * Remove an environment
  */
 export async function removeEnvironment(name: string): Promise<void> {
@@ -224,90 +202,4 @@ export async function getEnvironment(name: string): Promise<EnvironmentConfig> {
   }
 
   return state.environments[name];
-}
-
-/**
- * Add or update a target in an environment
- */
-export async function addTarget(
-  envName: string,
-  targetKey: string,
-  url: string,
-): Promise<void> {
-  const state = await loadState();
-
-  // Create environment if it doesn't exist
-  if (!(envName in state.environments)) {
-    state.environments[envName] = { targets: {} };
-    state.plans[envName] = [];
-
-    // Set as default if it's the first environment
-    if (Object.keys(state.environments).length === 1) {
-      state.defaultEnvironment = envName;
-    }
-  }
-
-  state.environments[envName].targets[targetKey] = url;
-  await saveState(state);
-}
-
-/**
- * Remove a target from an environment
- */
-export async function removeTarget(
-  envName: string,
-  targetKey: string,
-): Promise<void> {
-  const state = await loadState();
-
-  if (!(envName in state.environments)) {
-    throw new Error(`Environment '${envName}' does not exist`);
-  }
-
-  if (!(targetKey in state.environments[envName].targets)) {
-    throw new Error(
-      `Target '${targetKey}' does not exist in environment '${envName}'`,
-    );
-  }
-
-  delete state.environments[envName].targets[targetKey];
-  await saveState(state);
-}
-
-/**
- * Get all targets for an environment
- */
-export async function getTargets(
-  envName: string,
-): Promise<Record<string, string>> {
-  const state = await loadState();
-
-  if (!(envName in state.environments)) {
-    throw new Error(`Environment '${envName}' does not exist`);
-  }
-
-  return state.environments[envName].targets;
-}
-
-/**
- * Resolve a target URL by environment and key
- */
-export async function resolveTarget(
-  envName: string,
-  targetKey: string,
-): Promise<string> {
-  const state = await loadState();
-
-  if (!(envName in state.environments)) {
-    throw new Error(`Environment '${envName}' does not exist`);
-  }
-
-  const url = state.environments[envName].targets[targetKey];
-  if (!url) {
-    throw new Error(
-      `Target '${targetKey}' not found in environment '${envName}'.\nAvailable targets: ${Object.keys(state.environments[envName].targets).join(", ")}`,
-    );
-  }
-
-  return url;
 }

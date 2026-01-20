@@ -16,14 +16,8 @@ export const PlanStateEntrySchema = Type.Object({
 
 export type PlanStateEntry = Static<typeof PlanStateEntrySchema>;
 
-// v2 schema (for migration)
-export const EnvironmentConfigSchemaV2 = Type.Object({
-  baseUrl: Type.String(),
-});
-
-// v3 schema (current)
 export const EnvironmentConfigSchema = Type.Object({
-  targets: Type.Record(Type.String(), Type.String()),
+  // Empty for now - may be used for environment-specific config in the future
 });
 
 export type EnvironmentConfig = Static<typeof EnvironmentConfigSchema>;
@@ -78,15 +72,12 @@ export function createEmptyState(projectId: string): StateFile {
 /**
  * Create state file with a default local environment
  */
-export function createStateWithDefaultEnv(
-  projectId: string,
-  defaultTarget: string = "http://localhost:3000",
-): StateFile {
+export function createStateWithDefaultEnv(projectId: string): StateFile {
   return {
     stateVersion: 1,
     projectId,
     environments: {
-      local: { targets: { default: defaultTarget } },
+      local: {},
     },
     defaultEnvironment: "local",
     plans: {

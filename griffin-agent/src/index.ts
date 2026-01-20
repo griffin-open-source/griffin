@@ -6,6 +6,7 @@ import {
   AxiosAdapter,
   SecretProviderRegistry,
   EnvSecretProvider,
+  AwsSecretsManagerProvider,
 } from "griffin-plan-executor";
 
 /**
@@ -75,7 +76,6 @@ async function main() {
 
   // Register AWS provider if enabled
   if (config.secrets.providers.includes("aws") && config.secrets.aws) {
-    const { AwsSecretsManagerProvider } = await import("griffin-plan-executor");
     // Note: AwsSecretsManagerProvider expects a client to be passed, not region config
     // For now, skip AWS support - can be added in later phase with proper client setup
     console.warn("AWS Secrets Manager provider not yet supported in agent");

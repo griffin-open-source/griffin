@@ -10,7 +10,6 @@ export {
   SecretOrStringSchema,
   ResponseFormatSchema,
   HttpMethodSchema,
-  TargetRefSchema,
   EndpointSchema,
   FrequencySchema,
   WaitSchema,

@@ -4,7 +4,6 @@
  */
 
 export type {
-  TargetRef,
   Endpoint,
   Frequency,
   Wait,

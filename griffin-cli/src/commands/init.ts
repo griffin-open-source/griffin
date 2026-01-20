@@ -37,21 +37,18 @@ export async function executeInit(options: InitOptions): Promise<void> {
   await initState(projectId);
   console.log(`✓ Created state file: ${getStateFilePath()}`);
 
-  // Create a default local environment with a default target
-  await addEnvironment("local", {
-    targets: { default: "http://localhost:3000" },
-  });
+  // Create a default local environment
+  await addEnvironment("local", {});
   console.log(`✓ Created default 'local' environment`);
-  console.log(`  default: http://localhost:3000`);
 
   console.log("");
   console.log("Initialization complete!");
   console.log("");
   console.log("Next steps:");
-  console.log("  1. Add targets to local environment:");
-  console.log(
-    "     griffin local config add-target --env local --key api --url http://localhost:3000",
-  );
+  console.log("  1. Create a variables.yaml file in the project root:");
+  console.log("     environments:");
+  console.log("       local:");
+  console.log("         api-service: http://localhost:3000");
   console.log(
     "  2. Create test plans (*.griffin.ts files in __griffin__/ directories)",
   );

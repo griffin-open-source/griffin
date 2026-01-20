@@ -68,7 +68,6 @@ export const runnerConfigsTable = pgTable("runner_configs", {
   organization: text("organization").notNull(),
   project: text("project").notNull(),
   id: text("id").primaryKey(),
-  targets: jsonb("targets").$type<Record<string, string>>().notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

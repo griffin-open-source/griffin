@@ -514,14 +514,10 @@ async function executeEndpoint(
     );
   }
 
-  const baseUrl = await options.targetResolver(endpoint.base.key);
-  if (!baseUrl) {
-    throw new Error(
-      `Failed to resolve target "${endpoint.base.key}". Target not found in runner configuration.`,
-    );
-  }
-
-  const url = `${baseUrl}${endpoint.path}`;
+  // endpoint.base and endpoint.path are already resolved strings
+  const baseUrl = endpoint.base;
+  const path = endpoint.path;
+  const url = `${baseUrl}${path}`;
 
   // TODO: Add retry configuration from plan (node-level or plan-level)
   // For now, we always attempt once (attempt: 1)

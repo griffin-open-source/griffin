@@ -1,0 +1,27 @@
+# variables.yaml - Environment-scoped variable configuration
+# This file should be checked into version control
+#
+# Variables are resolved at test evaluation time (when the CLI imports test files)
+# and the resolved values are baked directly into the test plan JSON.
+#
+# Usage in test files:
+#   import { variable } from "griffin";
+#
+#   // Simple variable reference
+#   base: variable("sample-api")
+#
+#   // Template interpolation
+#   path: variable("api-version", "/api/${api-version}/health")
+
+environments:
+  local:
+    sample-api: http://localhost:3000
+    api-version: v1
+
+  staging:
+    sample-api: https://staging.example.com
+    api-version: v1
+
+  production:
+    sample-api: https://api.example.com
+    api-version: v2

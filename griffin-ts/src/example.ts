@@ -18,7 +18,7 @@ import {
   END,
   Frequency,
   WaitDuration,
-  target,
+  variable,
 } from "./index";
 
 const plan = createGraphBuilder({
@@ -29,7 +29,7 @@ const plan = createGraphBuilder({
     "create_foo",
     Endpoint({
       method: POST,
-      base: target("api-service"),
+      base: variable("api-service"),
       response_format: Json,
       path: "/api/v1/foo",
     }),
@@ -38,7 +38,7 @@ const plan = createGraphBuilder({
     "get_foo",
     Endpoint({
       method: GET,
-      base: target("api-service"),
+      base: variable("api-service"),
       response_format: Json,
       path: "/api/v1/foo",
     }),

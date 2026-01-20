@@ -16,7 +16,7 @@ import {
   Frequency,
   WaitDuration,
   Assert,
-  target,
+  variable,
 } from "./index";
 
 // ============================================================================
@@ -29,7 +29,7 @@ const healthCheck = createTestBuilder({
 })
   .request("health", {
     method: GET,
-    base: target("api-service"),
+    base: variable("api-service"),
     response_format: Json,
     path: "/health",
   })
@@ -55,7 +55,7 @@ const userJourney = createTestBuilder({
 })
   .request("create_user", {
     method: POST,
-    base: target("api-service"),
+    base: variable("api-service"),
     response_format: Json,
     path: "/api/v1/users",
     body: {
@@ -86,7 +86,7 @@ const userJourney = createTestBuilder({
   .wait("pause", WaitDuration.seconds(2))
   .request("get_user", {
     method: GET,
-    base: target("api-service"),
+    base: variable("api-service"),
     response_format: Json,
     path: "/api/v1/users/test@example.com",
   })
@@ -111,7 +111,7 @@ const performanceCheck = createTestBuilder({
 })
   .request("api_call", {
     method: GET,
-    base: target("api-service"),
+    base: variable("api-service"),
     response_format: Json,
     path: "/api/v1/metrics",
   })
@@ -145,7 +145,7 @@ const orderWorkflow = createTestBuilder({
 })
   .request("create_order", {
     method: POST,
-    base: target("api-service"),
+    base: variable("api-service"),
     response_format: Json,
     path: "/api/v1/orders",
     body: {
@@ -161,7 +161,7 @@ const orderWorkflow = createTestBuilder({
   ])
   .request("confirm_order", {
     method: POST,
-    base: target("api-service"),
+    base: variable("api-service"),
     response_format: Json,
     path: "/api/v1/orders/confirm",
     body: {
@@ -176,7 +176,7 @@ const orderWorkflow = createTestBuilder({
   .wait("processing_time", WaitDuration.seconds(5))
   .request("check_order", {
     method: GET,
-    base: target("api-service"),
+    base: variable("api-service"),
     response_format: Json,
     path: "/api/v1/orders/${create_order.body.order_id}",
   })

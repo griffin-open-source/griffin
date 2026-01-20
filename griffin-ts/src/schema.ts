@@ -72,19 +72,21 @@ export const HttpMethodSchema = Type.Union(
   { $id: "HttpMethod" },
 );
 
-export const TargetRefSchema = Type.Object({
-  type: Type.Literal("target"),
-  key: Type.String(),
+export const VariableRefSchema = Type.Object({
+  $variable: Type.Object({
+    key: Type.String(),
+    template: Type.Optional(Type.String()),
+  }),
 });
-export type TargetRef = Static<typeof TargetRefSchema>;
+export type VariableRef = Static<typeof VariableRefSchema>;
 
 export const EndpointSchema = Type.Object(
   {
     id: Type.String(),
     type: Type.Literal(NodeType.ENDPOINT),
     method: HttpMethodSchema,
-    path: Type.String(),
-    base: TargetRefSchema,
+    path: Type.Union([Type.String(), VariableRefSchema]),
+    base: Type.Union([Type.String(), VariableRefSchema]),
     headers: Type.Optional(Type.Record(Type.String(), SecretOrStringSchema)),
     body: Type.Optional(Type.Any()), // Body can contain nested SecretRefs
     response_format: ResponseFormatSchema,

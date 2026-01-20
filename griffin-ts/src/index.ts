@@ -34,7 +34,8 @@ export type {
 
 export { Frequency } from "./frequency";
 export { WaitDuration } from "./wait";
-export { target, isTargetRef } from "./target";
+export { variable, isVariableRef } from "./variable";
+export type { VariableRef } from "./variable";
 export { secret, isSecretRef } from "./secrets";
 export type { SecretRefData, SecretOptions } from "./secrets";
 

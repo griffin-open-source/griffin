@@ -1,6 +1,6 @@
 import { findTestFiles } from "../../test-discovery.js";
 import { runTestFile } from "../../test-runner.js";
-import { resolveEnvironment, getTargets } from "../../core/state.js";
+import { resolveEnvironment } from "../../core/state.js";
 import { basename } from "path";
 
 export interface RunLocalOptions {
@@ -13,28 +13,11 @@ export async function executeRunLocal(
   try {
     // Resolve environment
     const envName = await resolveEnvironment(options.env);
-    const targets = await getTargets(envName);
 
     console.log(`Running tests locally against '${envName}' environment`);
-
-    // Show targets
-    const targetKeys = Object.keys(targets);
-    if (targetKeys.length === 0) {
-      console.error(
-        `Error: Environment '${envName}' has no configured targets`,
-      );
-      console.log("");
-      console.log("Add a target with:");
-      console.log(
-        `  griffin local config add-target --env ${envName} --key <key> --url <url>`,
-      );
-      process.exit(1);
-    }
-
-    console.log("Targets:");
-    for (const [key, url] of Object.entries(targets)) {
-      console.log(`  ${key}: ${url}`);
-    }
+    console.log(
+      `Variables will be loaded from variables.yaml for environment: ${envName}`,
+    );
     console.log("");
 
     const testFiles = findTestFiles();
@@ -49,14 +32,11 @@ export async function executeRunLocal(
     testFiles.forEach((file) => console.log(`  - ${file}`));
     console.log("");
 
-    // For v1: use "default" target if available, otherwise use first target
-    const baseUrl = targets.default || Object.values(targets)[0];
-
     const results = await Promise.all(
       testFiles.map(async (file) => {
         const fileName = basename(file);
         console.log(`Running ${fileName}`);
-        const result = await runTest(file, baseUrl);
+        const result = await runTest(file, envName);
         return result;
       }),
     );
@@ -79,10 +59,10 @@ export async function executeRunLocal(
 
 async function runTest(
   file: string,
-  baseUrl: string,
+  envName: string,
 ): Promise<{ success: boolean }> {
   try {
-    const result = await runTestFile(file, baseUrl);
+    const result = await runTestFile(file, envName);
     return { success: result.success };
   } catch (error: any) {
     console.error(error.message || String(error));

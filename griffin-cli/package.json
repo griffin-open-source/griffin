@@ -29,7 +29,8 @@
     "griffin-hub-sdk": "file:../griffin-hub-sdk",
     "griffin-plan-executor": "file:../griffin-plan-executor",
     "object-hash": "^3.0.0",
-    "typebox": "^1.0.78"
+    "typebox": "^1.0.78",
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",

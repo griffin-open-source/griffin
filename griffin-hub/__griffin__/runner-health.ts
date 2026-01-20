@@ -6,7 +6,7 @@ import {
   START,
   END,
   Frequency,
-  target,
+  variable,
 } from "griffin";
 
 const plan = createGraphBuilder({
@@ -17,7 +17,7 @@ const plan = createGraphBuilder({
     "root",
     Endpoint({
       method: GET,
-      base: target("runner-api"),
+      base: variable("runner-api"),
       response_format: Json,
       path: "/",
     }),

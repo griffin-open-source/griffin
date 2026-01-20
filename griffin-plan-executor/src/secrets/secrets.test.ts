@@ -127,7 +127,7 @@ describe("Plan Secret Resolution", () => {
         type: NodeType.ENDPOINT,
         method: HttpMethod.GET,
         path: "/api/test",
-        base: { type: "target", key: "api-gateway" },
+        base: { $variable: { key: "api-gateway" } },
         response_format: ResponseFormat.JSON,
         headers,
         body,

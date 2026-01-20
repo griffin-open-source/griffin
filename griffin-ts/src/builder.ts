@@ -228,8 +228,8 @@ export interface EndpointConfig {
     | "OPTIONS"
     | "CONNECT"
     | "TRACE";
-  path: string;
-  base: Endpoint["base"];
+  path: string | Endpoint["path"];
+  base: string | Endpoint["base"];
   response_format: "JSON" | "XML" | "TEXT";
   headers?: Record<string, any>;
   body?: any;
@@ -243,12 +243,12 @@ export interface EndpointConfig {
  *
  * @example
  * ```typescript
- * import { target } from './target';
+ * import { variable } from './variable';
  *
  * builder.addNode("health", Endpoint({
  *   method: GET,
  *   path: "/health",
- *   base: target("api-gateway"),
+ *   base: variable("api-gateway"),
  *   response_format: JSON
  * }));
  * ```

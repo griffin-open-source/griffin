@@ -7,7 +7,7 @@ import {
   END,
   Frequency,
   secret,
-  target,
+  variable,
 } from "griffin";
 
 const plan = createGraphBuilder({
@@ -18,7 +18,7 @@ const plan = createGraphBuilder({
     "list_plans",
     Endpoint({
       method: GET,
-      base: target("runner-api"),
+      base: variable("runner-api"),
       response_format: Json,
       path: "/plan/plan",
       headers: { "X-API-Key": secret("env:RUNNER_API_KEY") },
@@ -28,7 +28,7 @@ const plan = createGraphBuilder({
     "list_runs",
     Endpoint({
       method: GET,
-      base: target("runner-api"),
+      base: variable("runner-api"),
       response_format: Json,
       path: "/runs/runs",
       headers: { "X-API-Key": secret("env:RUNNER_API_KEY") },

@@ -2,7 +2,6 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import AutoLoad, { AutoloadPluginOptions } from "@fastify/autoload";
 import { FastifyPluginAsync, FastifyServerOptions } from "fastify";
-import type { FastifyTypeBox } from "./types.js";
 import fp from "fastify-plugin";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -18,7 +17,7 @@ const appPlugin: FastifyPluginAsync<AppOptions> = async (
   opts,
 ): Promise<void> => {
   // Place here your custom code!
-  const fastifyWithTypes = fastify as FastifyTypeBox;
+  const fastifyWithTypes = fastify;
 
   // Do not touch the following lines
 

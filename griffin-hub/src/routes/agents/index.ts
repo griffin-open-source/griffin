@@ -1,7 +1,5 @@
-import type { FastifyPluginAsync } from "fastify";
 import { Type } from "typebox";
 import { AgentSchema, AgentStatusSchema } from "../../schemas/agent.js";
-import { FastifyTypeBox } from "../../types.js";
 
 export const RegisterEndpoint = {
   description: "Register a new agent with the hub",
@@ -70,7 +68,7 @@ export const GetRegisteredLocationsEndpoint = {
     }),
   },
 };
-const agentsRoute: FastifyPluginAsync = async (fastify: FastifyTypeBox) => {
+const agentsRoute = async (fastify: any) => {
   const agentRegistry = fastify.agentRegistry;
   // POST /agents/register - Register a new agent
   fastify.post(

@@ -121,7 +121,6 @@ describe("Plan Secret Resolution", () => {
     name: "Test Plan",
     version: "1.0",
     environment: "default",
-    organization: "test-org",
     project: "test-project",
     frequency: { every: 1, unit: FrequencyUnit.MINUTE },
     nodes: [

@@ -11,7 +11,7 @@ import { EnvSecretProvider } from "./secrets/providers/env.js";
 describe("executePlanV1", () => {
   let stubClient: StubAdapter;
   let options: ExecutionOptions;
-
+  let organizationId: string = "test-org";
   beforeEach(() => {
     stubClient = new StubAdapter();
     const secretRegistry = new SecretProviderRegistry();
@@ -28,7 +28,6 @@ describe("executePlanV1", () => {
     it("should execute a simple GET request successfully", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-1",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Simple GET Test",
@@ -65,7 +64,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.errors).toHaveLength(0);
@@ -84,7 +83,6 @@ describe("executePlanV1", () => {
         name: "POST Test",
         version: "1.0",
         environment: "default",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         nodes: [
@@ -124,7 +122,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results[0].response).toEqual({
@@ -140,7 +138,6 @@ describe("executePlanV1", () => {
         name: "JSON String Response Test",
         version: "1.0",
         environment: "default",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         nodes: [
@@ -174,7 +171,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results[0].response).toEqual({ message: "hello" });
@@ -186,7 +183,6 @@ describe("executePlanV1", () => {
         name: "BaseUrl Override Test",
         version: "1.0",
         environment: "default",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         nodes: [
@@ -220,7 +216,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(true);
     });
@@ -230,7 +226,6 @@ describe("executePlanV1", () => {
     it("should handle PUT requests", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-5",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "PUT Test",
@@ -268,7 +263,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results[0].response).toEqual({
@@ -280,7 +275,6 @@ describe("executePlanV1", () => {
     it("should handle DELETE requests", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-6",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "DELETE Test",
@@ -317,7 +311,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results[0].response).toBeNull();
@@ -326,7 +320,6 @@ describe("executePlanV1", () => {
     it("should handle PATCH requests", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-7",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "PATCH Test",
@@ -364,7 +357,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(true);
     });
@@ -374,7 +367,6 @@ describe("executePlanV1", () => {
     it("should execute two endpoints in sequence", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-8",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Sequential Test",
@@ -432,7 +424,7 @@ describe("executePlanV1", () => {
           },
         });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results).toHaveLength(2);
@@ -445,7 +437,6 @@ describe("executePlanV1", () => {
     it("should execute a linear chain of multiple endpoints", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-9",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Multi-Step Linear Test",
@@ -527,7 +518,7 @@ describe("executePlanV1", () => {
           response: { status: 200, statusText: "OK", data: { step: 4 } },
         });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results).toHaveLength(4);
@@ -542,7 +533,6 @@ describe("executePlanV1", () => {
     it("should execute a wait node successfully", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-10",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Wait Test",
@@ -568,7 +558,7 @@ describe("executePlanV1", () => {
       };
 
       const startTime = Date.now();
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
       const endTime = Date.now();
 
       expect(result.success).toBe(true);
@@ -582,7 +572,6 @@ describe("executePlanV1", () => {
     it("should execute endpoints with waits in between", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-11",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Endpoint-Wait-Endpoint Test",
@@ -641,7 +630,7 @@ describe("executePlanV1", () => {
           response: { status: 200, statusText: "OK", data: { step: 2 } },
         });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results).toHaveLength(3);
@@ -654,7 +643,6 @@ describe("executePlanV1", () => {
     it("should execute an assertion node (currently no-op)", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-12",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Assertion Test",
@@ -700,7 +688,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results).toHaveLength(2);
@@ -713,7 +701,6 @@ describe("executePlanV1", () => {
     it("should handle failed HTTP requests gracefully", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-13",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Failed Request Test",
@@ -743,7 +730,7 @@ describe("executePlanV1", () => {
 
       // Don't add a stub - this will cause the request to fail
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(false);
       expect(result.errors).toHaveLength(1);
@@ -756,7 +743,6 @@ describe("executePlanV1", () => {
     it("should handle disconnected nodes gracefully", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-14",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Disconnected Nodes Test",
@@ -796,7 +782,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       // Graph can execute but disconnected nodes are not executed
       expect(result.success).toBe(true);
@@ -806,7 +792,6 @@ describe("executePlanV1", () => {
     it("should continue execution after a failed node", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-15",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Continue After Failure Test",
@@ -852,7 +837,7 @@ describe("executePlanV1", () => {
       });
       // No stub for /fail - it will fail
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(false);
       expect(result.results).toHaveLength(2);
@@ -865,7 +850,6 @@ describe("executePlanV1", () => {
     it("should store successful responses for downstream nodes", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-16",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Response Storage Test",
@@ -923,7 +907,7 @@ describe("executePlanV1", () => {
           },
         });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results[0].response).toEqual({ userId: 123 });
@@ -933,7 +917,6 @@ describe("executePlanV1", () => {
     it("should not store failed responses", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-17",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Failed Response Not Stored Test",
@@ -963,7 +946,7 @@ describe("executePlanV1", () => {
 
       // No stub configured - will fail
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(false);
       expect(result.results[0].response).toBeUndefined();
@@ -977,7 +960,6 @@ describe("executePlanV1", () => {
         name: "Timing Test",
         version: "1.0",
         environment: "default",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         nodes: [
@@ -1011,7 +993,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.totalDuration_ms).toBeGreaterThanOrEqual(0);
       expect(result.totalDuration_ms).toBeGreaterThanOrEqual(
@@ -1022,7 +1004,6 @@ describe("executePlanV1", () => {
     it("should track individual node durations", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-19",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Node Duration Test",
@@ -1081,7 +1062,7 @@ describe("executePlanV1", () => {
           response: { status: 200, statusText: "OK", data: {} },
         });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(true);
       result.results.forEach((nodeResult) => {
@@ -1095,7 +1076,6 @@ describe("executePlanV1", () => {
     it("should handle empty plan (no nodes)", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-20",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Empty Plan Test",
@@ -1110,7 +1090,7 @@ describe("executePlanV1", () => {
         ],
       };
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       // Empty plan with just START->END should succeed with no results
       expect(result.success).toBe(true);
@@ -1121,7 +1101,6 @@ describe("executePlanV1", () => {
     it("should handle single node with no edges", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-21",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Single Node Test",
@@ -1158,7 +1137,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results).toHaveLength(1);
@@ -1167,7 +1146,6 @@ describe("executePlanV1", () => {
     it("should handle complex response data types", async () => {
       const plan: TestPlanV1 = {
         id: "test-plan-22",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Complex Data Test",
@@ -1217,7 +1195,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, options);
+      const result = await executePlanV1(plan, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results[0].response).toEqual(complexData);
@@ -1237,7 +1215,6 @@ describe("executePlanV1", () => {
     it("should emit PLAN_START and PLAN_END events", async () => {
       const plan: TestPlanV1 = {
         id: "event-test-1",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Event Test Plan",
@@ -1270,7 +1247,7 @@ describe("executePlanV1", () => {
         response: { status: 200, statusText: "OK", data: { ok: true } },
       });
 
-      await executePlanV1(plan, {
+      await executePlanV1(plan, organizationId, {
         ...options,
         eventEmitter: emitter,
       });
@@ -1303,7 +1280,6 @@ describe("executePlanV1", () => {
     it("should emit NODE_START and NODE_END events for each node", async () => {
       const plan: TestPlanV1 = {
         id: "event-test-2",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Multi-Node Event Test",
@@ -1362,7 +1338,7 @@ describe("executePlanV1", () => {
           response: { status: 200, statusText: "OK", data: { step: 2 } },
         });
 
-      await executePlanV1(plan, {
+      await executePlanV1(plan, organizationId, {
         ...options,
         eventEmitter: emitter,
       });
@@ -1391,7 +1367,6 @@ describe("executePlanV1", () => {
     it("should emit HTTP_REQUEST and HTTP_RESPONSE events for endpoint nodes", async () => {
       const plan: TestPlanV1 = {
         id: "event-test-3",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "HTTP Event Test",
@@ -1426,7 +1401,7 @@ describe("executePlanV1", () => {
         response: { status: 201, statusText: "Created", data: { id: 123 } },
       });
 
-      await executePlanV1(plan, {
+      await executePlanV1(plan, organizationId, {
         ...options,
         eventEmitter: emitter,
       });
@@ -1467,7 +1442,6 @@ describe("executePlanV1", () => {
     it("should emit WAIT_START event for wait nodes", async () => {
       const plan: TestPlanV1 = {
         id: "event-test-4",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Wait Event Test",
@@ -1492,7 +1466,7 @@ describe("executePlanV1", () => {
         ],
       };
 
-      await executePlanV1(plan, {
+      await executePlanV1(plan, organizationId, {
         ...options,
         eventEmitter: emitter,
       });
@@ -1510,7 +1484,6 @@ describe("executePlanV1", () => {
     it("should emit ERROR event on HTTP request failure", async () => {
       const plan: TestPlanV1 = {
         id: "event-test-5",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Error Event Test",
@@ -1540,7 +1513,7 @@ describe("executePlanV1", () => {
 
       // No stub - request will fail
 
-      const result = await executePlanV1(plan, {
+      const result = await executePlanV1(plan, organizationId, {
         ...options,
         eventEmitter: emitter,
       });
@@ -1554,7 +1527,6 @@ describe("executePlanV1", () => {
     it("should maintain monotonic sequence numbers", async () => {
       const plan: TestPlanV1 = {
         id: "event-test-6",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Sequence Test",
@@ -1587,7 +1559,7 @@ describe("executePlanV1", () => {
         response: { status: 200, statusText: "OK", data: {} },
       });
 
-      await executePlanV1(plan, {
+      await executePlanV1(plan, organizationId, {
         ...options,
         eventEmitter: emitter,
       });
@@ -1611,7 +1583,6 @@ describe("executePlanV1", () => {
 
       const plan: TestPlanV1 = {
         id: "event-test-7",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Custom Execution ID Test",
@@ -1644,7 +1615,7 @@ describe("executePlanV1", () => {
         response: { status: 200, statusText: "OK", data: {} },
       });
 
-      await executePlanV1(plan, {
+      await executePlanV1(plan, organizationId, {
         ...options,
         eventEmitter: emitter,
         executionId: customExecutionId,
@@ -1659,7 +1630,6 @@ describe("executePlanV1", () => {
     it("should emit events in correct order", async () => {
       const plan: TestPlanV1 = {
         id: "event-test-8",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         name: "Event Order Test",
@@ -1692,7 +1662,7 @@ describe("executePlanV1", () => {
         response: { status: 200, statusText: "OK", data: {} },
       });
 
-      await executePlanV1(plan, {
+      await executePlanV1(plan, organizationId, {
         ...options,
         eventEmitter: emitter,
       });
@@ -1714,7 +1684,6 @@ describe("executePlanV1", () => {
         name: "Failed Request Event Test",
         version: "1.0",
         environment: "default",
-        organization: "test-org",
         project: "test-project",
         frequency: { every: 1, unit: FrequencyUnit.MINUTE },
         nodes: [
@@ -1741,7 +1710,7 @@ describe("executePlanV1", () => {
 
       // No stub - request will fail
 
-      await executePlanV1(plan, {
+      await executePlanV1(plan, organizationId, {
         ...options,
         eventEmitter: emitter,
       });

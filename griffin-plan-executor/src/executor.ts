@@ -47,6 +47,7 @@ class ExecutionContext {
   constructor(
     public readonly executionId: string,
     public readonly plan: TestPlanV1,
+    public readonly organizationId: string,
     private readonly emitter?: ExecutionOptions["eventEmitter"],
   ) {}
 
@@ -60,6 +61,7 @@ class ExecutionContext {
       timestamp: Date.now(),
       planId: this.plan.id,
       executionId: this.executionId,
+      organizationId: this.organizationId,
     };
   }
 
@@ -357,6 +359,7 @@ function buildGraph(
 }
 export async function executePlanV1(
   plan: TestPlanV1,
+  organizationId: string,
   options: ExecutionOptions,
 ): Promise<ExecutionResult> {
   const startTime = Date.now();
@@ -368,6 +371,7 @@ export async function executePlanV1(
   const executionContext = new ExecutionContext(
     executionId,
     plan,
+    organizationId,
     options.eventEmitter,
   );
 

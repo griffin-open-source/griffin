@@ -137,30 +137,6 @@ export const Assertion1AnyOfAccessorEnum = {
 
 export type Assertion1AnyOfAccessorEnum = typeof Assertion1AnyOfAccessorEnum[keyof typeof Assertion1AnyOfAccessorEnum];
 
-export interface Assertion1AnyOf1 {
-    'assertionType': Assertion1AnyOf1AssertionTypeEnum;
-    'path': Array<string>;
-    'expected': any;
-}
-
-export const Assertion1AnyOf1AssertionTypeEnum = {
-    Xml: 'XML'
-} as const;
-
-export type Assertion1AnyOf1AssertionTypeEnum = typeof Assertion1AnyOf1AssertionTypeEnum[keyof typeof Assertion1AnyOf1AssertionTypeEnum];
-
-export interface Assertion1AnyOf2 {
-    'assertionType': Assertion1AnyOf2AssertionTypeEnum;
-    'path': string;
-    'expected': any;
-}
-
-export const Assertion1AnyOf2AssertionTypeEnum = {
-    Text: 'TEXT'
-} as const;
-
-export type Assertion1AnyOf2AssertionTypeEnum = typeof Assertion1AnyOf2AssertionTypeEnum[keyof typeof Assertion1AnyOf2AssertionTypeEnum];
-
 export interface Assertions {
     'id': string;
     'type': AssertionsTypeEnum;
@@ -248,29 +224,6 @@ export const BinaryPredicateOperator = {
 export type BinaryPredicateOperator = typeof BinaryPredicateOperator[keyof typeof BinaryPredicateOperator];
 
 
-export interface ConfigGet200Response {
-    'data': Array<ConfigOrganizationIdEnvironmentTargetsTargetKeyPut200ResponseData>;
-}
-export interface ConfigOrganizationIdEnvironmentTargetsTargetKeyGet200Response {
-    'data': ConfigOrganizationIdEnvironmentTargetsTargetKeyGet200ResponseData;
-}
-export interface ConfigOrganizationIdEnvironmentTargetsTargetKeyGet200ResponseData {
-    'baseUrl': string;
-}
-export interface ConfigOrganizationIdEnvironmentTargetsTargetKeyPut200Response {
-    'data': ConfigOrganizationIdEnvironmentTargetsTargetKeyPut200ResponseData;
-}
-export interface ConfigOrganizationIdEnvironmentTargetsTargetKeyPut200ResponseData {
-    'id': string;
-    'organizationId': string;
-    'environment': string;
-    'targets': { [key: string]: string; };
-    'createdAt': string;
-    'updatedAt': string;
-}
-export interface ConfigOrganizationIdEnvironmentTargetsTargetKeyPutRequest {
-    'baseUrl': string;
-}
 export interface Edge {
     'from': string;
     'to': string;
@@ -283,9 +236,9 @@ export interface Endpoint {
     'id': string;
     'type': EndpointTypeEnum;
     'method': EndpointMethodEnum;
-    'path': string;
-    'base': Endpoint1Base;
-    'headers'?: { [key: string]: Endpoint1HeadersValue; };
+    'path': PlanPostRequestNodesInnerAnyOfPath;
+    'base': PlanPostRequestNodesInnerAnyOfPath;
+    'headers'?: { [key: string]: PlanPostRequestNodesInnerAnyOfHeadersValue; };
     'body'?: any;
     'response_format': EndpointResponseFormatEnum;
 }
@@ -320,9 +273,9 @@ export interface Endpoint1 {
     'id': string;
     'type': Endpoint1TypeEnum;
     'method': Endpoint1MethodEnum;
-    'path': string;
-    'base': Endpoint1Base;
-    'headers'?: { [key: string]: Endpoint1HeadersValue; };
+    'path': PlanPostRequestNodesInnerAnyOfPath;
+    'base': PlanPostRequestNodesInnerAnyOfPath;
+    'headers'?: { [key: string]: PlanPostRequestNodesInnerAnyOfHeadersValue; };
     'body'?: any;
     'response_format': Endpoint1ResponseFormatEnum;
 }
@@ -353,29 +306,6 @@ export const Endpoint1ResponseFormatEnum = {
 
 export type Endpoint1ResponseFormatEnum = typeof Endpoint1ResponseFormatEnum[keyof typeof Endpoint1ResponseFormatEnum];
 
-export interface Endpoint1Base {
-    'type': Endpoint1BaseTypeEnum;
-    'key': string;
-}
-
-export const Endpoint1BaseTypeEnum = {
-    Target: 'target'
-} as const;
-
-export type Endpoint1BaseTypeEnum = typeof Endpoint1BaseTypeEnum[keyof typeof Endpoint1BaseTypeEnum];
-
-export interface Endpoint1HeadersValue {
-    '$secret': Endpoint1HeadersValueAnyOfSecret;
-}
-export interface Endpoint1HeadersValueAnyOf {
-    '$secret': Endpoint1HeadersValueAnyOfSecret;
-}
-export interface Endpoint1HeadersValueAnyOfSecret {
-    'provider': string;
-    'ref': string;
-    'version'?: string;
-    'field'?: string;
-}
 export interface Frequency {
     'every': number;
     'unit': FrequencyUnitEnum;
@@ -464,9 +394,9 @@ export interface Node1 {
     'id': string;
     'type': Node1TypeEnum;
     'method': Node1MethodEnum;
-    'path': string;
-    'base': Endpoint1Base;
-    'headers'?: { [key: string]: Endpoint1HeadersValue; };
+    'path': PlanPostRequestNodesInnerAnyOfPath;
+    'base': PlanPostRequestNodesInnerAnyOfPath;
+    'headers'?: { [key: string]: PlanPostRequestNodesInnerAnyOfHeadersValue; };
     'body'?: any;
     'response_format': Node1ResponseFormatEnum;
     'duration_ms': number;
@@ -509,6 +439,271 @@ export interface PlanGet200Response {
 }
 export interface PlanPost201Response {
     'data': TestPlanV1;
+}
+export interface PlanPostRequest {
+    'project': string;
+    'locations'?: Array<string>;
+    'name': string;
+    'version': PlanPostRequestVersionEnum;
+    'frequency': PlanPostRequestFrequency;
+    'environment': string;
+    'nodes': Array<PlanPostRequestNodesInner>;
+    'edges': Array<PlanPostRequestEdgesInner>;
+}
+
+export const PlanPostRequestVersionEnum = {
+    _10: '1.0'
+} as const;
+
+export type PlanPostRequestVersionEnum = typeof PlanPostRequestVersionEnum[keyof typeof PlanPostRequestVersionEnum];
+
+export interface PlanPostRequestEdgesInner {
+    'from': string;
+    'to': string;
+}
+export interface PlanPostRequestFrequency {
+    'every': number;
+    'unit': PlanPostRequestFrequencyUnitEnum;
+}
+
+export const PlanPostRequestFrequencyUnitEnum = {
+    Minute: 'MINUTE',
+    Hour: 'HOUR',
+    Day: 'DAY'
+} as const;
+
+export type PlanPostRequestFrequencyUnitEnum = typeof PlanPostRequestFrequencyUnitEnum[keyof typeof PlanPostRequestFrequencyUnitEnum];
+
+export interface PlanPostRequestNodesInner {
+    'id': string;
+    'type': PlanPostRequestNodesInnerTypeEnum;
+    'method': PlanPostRequestNodesInnerMethodEnum;
+    'path': PlanPostRequestNodesInnerAnyOfPath;
+    'base': PlanPostRequestNodesInnerAnyOfPath;
+    'headers'?: { [key: string]: PlanPostRequestNodesInnerAnyOfHeadersValue; };
+    'body'?: any;
+    'response_format': PlanPostRequestNodesInnerResponseFormatEnum;
+    'duration_ms': number;
+    'assertions': Array<PlanPostRequestNodesInnerAnyOf2AssertionsInner>;
+}
+
+export const PlanPostRequestNodesInnerTypeEnum = {
+    Endpoint: 'ENDPOINT',
+    Wait: 'WAIT',
+    Assertion: 'ASSERTION'
+} as const;
+
+export type PlanPostRequestNodesInnerTypeEnum = typeof PlanPostRequestNodesInnerTypeEnum[keyof typeof PlanPostRequestNodesInnerTypeEnum];
+export const PlanPostRequestNodesInnerMethodEnum = {
+    Get: 'GET',
+    Post: 'POST',
+    Put: 'PUT',
+    Delete: 'DELETE',
+    Patch: 'PATCH',
+    Head: 'HEAD',
+    Options: 'OPTIONS',
+    Connect: 'CONNECT',
+    Trace: 'TRACE'
+} as const;
+
+export type PlanPostRequestNodesInnerMethodEnum = typeof PlanPostRequestNodesInnerMethodEnum[keyof typeof PlanPostRequestNodesInnerMethodEnum];
+export const PlanPostRequestNodesInnerResponseFormatEnum = {
+    Json: 'JSON',
+    Xml: 'XML',
+    Text: 'TEXT'
+} as const;
+
+export type PlanPostRequestNodesInnerResponseFormatEnum = typeof PlanPostRequestNodesInnerResponseFormatEnum[keyof typeof PlanPostRequestNodesInnerResponseFormatEnum];
+
+export interface PlanPostRequestNodesInnerAnyOf {
+    'id': string;
+    'type': PlanPostRequestNodesInnerAnyOfTypeEnum;
+    'method': PlanPostRequestNodesInnerAnyOfMethodEnum;
+    'path': PlanPostRequestNodesInnerAnyOfPath;
+    'base': PlanPostRequestNodesInnerAnyOfPath;
+    'headers'?: { [key: string]: PlanPostRequestNodesInnerAnyOfHeadersValue; };
+    'body'?: any;
+    'response_format': PlanPostRequestNodesInnerAnyOfResponseFormatEnum;
+}
+
+export const PlanPostRequestNodesInnerAnyOfTypeEnum = {
+    Endpoint: 'ENDPOINT'
+} as const;
+
+export type PlanPostRequestNodesInnerAnyOfTypeEnum = typeof PlanPostRequestNodesInnerAnyOfTypeEnum[keyof typeof PlanPostRequestNodesInnerAnyOfTypeEnum];
+export const PlanPostRequestNodesInnerAnyOfMethodEnum = {
+    Get: 'GET',
+    Post: 'POST',
+    Put: 'PUT',
+    Delete: 'DELETE',
+    Patch: 'PATCH',
+    Head: 'HEAD',
+    Options: 'OPTIONS',
+    Connect: 'CONNECT',
+    Trace: 'TRACE'
+} as const;
+
+export type PlanPostRequestNodesInnerAnyOfMethodEnum = typeof PlanPostRequestNodesInnerAnyOfMethodEnum[keyof typeof PlanPostRequestNodesInnerAnyOfMethodEnum];
+export const PlanPostRequestNodesInnerAnyOfResponseFormatEnum = {
+    Json: 'JSON',
+    Xml: 'XML',
+    Text: 'TEXT'
+} as const;
+
+export type PlanPostRequestNodesInnerAnyOfResponseFormatEnum = typeof PlanPostRequestNodesInnerAnyOfResponseFormatEnum[keyof typeof PlanPostRequestNodesInnerAnyOfResponseFormatEnum];
+
+export interface PlanPostRequestNodesInnerAnyOf1 {
+    'id': string;
+    'type': PlanPostRequestNodesInnerAnyOf1TypeEnum;
+    'duration_ms': number;
+}
+
+export const PlanPostRequestNodesInnerAnyOf1TypeEnum = {
+    Wait: 'WAIT'
+} as const;
+
+export type PlanPostRequestNodesInnerAnyOf1TypeEnum = typeof PlanPostRequestNodesInnerAnyOf1TypeEnum[keyof typeof PlanPostRequestNodesInnerAnyOf1TypeEnum];
+
+export interface PlanPostRequestNodesInnerAnyOf2 {
+    'id': string;
+    'type': PlanPostRequestNodesInnerAnyOf2TypeEnum;
+    'assertions': Array<PlanPostRequestNodesInnerAnyOf2AssertionsInner>;
+}
+
+export const PlanPostRequestNodesInnerAnyOf2TypeEnum = {
+    Assertion: 'ASSERTION'
+} as const;
+
+export type PlanPostRequestNodesInnerAnyOf2TypeEnum = typeof PlanPostRequestNodesInnerAnyOf2TypeEnum[keyof typeof PlanPostRequestNodesInnerAnyOf2TypeEnum];
+
+export interface PlanPostRequestNodesInnerAnyOf2AssertionsInner {
+    'assertionType': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAssertionTypeEnum;
+    'nodeId': string;
+    'accessor': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfAccessor;
+    'path': string;
+    'predicate': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicate;
+    'expected': any;
+}
+
+export const PlanPostRequestNodesInnerAnyOf2AssertionsInnerAssertionTypeEnum = {
+    Text: 'TEXT'
+} as const;
+
+export type PlanPostRequestNodesInnerAnyOf2AssertionsInnerAssertionTypeEnum = typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAssertionTypeEnum[keyof typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAssertionTypeEnum];
+
+export interface PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf {
+    'assertionType': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAssertionTypeEnum;
+    'nodeId': string;
+    'accessor': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfAccessor;
+    'path': Array<string>;
+    'predicate': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicate;
+}
+
+export const PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAssertionTypeEnum = {
+    Json: 'JSON'
+} as const;
+
+export type PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAssertionTypeEnum = typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAssertionTypeEnum[keyof typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAssertionTypeEnum];
+
+export interface PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1 {
+    'assertionType': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1AssertionTypeEnum;
+    'path': Array<string>;
+    'expected': any;
+}
+
+export const PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1AssertionTypeEnum = {
+    Xml: 'XML'
+} as const;
+
+export type PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1AssertionTypeEnum = typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1AssertionTypeEnum[keyof typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1AssertionTypeEnum];
+
+export interface PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf2 {
+    'assertionType': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf2AssertionTypeEnum;
+    'path': string;
+    'expected': any;
+}
+
+export const PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf2AssertionTypeEnum = {
+    Text: 'TEXT'
+} as const;
+
+export type PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf2AssertionTypeEnum = typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf2AssertionTypeEnum[keyof typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf2AssertionTypeEnum];
+
+
+export const PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfAccessor = {
+    Body: 'body',
+    Headers: 'headers',
+    Status: 'status'
+} as const;
+
+export type PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfAccessor = typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfAccessor[keyof typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfAccessor];
+
+
+export interface PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicate {
+    'expected': any;
+    'operator': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateOperatorEnum;
+}
+
+export const PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateOperatorEnum = {
+    Equal: 'EQUAL',
+    NotEqual: 'NOT_EQUAL',
+    GreaterThan: 'GREATER_THAN',
+    LessThan: 'LESS_THAN',
+    GreaterThanOrEqual: 'GREATER_THAN_OR_EQUAL',
+    LessThanOrEqual: 'LESS_THAN_OR_EQUAL',
+    Contains: 'CONTAINS',
+    NotContains: 'NOT_CONTAINS',
+    StartsWith: 'STARTS_WITH',
+    EndsWith: 'ENDS_WITH',
+    NotStartsWith: 'NOT_STARTS_WITH',
+    NotEndsWith: 'NOT_ENDS_WITH'
+} as const;
+
+export type PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateOperatorEnum = typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateOperatorEnum[keyof typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateOperatorEnum];
+
+export interface PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOf {
+    'expected': any;
+    'operator': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOfOperatorEnum;
+}
+
+export const PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOfOperatorEnum = {
+    Equal: 'EQUAL',
+    NotEqual: 'NOT_EQUAL',
+    GreaterThan: 'GREATER_THAN',
+    LessThan: 'LESS_THAN',
+    GreaterThanOrEqual: 'GREATER_THAN_OR_EQUAL',
+    LessThanOrEqual: 'LESS_THAN_OR_EQUAL',
+    Contains: 'CONTAINS',
+    NotContains: 'NOT_CONTAINS',
+    StartsWith: 'STARTS_WITH',
+    EndsWith: 'ENDS_WITH',
+    NotStartsWith: 'NOT_STARTS_WITH',
+    NotEndsWith: 'NOT_ENDS_WITH'
+} as const;
+
+export type PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOfOperatorEnum = typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOfOperatorEnum[keyof typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOfOperatorEnum];
+
+export interface PlanPostRequestNodesInnerAnyOfHeadersValue {
+    '$secret': PlanPostRequestNodesInnerAnyOfHeadersValueAnyOfSecret;
+}
+export interface PlanPostRequestNodesInnerAnyOfHeadersValueAnyOf {
+    '$secret': PlanPostRequestNodesInnerAnyOfHeadersValueAnyOfSecret;
+}
+export interface PlanPostRequestNodesInnerAnyOfHeadersValueAnyOfSecret {
+    'provider': string;
+    'ref': string;
+    'version'?: string;
+    'field'?: string;
+}
+export interface PlanPostRequestNodesInnerAnyOfPath {
+    '$variable': PlanPostRequestNodesInnerAnyOfPathAnyOfVariable;
+}
+export interface PlanPostRequestNodesInnerAnyOfPathAnyOf {
+    '$variable': PlanPostRequestNodesInnerAnyOfPathAnyOfVariable;
+}
+export interface PlanPostRequestNodesInnerAnyOfPathAnyOfVariable {
+    'key': string;
+    'template'?: string;
 }
 
 export const ResponseFormat = {
@@ -612,13 +807,12 @@ export interface RunsTriggerPlanIdPostRequest {
     'environment': string;
 }
 export interface TestPlanV1 {
-    'organization'?: string;
-    'project'?: string;
+    'project': string;
     'locations'?: Array<string>;
     'id': string;
     'name': string;
     'version': TestPlanV1VersionEnum;
-    'frequency'?: Frequency1;
+    'frequency': Frequency1;
     'environment': string;
     'nodes': Array<Node1>;
     'edges': Array<Edge1>;
@@ -1030,431 +1224,6 @@ export type AgentsGetStatusEnum = typeof AgentsGetStatusEnum[keyof typeof Agents
 
 
 /**
- * ConfigApi - axios parameter creator
- */
-export const ConfigApiAxiosParamCreator = function (configuration?: Configuration) {
-    return {
-        /**
-         * 
-         * @param {string} [organizationId] 
-         * @param {string} [environment] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        configGet: async (organizationId?: string, environment?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/config/`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            if (organizationId !== undefined) {
-                localVarQueryParameter['organizationId'] = organizationId;
-            }
-
-            if (environment !== undefined) {
-                localVarQueryParameter['environment'] = environment;
-            }
-
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {string} organizationId 
-         * @param {string} environment 
-         * @param {string} targetKey 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        configOrganizationIdEnvironmentTargetsTargetKeyDelete: async (organizationId: string, environment: string, targetKey: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'organizationId' is not null or undefined
-            assertParamExists('configOrganizationIdEnvironmentTargetsTargetKeyDelete', 'organizationId', organizationId)
-            // verify required parameter 'environment' is not null or undefined
-            assertParamExists('configOrganizationIdEnvironmentTargetsTargetKeyDelete', 'environment', environment)
-            // verify required parameter 'targetKey' is not null or undefined
-            assertParamExists('configOrganizationIdEnvironmentTargetsTargetKeyDelete', 'targetKey', targetKey)
-            const localVarPath = `/config/{organizationId}/{environment}/targets/{targetKey}`
-                .replace(`{${"organizationId"}}`, encodeURIComponent(String(organizationId)))
-                .replace(`{${"environment"}}`, encodeURIComponent(String(environment)))
-                .replace(`{${"targetKey"}}`, encodeURIComponent(String(targetKey)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {string} organizationId 
-         * @param {string} environment 
-         * @param {string} targetKey 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        configOrganizationIdEnvironmentTargetsTargetKeyGet: async (organizationId: string, environment: string, targetKey: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'organizationId' is not null or undefined
-            assertParamExists('configOrganizationIdEnvironmentTargetsTargetKeyGet', 'organizationId', organizationId)
-            // verify required parameter 'environment' is not null or undefined
-            assertParamExists('configOrganizationIdEnvironmentTargetsTargetKeyGet', 'environment', environment)
-            // verify required parameter 'targetKey' is not null or undefined
-            assertParamExists('configOrganizationIdEnvironmentTargetsTargetKeyGet', 'targetKey', targetKey)
-            const localVarPath = `/config/{organizationId}/{environment}/targets/{targetKey}`
-                .replace(`{${"organizationId"}}`, encodeURIComponent(String(organizationId)))
-                .replace(`{${"environment"}}`, encodeURIComponent(String(environment)))
-                .replace(`{${"targetKey"}}`, encodeURIComponent(String(targetKey)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {string} organizationId 
-         * @param {string} environment 
-         * @param {string} targetKey 
-         * @param {ConfigOrganizationIdEnvironmentTargetsTargetKeyPutRequest} configOrganizationIdEnvironmentTargetsTargetKeyPutRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        configOrganizationIdEnvironmentTargetsTargetKeyPut: async (organizationId: string, environment: string, targetKey: string, configOrganizationIdEnvironmentTargetsTargetKeyPutRequest: ConfigOrganizationIdEnvironmentTargetsTargetKeyPutRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'organizationId' is not null or undefined
-            assertParamExists('configOrganizationIdEnvironmentTargetsTargetKeyPut', 'organizationId', organizationId)
-            // verify required parameter 'environment' is not null or undefined
-            assertParamExists('configOrganizationIdEnvironmentTargetsTargetKeyPut', 'environment', environment)
-            // verify required parameter 'targetKey' is not null or undefined
-            assertParamExists('configOrganizationIdEnvironmentTargetsTargetKeyPut', 'targetKey', targetKey)
-            // verify required parameter 'configOrganizationIdEnvironmentTargetsTargetKeyPutRequest' is not null or undefined
-            assertParamExists('configOrganizationIdEnvironmentTargetsTargetKeyPut', 'configOrganizationIdEnvironmentTargetsTargetKeyPutRequest', configOrganizationIdEnvironmentTargetsTargetKeyPutRequest)
-            const localVarPath = `/config/{organizationId}/{environment}/targets/{targetKey}`
-                .replace(`{${"organizationId"}}`, encodeURIComponent(String(organizationId)))
-                .replace(`{${"environment"}}`, encodeURIComponent(String(environment)))
-                .replace(`{${"targetKey"}}`, encodeURIComponent(String(targetKey)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(configOrganizationIdEnvironmentTargetsTargetKeyPutRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {string} organizationId 
-         * @param {string} environment 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        configSingleGet: async (organizationId: string, environment: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'organizationId' is not null or undefined
-            assertParamExists('configSingleGet', 'organizationId', organizationId)
-            // verify required parameter 'environment' is not null or undefined
-            assertParamExists('configSingleGet', 'environment', environment)
-            const localVarPath = `/config/single`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            if (organizationId !== undefined) {
-                localVarQueryParameter['organizationId'] = organizationId;
-            }
-
-            if (environment !== undefined) {
-                localVarQueryParameter['environment'] = environment;
-            }
-
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-    }
-};
-
-/**
- * ConfigApi - functional programming interface
- */
-export const ConfigApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = ConfigApiAxiosParamCreator(configuration)
-    return {
-        /**
-         * 
-         * @param {string} [organizationId] 
-         * @param {string} [environment] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async configGet(organizationId?: string, environment?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigGet200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.configGet(organizationId, environment, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ConfigApi.configGet']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {string} organizationId 
-         * @param {string} environment 
-         * @param {string} targetKey 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async configOrganizationIdEnvironmentTargetsTargetKeyDelete(organizationId: string, environment: string, targetKey: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.configOrganizationIdEnvironmentTargetsTargetKeyDelete(organizationId, environment, targetKey, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ConfigApi.configOrganizationIdEnvironmentTargetsTargetKeyDelete']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {string} organizationId 
-         * @param {string} environment 
-         * @param {string} targetKey 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async configOrganizationIdEnvironmentTargetsTargetKeyGet(organizationId: string, environment: string, targetKey: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigOrganizationIdEnvironmentTargetsTargetKeyGet200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.configOrganizationIdEnvironmentTargetsTargetKeyGet(organizationId, environment, targetKey, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ConfigApi.configOrganizationIdEnvironmentTargetsTargetKeyGet']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {string} organizationId 
-         * @param {string} environment 
-         * @param {string} targetKey 
-         * @param {ConfigOrganizationIdEnvironmentTargetsTargetKeyPutRequest} configOrganizationIdEnvironmentTargetsTargetKeyPutRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async configOrganizationIdEnvironmentTargetsTargetKeyPut(organizationId: string, environment: string, targetKey: string, configOrganizationIdEnvironmentTargetsTargetKeyPutRequest: ConfigOrganizationIdEnvironmentTargetsTargetKeyPutRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigOrganizationIdEnvironmentTargetsTargetKeyPut200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.configOrganizationIdEnvironmentTargetsTargetKeyPut(organizationId, environment, targetKey, configOrganizationIdEnvironmentTargetsTargetKeyPutRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ConfigApi.configOrganizationIdEnvironmentTargetsTargetKeyPut']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {string} organizationId 
-         * @param {string} environment 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async configSingleGet(organizationId: string, environment: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigOrganizationIdEnvironmentTargetsTargetKeyPut200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.configSingleGet(organizationId, environment, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ConfigApi.configSingleGet']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-    }
-};
-
-/**
- * ConfigApi - factory interface
- */
-export const ConfigApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = ConfigApiFp(configuration)
-    return {
-        /**
-         * 
-         * @param {string} [organizationId] 
-         * @param {string} [environment] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        configGet(organizationId?: string, environment?: string, options?: RawAxiosRequestConfig): AxiosPromise<ConfigGet200Response> {
-            return localVarFp.configGet(organizationId, environment, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {string} organizationId 
-         * @param {string} environment 
-         * @param {string} targetKey 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        configOrganizationIdEnvironmentTargetsTargetKeyDelete(organizationId: string, environment: string, targetKey: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.configOrganizationIdEnvironmentTargetsTargetKeyDelete(organizationId, environment, targetKey, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {string} organizationId 
-         * @param {string} environment 
-         * @param {string} targetKey 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        configOrganizationIdEnvironmentTargetsTargetKeyGet(organizationId: string, environment: string, targetKey: string, options?: RawAxiosRequestConfig): AxiosPromise<ConfigOrganizationIdEnvironmentTargetsTargetKeyGet200Response> {
-            return localVarFp.configOrganizationIdEnvironmentTargetsTargetKeyGet(organizationId, environment, targetKey, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {string} organizationId 
-         * @param {string} environment 
-         * @param {string} targetKey 
-         * @param {ConfigOrganizationIdEnvironmentTargetsTargetKeyPutRequest} configOrganizationIdEnvironmentTargetsTargetKeyPutRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        configOrganizationIdEnvironmentTargetsTargetKeyPut(organizationId: string, environment: string, targetKey: string, configOrganizationIdEnvironmentTargetsTargetKeyPutRequest: ConfigOrganizationIdEnvironmentTargetsTargetKeyPutRequest, options?: RawAxiosRequestConfig): AxiosPromise<ConfigOrganizationIdEnvironmentTargetsTargetKeyPut200Response> {
-            return localVarFp.configOrganizationIdEnvironmentTargetsTargetKeyPut(organizationId, environment, targetKey, configOrganizationIdEnvironmentTargetsTargetKeyPutRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {string} organizationId 
-         * @param {string} environment 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        configSingleGet(organizationId: string, environment: string, options?: RawAxiosRequestConfig): AxiosPromise<ConfigOrganizationIdEnvironmentTargetsTargetKeyPut200Response> {
-            return localVarFp.configSingleGet(organizationId, environment, options).then((request) => request(axios, basePath));
-        },
-    };
-};
-
-/**
- * ConfigApi - object-oriented interface
- */
-export class ConfigApi extends BaseAPI {
-    /**
-     * 
-     * @param {string} [organizationId] 
-     * @param {string} [environment] 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public configGet(organizationId?: string, environment?: string, options?: RawAxiosRequestConfig) {
-        return ConfigApiFp(this.configuration).configGet(organizationId, environment, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {string} organizationId 
-     * @param {string} environment 
-     * @param {string} targetKey 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public configOrganizationIdEnvironmentTargetsTargetKeyDelete(organizationId: string, environment: string, targetKey: string, options?: RawAxiosRequestConfig) {
-        return ConfigApiFp(this.configuration).configOrganizationIdEnvironmentTargetsTargetKeyDelete(organizationId, environment, targetKey, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {string} organizationId 
-     * @param {string} environment 
-     * @param {string} targetKey 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public configOrganizationIdEnvironmentTargetsTargetKeyGet(organizationId: string, environment: string, targetKey: string, options?: RawAxiosRequestConfig) {
-        return ConfigApiFp(this.configuration).configOrganizationIdEnvironmentTargetsTargetKeyGet(organizationId, environment, targetKey, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {string} organizationId 
-     * @param {string} environment 
-     * @param {string} targetKey 
-     * @param {ConfigOrganizationIdEnvironmentTargetsTargetKeyPutRequest} configOrganizationIdEnvironmentTargetsTargetKeyPutRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public configOrganizationIdEnvironmentTargetsTargetKeyPut(organizationId: string, environment: string, targetKey: string, configOrganizationIdEnvironmentTargetsTargetKeyPutRequest: ConfigOrganizationIdEnvironmentTargetsTargetKeyPutRequest, options?: RawAxiosRequestConfig) {
-        return ConfigApiFp(this.configuration).configOrganizationIdEnvironmentTargetsTargetKeyPut(organizationId, environment, targetKey, configOrganizationIdEnvironmentTargetsTargetKeyPutRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {string} organizationId 
-     * @param {string} environment 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public configSingleGet(organizationId: string, environment: string, options?: RawAxiosRequestConfig) {
-        return ConfigApiFp(this.configuration).configSingleGet(organizationId, environment, options).then((request) => request(this.axios, this.basePath));
-    }
-}
-
-
-
-/**
  * DefaultApi - axios parameter creator
  */
 export const DefaultApiAxiosParamCreator = function (configuration?: Configuration) {
@@ -1550,13 +1319,64 @@ export const PlanApiAxiosParamCreator = function (configuration?: Configuration)
     return {
         /**
          * 
+         * @param {string} projectId 
+         * @param {string} environment 
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        planByNameGet: async (projectId: string, environment: string, name: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'projectId' is not null or undefined
+            assertParamExists('planByNameGet', 'projectId', projectId)
+            // verify required parameter 'environment' is not null or undefined
+            assertParamExists('planByNameGet', 'environment', environment)
+            // verify required parameter 'name' is not null or undefined
+            assertParamExists('planByNameGet', 'name', name)
+            const localVarPath = `/plan/by-name`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (projectId !== undefined) {
+                localVarQueryParameter['projectId'] = projectId;
+            }
+
+            if (environment !== undefined) {
+                localVarQueryParameter['environment'] = environment;
+            }
+
+            if (name !== undefined) {
+                localVarQueryParameter['name'] = name;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {string} [projectId] 
+         * @param {string} [environment] 
          * @param {number} [limit] 
          * @param {number} [offset] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        planGet: async (projectId?: string, limit?: number, offset?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        planGet: async (projectId?: string, environment?: string, limit?: number, offset?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/plan/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1571,6 +1391,10 @@ export const PlanApiAxiosParamCreator = function (configuration?: Configuration)
 
             if (projectId !== undefined) {
                 localVarQueryParameter['projectId'] = projectId;
+            }
+
+            if (environment !== undefined) {
+                localVarQueryParameter['environment'] = environment;
             }
 
             if (limit !== undefined) {
@@ -1594,11 +1418,84 @@ export const PlanApiAxiosParamCreator = function (configuration?: Configuration)
         },
         /**
          * 
-         * @param {TestPlanV1} [testPlanV1] 
+         * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        planPost: async (testPlanV1?: TestPlanV1, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        planIdDelete: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('planIdDelete', 'id', id)
+            const localVarPath = `/plan/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {PlanPostRequest} planPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        planIdPut: async (id: string, planPostRequest: PlanPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('planIdPut', 'id', id)
+            // verify required parameter 'planPostRequest' is not null or undefined
+            assertParamExists('planIdPut', 'planPostRequest', planPostRequest)
+            const localVarPath = `/plan/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(planPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {PlanPostRequest} planPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        planPost: async (planPostRequest: PlanPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'planPostRequest' is not null or undefined
+            assertParamExists('planPost', 'planPostRequest', planPostRequest)
             const localVarPath = `/plan/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1617,7 +1514,7 @@ export const PlanApiAxiosParamCreator = function (configuration?: Configuration)
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(testPlanV1, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(planPostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1635,26 +1532,66 @@ export const PlanApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @param {string} projectId 
+         * @param {string} environment 
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async planByNameGet(projectId: string, environment: string, name: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PlanPost201Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.planByNameGet(projectId, environment, name, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PlanApi.planByNameGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @param {string} [projectId] 
+         * @param {string} [environment] 
          * @param {number} [limit] 
          * @param {number} [offset] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async planGet(projectId?: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PlanGet200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.planGet(projectId, limit, offset, options);
+        async planGet(projectId?: string, environment?: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PlanGet200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.planGet(projectId, environment, limit, offset, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PlanApi.planGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {TestPlanV1} [testPlanV1] 
+         * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async planPost(testPlanV1?: TestPlanV1, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PlanPost201Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.planPost(testPlanV1, options);
+        async planIdDelete(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.planIdDelete(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PlanApi.planIdDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {PlanPostRequest} planPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async planIdPut(id: string, planPostRequest: PlanPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PlanPost201Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.planIdPut(id, planPostRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PlanApi.planIdPut']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {PlanPostRequest} planPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async planPost(planPostRequest: PlanPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PlanPost201Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.planPost(planPostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PlanApi.planPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1670,23 +1607,54 @@ export const PlanApiFactory = function (configuration?: Configuration, basePath?
     return {
         /**
          * 
+         * @param {string} projectId 
+         * @param {string} environment 
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        planByNameGet(projectId: string, environment: string, name: string, options?: RawAxiosRequestConfig): AxiosPromise<PlanPost201Response> {
+            return localVarFp.planByNameGet(projectId, environment, name, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {string} [projectId] 
+         * @param {string} [environment] 
          * @param {number} [limit] 
          * @param {number} [offset] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        planGet(projectId?: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig): AxiosPromise<PlanGet200Response> {
-            return localVarFp.planGet(projectId, limit, offset, options).then((request) => request(axios, basePath));
+        planGet(projectId?: string, environment?: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig): AxiosPromise<PlanGet200Response> {
+            return localVarFp.planGet(projectId, environment, limit, offset, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {TestPlanV1} [testPlanV1] 
+         * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        planPost(testPlanV1?: TestPlanV1, options?: RawAxiosRequestConfig): AxiosPromise<PlanPost201Response> {
-            return localVarFp.planPost(testPlanV1, options).then((request) => request(axios, basePath));
+        planIdDelete(id: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.planIdDelete(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {PlanPostRequest} planPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        planIdPut(id: string, planPostRequest: PlanPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<PlanPost201Response> {
+            return localVarFp.planIdPut(id, planPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {PlanPostRequest} planPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        planPost(planPostRequest: PlanPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<PlanPost201Response> {
+            return localVarFp.planPost(planPostRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1697,24 +1665,58 @@ export const PlanApiFactory = function (configuration?: Configuration, basePath?
 export class PlanApi extends BaseAPI {
     /**
      * 
+     * @param {string} projectId 
+     * @param {string} environment 
+     * @param {string} name 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public planByNameGet(projectId: string, environment: string, name: string, options?: RawAxiosRequestConfig) {
+        return PlanApiFp(this.configuration).planByNameGet(projectId, environment, name, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @param {string} [projectId] 
+     * @param {string} [environment] 
      * @param {number} [limit] 
      * @param {number} [offset] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public planGet(projectId?: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig) {
-        return PlanApiFp(this.configuration).planGet(projectId, limit, offset, options).then((request) => request(this.axios, this.basePath));
+    public planGet(projectId?: string, environment?: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig) {
+        return PlanApiFp(this.configuration).planGet(projectId, environment, limit, offset, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {TestPlanV1} [testPlanV1] 
+     * @param {string} id 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public planPost(testPlanV1?: TestPlanV1, options?: RawAxiosRequestConfig) {
-        return PlanApiFp(this.configuration).planPost(testPlanV1, options).then((request) => request(this.axios, this.basePath));
+    public planIdDelete(id: string, options?: RawAxiosRequestConfig) {
+        return PlanApiFp(this.configuration).planIdDelete(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} id 
+     * @param {PlanPostRequest} planPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public planIdPut(id: string, planPostRequest: PlanPostRequest, options?: RawAxiosRequestConfig) {
+        return PlanApiFp(this.configuration).planIdPut(id, planPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {PlanPostRequest} planPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public planPost(planPostRequest: PlanPostRequest, options?: RawAxiosRequestConfig) {
+        return PlanApiFp(this.configuration).planPost(planPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

@@ -14,7 +14,10 @@ import {
 } from "./schema.js";
 import { type START as StartType, type END as EndType } from "./constants.js";
 
-type RawPlan = Omit<TestPlanV1, "id" | "environment" | "organization" | "project">;
+type RawPlan = Omit<
+  TestPlanV1,
+  "id" | "environment" | "organization" | "project"
+>;
 
 /**
  * A node definition without the id field.

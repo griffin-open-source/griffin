@@ -17,6 +17,7 @@ import type {
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema.js";
 import { FrequencyUnit } from "@griffin-app/griffin-ts/schema";
+import type { TestPlanDB } from "../../repositories.js";
 
 // =============================================================================
 // Plans Repository
@@ -25,7 +26,7 @@ import { FrequencyUnit } from "@griffin-app/griffin-ts/schema";
 export class SqlitePlansRepository implements PlansRepository {
   constructor(private db: BetterSQLite3Database<typeof schema>) {}
 
-  async create(data: Omit<TestPlanV1, "id">): Promise<TestPlanV1> {
+  async create(data: Omit<TestPlanDB, "id">): Promise<TestPlanDB> {
     const now = new Date();
     const result = this.db
       .insert(schema.plansTable)
@@ -45,7 +46,7 @@ export class SqlitePlansRepository implements PlansRepository {
     };
   }
 
-  async findById(id: string): Promise<TestPlanV1 | null> {
+  async findById(id: string): Promise<TestPlanDB | null> {
     const result = await this.db.query.plansTable.findFirst({
       where: eq(schema.plansTable.id, id),
     });
@@ -61,7 +62,7 @@ export class SqlitePlansRepository implements PlansRepository {
     };
   }
 
-  async findMany(options?: QueryOptions): Promise<TestPlanV1[]> {
+  async findMany(options?: QueryOptions): Promise<TestPlanDB[]> {
     const result = await this.db.query.plansTable.findMany({
       where: options?.where,
       orderBy: options?.orderBy,
@@ -78,8 +79,8 @@ export class SqlitePlansRepository implements PlansRepository {
 
   async update(
     id: string,
-    data: Partial<Omit<TestPlanV1, "id">>,
-  ): Promise<TestPlanV1> {
+    data: Partial<Omit<TestPlanDB, "id">>,
+  ): Promise<TestPlanDB> {
     const result = this.db
       .update(schema.plansTable)
       .set({ ...data, updatedAt: new Date() })
@@ -137,7 +138,7 @@ export class SqlitePlansRepository implements PlansRepository {
       ...plan,
       // Parse JSON fields
       frequency: plan.frequency,
-      locations: plan.locations,
+      locations: plan.locations || [],
       nodes: plan.nodes,
       edges: plan.edges,
       // Convert timestamps

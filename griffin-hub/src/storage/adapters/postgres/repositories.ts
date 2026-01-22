@@ -16,7 +16,7 @@ import type {
 } from "../../repositories.js";
 import type { DrizzleDatabase } from "../../../plugins/storage.js";
 import * as schema from "./schema.js";
-import { FrequencyUnit } from "@griffin-app/griffin-ts/schema";
+import type { TestPlanDB } from "../../repositories.js";
 
 // =============================================================================
 // Plans Repository
@@ -25,7 +25,7 @@ import { FrequencyUnit } from "@griffin-app/griffin-ts/schema";
 export class PostgresPlansRepository implements PlansRepository {
   constructor(private db: DrizzleDatabase) {}
 
-  async create(data: Omit<TestPlanV1, "id">): Promise<TestPlanV1> {
+  async create(data: Omit<TestPlanDB, "id">): Promise<TestPlanDB> {
     const result = await this.db
       .insert(schema.plansTable)
       .values({
@@ -42,7 +42,7 @@ export class PostgresPlansRepository implements PlansRepository {
     };
   }
 
-  async findById(id: string): Promise<TestPlanV1 | null> {
+  async findById(id: string): Promise<TestPlanDB | null> {
     const result = await this.db.query.plansTable.findFirst({
       where: eq(schema.plansTable.id, id),
     });
@@ -58,7 +58,7 @@ export class PostgresPlansRepository implements PlansRepository {
     };
   }
 
-  async findMany(options?: QueryOptions): Promise<TestPlanV1[]> {
+  async findMany(options?: QueryOptions): Promise<TestPlanDB[]> {
     const result = await this.db.query.plansTable.findMany({
       where: options?.where,
       orderBy: options?.orderBy,
@@ -75,8 +75,8 @@ export class PostgresPlansRepository implements PlansRepository {
 
   async update(
     id: string,
-    data: Partial<Omit<TestPlanV1, "id">>,
-  ): Promise<TestPlanV1> {
+    data: Partial<Omit<TestPlanDB, "id">>,
+  ): Promise<TestPlanDB> {
     const result = await this.db
       .update(schema.plansTable)
       .set(data)

@@ -1,4 +1,5 @@
 import { loadState, resolveEnvironment } from "../../core/state.js";
+import type { TestPlanV1 } from "@griffin-app/griffin-ts/types";
 import { discoverPlans, formatDiscoveryErrors } from "../../core/discovery.js";
 import { computeDiff, formatDiff } from "../../core/diff.js";
 import { applyDiff, formatApplyResult } from "../../core/apply.js";
@@ -8,6 +9,7 @@ export interface ApplyOptions {
   autoApprove?: boolean;
   dryRun?: boolean;
   env?: string;
+  prune?: boolean; // If true, delete remote plans not in local
 }
 
 /**
@@ -56,16 +58,15 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
       process.exit(1);
     }
 
-    // Fetch remote plans for this project
-    const response = await planApi.planGet(state.projectId);
-    const remotePlans = response.data.data.map((p: any) => p);
+    // Fetch remote plans for this project + environment
+    const response = await planApi.planGet(state.projectId, envName);
+    const remotePlans = response.data.data as TestPlanV1[];
 
-    // Compute diff for this environment
+    // Compute diff (include deletions if --prune)
     const diff = computeDiff(
       plans.map((p) => p.plan),
-      state,
       remotePlans,
-      envName,
+      { includeDeletions: options.prune || false },
     );
 
     // Show plan
@@ -81,6 +82,14 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
       return;
     }
 
+    // Show deletions warning if --prune
+    if (options.prune && diff.summary.deletes > 0) {
+      console.warn(
+        `⚠️  --prune will DELETE ${diff.summary.deletes} plan(s) from the hub`,
+      );
+      console.log("");
+    }
+
     // Ask for confirmation unless auto-approved
     if (!options.autoApprove && !options.dryRun) {
       console.log("Do you want to perform these actions? (yes/no)");
@@ -90,8 +99,8 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
       console.log("");
     }
 
-    // Apply changes
-    const result = await applyDiff(diff, state, planApi, envName, {
+    // Apply changes with environment injection
+    const result = await applyDiff(diff, planApi, state.projectId, envName, {
       dryRun: options.dryRun,
     });
 

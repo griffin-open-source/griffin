@@ -1,21 +1,23 @@
-# Endpoint1Base
+# PlanPostRequestNodesInnerAnyOf1
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**id** | **string** |  | [default to undefined]
 **type** | **string** |  | [default to undefined]
-**key** | **string** |  | [default to undefined]
+**duration_ms** | **number** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { Endpoint1Base } from 'griffin-hub-sdk';
+import { PlanPostRequestNodesInnerAnyOf1 } from 'griffin-hub-sdk';
 
-const instance: Endpoint1Base = {
+const instance: PlanPostRequestNodesInnerAnyOf1 = {
+    id,
     type,
-    key,
+    duration_ms,
 };
 ```
 

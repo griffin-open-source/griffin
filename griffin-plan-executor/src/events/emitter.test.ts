@@ -22,6 +22,7 @@ describe("LocalEventEmitter", () => {
       eventId: "123",
       seq: 0,
       timestamp: Date.now(),
+      organizationId: "test-org",
       planId: "plan-1",
       executionId: "exec-1",
       planName: "Test Plan",
@@ -50,6 +51,7 @@ describe("LocalEventEmitter", () => {
       timestamp: Date.now(),
       planId: "plan-1",
       executionId: "exec-1",
+      organizationId: "test-org",
       nodeId: "node-1",
       nodeType: "endpoint",
     };
@@ -73,6 +75,7 @@ describe("LocalEventEmitter", () => {
       timestamp: Date.now(),
       planId: "plan-1",
       executionId: "exec-1",
+      organizationId: "test-org",
       nodeId: "node-1",
       nodeType: "endpoint",
       success: true,
@@ -106,6 +109,7 @@ describe("LocalEventEmitter", () => {
       timestamp: Date.now(),
       planId: "plan-1",
       executionId: "exec-1",
+      organizationId: "test-org",
       success: true,
       totalDuration_ms: 1000,
       nodeResultCount: 2,
@@ -153,6 +157,7 @@ describe("DurableEventEmitter", () => {
       timestamp: Date.now(),
       planId: "plan-1",
       executionId: "exec-1",
+      organizationId: "test-org",
       nodeId: "node-1",
       nodeType: "endpoint",
     };
@@ -164,6 +169,7 @@ describe("DurableEventEmitter", () => {
       timestamp: Date.now(),
       planId: "plan-1",
       executionId: "exec-1",
+      organizationId: "test-org",
       nodeId: "node-2",
       nodeType: "wait",
     };
@@ -175,6 +181,7 @@ describe("DurableEventEmitter", () => {
       timestamp: Date.now(),
       planId: "plan-1",
       executionId: "exec-1",
+      organizationId: "test-org",
       nodeId: "node-3",
       nodeType: "assertion",
     };
@@ -205,6 +212,7 @@ describe("DurableEventEmitter", () => {
       timestamp: Date.now(),
       planId: "plan-1",
       executionId: "exec-1",
+      organizationId: "test-org",
       nodeId: "node-1",
       attempt: 1,
       method: "GET",
@@ -233,6 +241,7 @@ describe("DurableEventEmitter", () => {
       timestamp: Date.now(),
       planId: "plan-1",
       executionId: "exec-1",
+      organizationId: "test-org",
       nodeId: "node-1",
       attempt: 1,
       status: 200,
@@ -266,6 +275,7 @@ describe("DurableEventEmitter", () => {
       timestamp: Date.now(),
       planId: "plan-1",
       executionId: "exec-1",
+      organizationId: "test-org",
       errorName: "TestError",
       message: "Test error message",
     };
@@ -300,6 +310,7 @@ describe("DurableEventEmitter", () => {
       timestamp: Date.now(),
       planId: "plan-1",
       executionId: "exec-1",
+      organizationId: "test-org",
       nodeId: "wait-1",
       duration_ms: 1000,
     };

@@ -1,4 +1,4 @@
-# TestPlanV1
+# PlanPostRequest
 
 
 ## Properties
@@ -7,23 +7,21 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **project** | **string** |  | [default to undefined]
 **locations** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
-**id** | **string** |  | [default to undefined]
 **name** | **string** |  | [default to undefined]
 **version** | **string** |  | [default to undefined]
-**frequency** | [**Frequency1**](Frequency1.md) |  | [default to undefined]
+**frequency** | [**PlanPostRequestFrequency**](PlanPostRequestFrequency.md) |  | [default to undefined]
 **environment** | **string** |  | [default to 'default']
-**nodes** | [**Array&lt;Node1&gt;**](Node1.md) |  | [default to undefined]
-**edges** | [**Array&lt;Edge1&gt;**](Edge1.md) |  | [default to undefined]
+**nodes** | [**Array&lt;PlanPostRequestNodesInner&gt;**](PlanPostRequestNodesInner.md) |  | [default to undefined]
+**edges** | [**Array&lt;PlanPostRequestEdgesInner&gt;**](PlanPostRequestEdgesInner.md) |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { TestPlanV1 } from 'griffin-hub-sdk';
+import { PlanPostRequest } from 'griffin-hub-sdk';
 
-const instance: TestPlanV1 = {
+const instance: PlanPostRequest = {
     project,
     locations,
-    id,
     name,
     version,
     frequency,

@@ -7,7 +7,7 @@ import {
   END,
   Frequency,
   variable,
-} from "griffin";
+} from "@griffin-app/griffin-ts";
 
 const plan = createGraphBuilder({
   name: "runner-health-check",

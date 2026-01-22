@@ -18,6 +18,9 @@ export interface BaseEvent {
   planId: string;
   /** Unique identifier for this execution run */
   executionId: string;
+
+  /** ID of the organization that the plan belongs to */
+  organizationId: string;
 }
 
 /** Plan-level events */

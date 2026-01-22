@@ -1,4 +1,4 @@
-# Node1
+# PlanPostRequestNodesInner
 
 
 ## Properties
@@ -14,14 +14,14 @@ Name | Type | Description | Notes
 **body** | **any** |  | [optional] [default to undefined]
 **response_format** | **string** |  | [default to undefined]
 **duration_ms** | **number** |  | [default to undefined]
-**assertions** | [**Array&lt;Assertion1&gt;**](Assertion1.md) |  | [default to undefined]
+**assertions** | [**Array&lt;PlanPostRequestNodesInnerAnyOf2AssertionsInner&gt;**](PlanPostRequestNodesInnerAnyOf2AssertionsInner.md) |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { Node1 } from 'griffin-hub-sdk';
+import { PlanPostRequestNodesInner } from 'griffin-hub-sdk';
 
-const instance: Node1 = {
+const instance: PlanPostRequestNodesInner = {
     id,
     type,
     method,

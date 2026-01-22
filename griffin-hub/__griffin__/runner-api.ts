@@ -8,7 +8,7 @@ import {
   Frequency,
   secret,
   variable,
-} from "griffin";
+} from "@griffin-app/griffin-ts";
 
 const plan = createGraphBuilder({
   name: "runner-api-check",
@@ -20,7 +20,7 @@ const plan = createGraphBuilder({
       method: GET,
       base: variable("griffin-hub"),
       response_format: Json,
-      path: "/plan/plan",
+      path: "/plan",
       headers: { "X-API-Key": secret("env:RUNNER_API_KEY") },
     }),
   )
@@ -30,7 +30,7 @@ const plan = createGraphBuilder({
       method: GET,
       base: variable("griffin-hub"),
       response_format: Json,
-      path: "/runs/runs",
+      path: "/runs",
       headers: { "X-API-Key": secret("env:RUNNER_API_KEY") },
     }),
   )

@@ -1,8 +1,9 @@
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import AutoLoad, { AutoloadPluginOptions } from "@fastify/autoload";
-import { FastifyPluginAsync, FastifyServerOptions } from "fastify";
+import fastify, { FastifyPluginAsync, FastifyServerOptions } from "fastify";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
+import cors from "@fastify/cors";
 import fp from "fastify-plugin";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -35,6 +36,13 @@ const appPlugin: FastifyPluginAsync<AppOptions> = async (
   void fastifyWithTypes.register(AutoLoad, {
     dir: join(__dirname, "routes"),
     options: opts,
+  });
+  await fastify.register(cors, {
+    origin: [
+      "*", // TODO: tighten this up later
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    credentials: true, // Required for cookie-based auth
   });
 };
 

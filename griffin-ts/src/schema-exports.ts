@@ -24,7 +24,6 @@ export {
   TextAssertionSchema,
   AssertionSchema,
   AssertionsSchema,
-  NodeTypeSchema,
   NodeSchema,
   EdgeSchema,
   TestPlanV1Schema,

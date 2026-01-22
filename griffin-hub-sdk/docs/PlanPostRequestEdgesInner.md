@@ -1,19 +1,21 @@
-# ConfigOrganizationIdEnvironmentTargetsTargetKeyPutRequest
+# PlanPostRequestEdgesInner
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**baseUrl** | **string** |  | [default to undefined]
+**from** | **string** |  | [default to undefined]
+**to** | **string** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { ConfigOrganizationIdEnvironmentTargetsTargetKeyPutRequest } from 'griffin-hub-sdk';
+import { PlanPostRequestEdgesInner } from 'griffin-hub-sdk';
 
-const instance: ConfigOrganizationIdEnvironmentTargetsTargetKeyPutRequest = {
-    baseUrl,
+const instance: PlanPostRequestEdgesInner = {
+    from,
+    to,
 };
 ```
 

@@ -1,4 +1,4 @@
-# Node1
+# PlanPostRequestNodesInnerAnyOf
 
 
 ## Properties
@@ -13,15 +13,13 @@ Name | Type | Description | Notes
 **headers** | [**{ [key: string]: PlanPostRequestNodesInnerAnyOfHeadersValue; }**](PlanPostRequestNodesInnerAnyOfHeadersValue.md) |  | [optional] [default to undefined]
 **body** | **any** |  | [optional] [default to undefined]
 **response_format** | **string** |  | [default to undefined]
-**duration_ms** | **number** |  | [default to undefined]
-**assertions** | [**Array&lt;Assertion1&gt;**](Assertion1.md) |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { Node1 } from 'griffin-hub-sdk';
+import { PlanPostRequestNodesInnerAnyOf } from 'griffin-hub-sdk';
 
-const instance: Node1 = {
+const instance: PlanPostRequestNodesInnerAnyOf = {
     id,
     type,
     method,
@@ -30,8 +28,6 @@ const instance: Node1 = {
     headers,
     body,
     response_format,
-    duration_ms,
-    assertions,
 };
 ```
 

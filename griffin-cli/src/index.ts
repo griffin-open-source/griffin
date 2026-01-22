@@ -1,9 +1,5 @@
 // Export core types and utilities
-export type {
-  StateFile,
-  PlanStateEntry,
-  RunnerConfig,
-} from "./schemas/state.js";
+export type { StateFile, RunnerConfig } from "./schemas/state.js";
 export type {
   DiscoveredPlan,
   DiscoveryResult,
@@ -16,11 +12,8 @@ export type { ApplyResult, ApplyAction, ApplyError } from "./core/apply.js";
 export {
   createEmptyState,
   StateFileSchema,
-  PlanStateEntrySchema,
   RunnerConfigSchema,
 } from "./schemas/state.js";
-
-export { hashPlanPayload } from "./schemas/payload.js";
 
 export {
   getStateDirPath,

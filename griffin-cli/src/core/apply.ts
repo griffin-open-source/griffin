@@ -1,9 +1,6 @@
 import type { DiffAction, DiffResult } from "./diff.js";
-import type { StateFile, PlanStateEntry } from "../schemas/state.js";
-import type { PlanApi } from "griffin-hub-sdk";
-import { hashPlanPayload } from "../schemas/payload.js";
-import { saveState } from "./state.js";
-import { injectProjectId } from "./sdk.js";
+import type { PlanApi, PlanPostRequest } from "@griffin-app/griffin-hub-sdk";
+import type { TestPlanV1 } from "@griffin-app/griffin-ts/types";
 
 export interface ApplyResult {
   success: boolean;
@@ -24,13 +21,14 @@ export interface ApplyError {
 }
 
 /**
- * Apply diff actions to the runner and update state file for a specific environment
+ * Apply diff actions to the hub.
+ * CLI injects both project and environment into plan payloads.
  */
 export async function applyDiff(
   diff: DiffResult,
-  state: StateFile,
   planApi: PlanApi,
-  envName: string,
+  projectId: string,
+  environment: string,
   options?: {
     dryRun?: boolean;
   },
@@ -53,23 +51,24 @@ export async function applyDiff(
     try {
       if (options?.dryRun) {
         console.log(
-          `[DRY RUN] Would ${action.type} plan: ${action.plan?.name || action.stateEntry?.planName}`,
+          `[DRY RUN] Would ${action.type} plan: ${action.plan?.name || action.remotePlan?.name}`,
         );
         continue;
       }
 
       switch (action.type) {
         case "create":
-          await applyCreate(action, state, planApi, envName, applied);
+          await applyCreate(action, planApi, projectId, environment, applied);
           break;
         case "update":
-          await applyUpdate(action, state, planApi, envName, applied);
+          await applyUpdate(action, planApi, projectId, environment, applied);
           break;
         case "delete":
-          await applyDelete(action, state, planApi, envName, applied);
+          await applyDelete(action, planApi, applied);
           break;
       }
     } catch (error) {
+      console.error(error);
       errors.push({
         action,
         error: error as Error,
@@ -77,17 +76,11 @@ export async function applyDiff(
 
       applied.push({
         type: action.type as "create" | "update" | "delete",
-        planName: action.plan?.name || action.stateEntry?.planName || "unknown",
+        planName: action.plan?.name || action.remotePlan?.name || "unknown",
         success: false,
         error: (error as Error).message,
       });
     }
-  }
-
-  // Save updated state if not a dry run and there were no errors
-  if (!options?.dryRun && errors.length === 0) {
-    await saveState(state);
-    console.log("State file updated.");
   }
 
   return {
@@ -102,35 +95,26 @@ export async function applyDiff(
  */
 async function applyCreate(
   action: DiffAction,
-  state: StateFile,
   planApi: PlanApi,
-  envName: string,
+  projectId: string,
+  environment: string,
   applied: ApplyAction[],
 ): Promise<void> {
   const plan = action.plan!;
 
   console.log(`Creating plan: ${plan.name}`);
 
-  // Inject projectId from state
-  const payload = injectProjectId(plan, state.projectId);
-  const { data: createdPlan } = await planApi.planPost(payload);
-
-  // Add to state for this environment
-  const entry: PlanStateEntry = {
-    localPath: "", // TODO: Track source file path
-    exportName: "default", // TODO: Track export name
-    planName: createdPlan.data.name,
-    planId: createdPlan.data.id,
-    lastAppliedHash: hashPlanPayload(plan),
-    lastAppliedAt: new Date().toISOString(),
+  // Inject project AND environment (plan itself is env-agnostic)
+  // POST body is Omit<TestPlanV1, 'id'> - hub assigns the id
+  const payload: Omit<TestPlanV1, "id"> = {
+    ...plan,
+    project: projectId,
+    environment,
   };
 
-  // Initialize environment plans array if needed
-  if (!state.plans[envName]) {
-    state.plans[envName] = [];
-  }
-
-  state.plans[envName].push(entry);
+  const { data: createdPlan } = await planApi.planPost(
+    payload as unknown as PlanPostRequest,
+  );
 
   applied.push({
     type: "create",
@@ -146,35 +130,34 @@ async function applyCreate(
  */
 async function applyUpdate(
   action: DiffAction,
-  state: StateFile,
   planApi: PlanApi,
-  envName: string,
+  projectId: string,
+  environment: string,
   applied: ApplyAction[],
 ): Promise<void> {
   const plan = action.plan!;
+  const remotePlan = action.remotePlan!;
 
   console.log(`Updating plan: ${plan.name}`);
 
-  // Inject projectId from state
-  const payload = injectProjectId(plan, state.projectId);
-  const { data: updatedPlan } = await planApi.planPost(payload);
+  // Inject project AND environment
+  // PUT body is Omit<TestPlanV1, 'id'> - id comes from URL path
+  const payload: Omit<TestPlanV1, "id"> = {
+    ...plan,
+    project: projectId,
+    environment,
+  };
 
-  // Update state entry for this environment
-  const envPlans = state.plans[envName] || [];
-  const stateEntry = envPlans.find((e) => e.planId === updatedPlan.data.id);
-  if (stateEntry) {
-    stateEntry.lastAppliedHash = hashPlanPayload(plan);
-    stateEntry.lastAppliedAt = new Date().toISOString();
-    stateEntry.planName = updatedPlan.data.name; // Update name in case it changed
-  }
+  // Use the remote plan's ID for the update
+  await planApi.planIdPut(remotePlan.id, payload as unknown as PlanPostRequest);
 
   applied.push({
     type: "update",
-    planName: updatedPlan.data.name,
+    planName: plan.name,
     success: true,
   });
 
-  console.log(`✓ Updated: ${updatedPlan.data.name}`);
+  console.log(`✓ Updated: ${plan.name}`);
 }
 
 /**
@@ -182,35 +165,22 @@ async function applyUpdate(
  */
 async function applyDelete(
   action: DiffAction,
-  state: StateFile,
   planApi: PlanApi,
-  envName: string,
   applied: ApplyAction[],
 ): Promise<void> {
-  const stateEntry = action.stateEntry!;
+  const remotePlan = action.remotePlan!;
 
-  console.log(`Deleting plan: ${stateEntry.planName}`);
+  console.log(`Deleting plan: ${remotePlan.name}`);
 
-  // TODO: Implement DELETE endpoint in runner API
-  // For now, warn that delete is not supported
-  console.warn(
-    `Warning: DELETE not yet supported by runner API (${stateEntry.planId})`,
-  );
-
-  // Remove from state for this environment (local cleanup)
-  if (state.plans[envName]) {
-    state.plans[envName] = state.plans[envName].filter(
-      (e) => e.planId !== stateEntry.planId,
-    );
-  }
+  await planApi.planIdDelete(remotePlan.id);
 
   applied.push({
     type: "delete",
-    planName: stateEntry.planName,
+    planName: remotePlan.name,
     success: true,
   });
 
-  console.log(`✓ Removed from state: ${stateEntry.planName}`);
+  console.log(`✓ Deleted: ${remotePlan.name}`);
 }
 
 /**

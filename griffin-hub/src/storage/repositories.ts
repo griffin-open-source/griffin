@@ -4,6 +4,7 @@
  */
 
 import type { SQL } from "drizzle-orm";
+import * as schema from "./adapters/postgres/schema.js";
 import type { TestPlanV1 } from "@griffin-app/griffin-ts/types";
 import type { JobRun } from "../schemas/job-run.js";
 import type { Agent } from "../schemas/agent.js";
@@ -21,6 +22,7 @@ export interface QueryOptions {
   limit?: number;
   offset?: number;
 }
+export type TestPlanDB = typeof schema.plansTable.$inferInsert;
 
 // =============================================================================
 // Repository Interfaces
@@ -30,13 +32,13 @@ export interface QueryOptions {
  * Repository for test plans
  */
 export interface PlansRepository {
-  create(data: Omit<TestPlanV1, "id">): Promise<TestPlanV1>;
-  findById(id: string): Promise<TestPlanV1 | null>;
-  findMany(options?: QueryOptions): Promise<TestPlanV1[]>;
+  create(data: Omit<TestPlanDB, "id">): Promise<TestPlanDB>;
+  findById(id: string): Promise<TestPlanDB | null>;
+  findMany(options?: QueryOptions): Promise<TestPlanDB[]>;
   update(
     id: string,
-    data: Partial<Omit<TestPlanV1, "id">>,
-  ): Promise<TestPlanV1>;
+    data: Partial<Omit<TestPlanDB, "id">>,
+  ): Promise<TestPlanDB>;
   delete(id: string): Promise<void>;
   count(where?: SQL): Promise<number>;
 

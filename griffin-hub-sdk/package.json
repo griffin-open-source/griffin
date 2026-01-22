@@ -1,5 +1,5 @@
 {
-  "name": "griffin-hub-sdk",
+  "name": "@griffin-app/griffin-hub-sdk",
   "version": "1.0.0",
   "description": "OpenAPI client for griffin-hub-sdk",
   "author": "OpenAPI-Generator Contributors",

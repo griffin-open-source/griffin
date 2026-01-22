@@ -40,7 +40,6 @@ export async function stateExists(): Promise<boolean> {
 /**
  * Load state file from disk
  * Throws if file doesn't exist or is invalid
- * Automatically migrates v2 to v3 if needed
  */
 export async function loadState(): Promise<StateFile> {
   const stateFilePath = getStateFilePath();
@@ -114,13 +113,7 @@ export async function addEnvironment(
 ): Promise<void> {
   const state = await loadState();
 
-  const isNew = !(name in state.environments);
   state.environments[name] = config;
-
-  // Initialize plans array for new environment
-  if (isNew && !(name in state.plans)) {
-    state.plans[name] = [];
-  }
 
   // Set as default if it's the first environment
   if (Object.keys(state.environments).length === 1) {
@@ -141,7 +134,6 @@ export async function removeEnvironment(name: string): Promise<void> {
   }
 
   delete state.environments[name];
-  delete state.plans[name];
 
   // Update default if we removed it
   if (state.defaultEnvironment === name) {
@@ -202,4 +194,12 @@ export async function getEnvironment(name: string): Promise<EnvironmentConfig> {
   }
 
   return state.environments[name];
+}
+
+/**
+ * Get the project ID
+ */
+export async function getProjectId(): Promise<string> {
+  const state = await loadState();
+  return state.projectId;
 }

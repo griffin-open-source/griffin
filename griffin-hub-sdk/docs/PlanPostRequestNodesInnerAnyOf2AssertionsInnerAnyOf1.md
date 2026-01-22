@@ -1,4 +1,4 @@
-# Assertion1AnyOf1
+# PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1
 
 
 ## Properties
@@ -12,9 +12,9 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { Assertion1AnyOf1 } from 'griffin-hub-sdk';
+import { PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1 } from 'griffin-hub-sdk';
 
-const instance: Assertion1AnyOf1 = {
+const instance: PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1 = {
     assertionType,
     path,
     expected,

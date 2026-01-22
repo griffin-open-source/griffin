@@ -1,10 +1,20 @@
 import { glob } from "glob";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import type { TestPlanV1 } from "griffin-hub-sdk";
+import { TestPlanV1Schema } from "@griffin-app/griffin-ts/schema";
+import type { TestPlanV1 } from "@griffin-app/griffin-ts/types";
+import { Value } from "typebox/value";
+import { Static, Type } from "typebox";
+
+const RawTestPlanSchema = Type.Omit(TestPlanV1Schema, [
+  "id",
+  "environment",
+  "project",
+]);
+export type RawTestPlan = Omit<TestPlanV1, "id" | "environment" | "project">;
 
 export interface DiscoveredPlan {
-  plan: TestPlanV1;
+  plan: RawTestPlan;
   filePath: string;
   exportName: string;
 }
@@ -54,6 +64,10 @@ export async function discoverPlans(
   return { plans, errors };
 }
 
+function isPlan(value: unknown): value is TestPlanV1 {
+  return Value.Check(RawTestPlanSchema, value);
+}
+
 /**
  * Load plans from a single file
  * Supports both default and named exports
@@ -76,26 +90,9 @@ async function loadPlansFromFile(filePath: string): Promise<DiscoveredPlan[]> {
           exportName: "default",
         });
       } else {
+        const errors = Value.Errors(RawTestPlanSchema, module.default);
         throw new Error(
-          `Default export is not a valid TestPlan. Got: ${typeof module.default}`,
-        );
-      }
-    }
-
-    // Check named exports
-    for (const [name, value] of Object.entries(module)) {
-      if (name === "default") continue;
-
-      if (isPlan(value)) {
-        plans.push({
-          plan: value as TestPlanV1,
-          filePath,
-          exportName: name,
-        });
-      } else if (name !== "__esModule") {
-        // Warn about non-plan exports (except __esModule from transpiled code)
-        console.warn(
-          `Warning: Export "${name}" in ${filePath} is not a TestPlan`,
+          `Default export is not a valid TestPlan. Got: ${JSON.stringify(errors, null, 2)}`,
         );
       }
     }
@@ -108,33 +105,6 @@ async function loadPlansFromFile(filePath: string): Promise<DiscoveredPlan[]> {
   }
 
   return plans;
-}
-
-/**
- * Type guard to check if a value is a TestPlan
- */
-function isPlan(value: unknown): value is TestPlanV1 {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const plan = value as Record<string, unknown>;
-
-  // Validate that project field is not set
-  if ("project" in plan) {
-    throw new Error(
-      "Plans should not include 'project' field. Project is managed by the CLI and set during init.",
-    );
-  }
-
-  return (
-    typeof plan.id === "string" &&
-    typeof plan.name === "string" &&
-    plan.version === "1.0" &&
-    typeof plan.endpoint_host === "string" &&
-    Array.isArray(plan.nodes) &&
-    Array.isArray(plan.edges)
-  );
 }
 
 /**

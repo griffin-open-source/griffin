@@ -115,6 +115,7 @@ hub
   )
   .option("--auto-approve", "Skip confirmation prompt")
   .option("--dry-run", "Show what would be done without making changes")
+  .option("--prune", "Delete plans on hub that don't exist locally")
   .action(async (options) => {
     await executeApply(options);
   });
@@ -125,6 +126,7 @@ hub
   .requiredOption("--plan <name>", "Plan name to run")
   .requiredOption("--env <name>", "Target environment")
   .option("--wait", "Wait for run to complete")
+  .option("--force", "Run even if local plan differs from hub")
   .action(async (options) => {
     await executeRun(options);
   });

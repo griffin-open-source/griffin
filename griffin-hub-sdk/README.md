@@ -56,13 +56,11 @@ Class | Method | HTTP request | Description
 *AgentsApi* | [**agentsIdHeartbeatPost**](docs/AgentsApi.md#agentsidheartbeatpost) | **POST** /agents/{id}/heartbeat | 
 *AgentsApi* | [**agentsLocationsGet**](docs/AgentsApi.md#agentslocationsget) | **GET** /agents/locations | 
 *AgentsApi* | [**agentsRegisterPost**](docs/AgentsApi.md#agentsregisterpost) | **POST** /agents/register | 
-*ConfigApi* | [**configGet**](docs/ConfigApi.md#configget) | **GET** /config/ | 
-*ConfigApi* | [**configOrganizationIdEnvironmentTargetsTargetKeyDelete**](docs/ConfigApi.md#configorganizationidenvironmenttargetstargetkeydelete) | **DELETE** /config/{organizationId}/{environment}/targets/{targetKey} | 
-*ConfigApi* | [**configOrganizationIdEnvironmentTargetsTargetKeyGet**](docs/ConfigApi.md#configorganizationidenvironmenttargetstargetkeyget) | **GET** /config/{organizationId}/{environment}/targets/{targetKey} | 
-*ConfigApi* | [**configOrganizationIdEnvironmentTargetsTargetKeyPut**](docs/ConfigApi.md#configorganizationidenvironmenttargetstargetkeyput) | **PUT** /config/{organizationId}/{environment}/targets/{targetKey} | 
-*ConfigApi* | [**configSingleGet**](docs/ConfigApi.md#configsingleget) | **GET** /config/single | 
 *DefaultApi* | [**rootGet**](docs/DefaultApi.md#rootget) | **GET** / | 
+*PlanApi* | [**planByNameGet**](docs/PlanApi.md#planbynameget) | **GET** /plan/by-name | 
 *PlanApi* | [**planGet**](docs/PlanApi.md#planget) | **GET** /plan/ | 
+*PlanApi* | [**planIdDelete**](docs/PlanApi.md#planiddelete) | **DELETE** /plan/{id} | 
+*PlanApi* | [**planIdPut**](docs/PlanApi.md#planidput) | **PUT** /plan/{id} | 
 *PlanApi* | [**planPost**](docs/PlanApi.md#planpost) | **POST** /plan/ | 
 *RunsApi* | [**runsGet**](docs/RunsApi.md#runsget) | **GET** /runs/ | 
 *RunsApi* | [**runsIdGet**](docs/RunsApi.md#runsidget) | **GET** /runs/{id} | 
@@ -82,27 +80,15 @@ Class | Method | HTTP request | Description
  - [Assertion](docs/Assertion.md)
  - [Assertion1](docs/Assertion1.md)
  - [Assertion1AnyOf](docs/Assertion1AnyOf.md)
- - [Assertion1AnyOf1](docs/Assertion1AnyOf1.md)
- - [Assertion1AnyOf2](docs/Assertion1AnyOf2.md)
  - [Assertions](docs/Assertions.md)
  - [Assertions1](docs/Assertions1.md)
  - [BinaryPredicate](docs/BinaryPredicate.md)
  - [BinaryPredicate1](docs/BinaryPredicate1.md)
  - [BinaryPredicateOperator](docs/BinaryPredicateOperator.md)
- - [ConfigGet200Response](docs/ConfigGet200Response.md)
- - [ConfigOrganizationIdEnvironmentTargetsTargetKeyGet200Response](docs/ConfigOrganizationIdEnvironmentTargetsTargetKeyGet200Response.md)
- - [ConfigOrganizationIdEnvironmentTargetsTargetKeyGet200ResponseData](docs/ConfigOrganizationIdEnvironmentTargetsTargetKeyGet200ResponseData.md)
- - [ConfigOrganizationIdEnvironmentTargetsTargetKeyPut200Response](docs/ConfigOrganizationIdEnvironmentTargetsTargetKeyPut200Response.md)
- - [ConfigOrganizationIdEnvironmentTargetsTargetKeyPut200ResponseData](docs/ConfigOrganizationIdEnvironmentTargetsTargetKeyPut200ResponseData.md)
- - [ConfigOrganizationIdEnvironmentTargetsTargetKeyPutRequest](docs/ConfigOrganizationIdEnvironmentTargetsTargetKeyPutRequest.md)
  - [Edge](docs/Edge.md)
  - [Edge1](docs/Edge1.md)
  - [Endpoint](docs/Endpoint.md)
  - [Endpoint1](docs/Endpoint1.md)
- - [Endpoint1Base](docs/Endpoint1Base.md)
- - [Endpoint1HeadersValue](docs/Endpoint1HeadersValue.md)
- - [Endpoint1HeadersValueAnyOf](docs/Endpoint1HeadersValueAnyOf.md)
- - [Endpoint1HeadersValueAnyOfSecret](docs/Endpoint1HeadersValueAnyOfSecret.md)
  - [Frequency](docs/Frequency.md)
  - [Frequency1](docs/Frequency1.md)
  - [HttpMethod](docs/HttpMethod.md)
@@ -112,6 +98,26 @@ Class | Method | HTTP request | Description
  - [Node1](docs/Node1.md)
  - [PlanGet200Response](docs/PlanGet200Response.md)
  - [PlanPost201Response](docs/PlanPost201Response.md)
+ - [PlanPostRequest](docs/PlanPostRequest.md)
+ - [PlanPostRequestEdgesInner](docs/PlanPostRequestEdgesInner.md)
+ - [PlanPostRequestFrequency](docs/PlanPostRequestFrequency.md)
+ - [PlanPostRequestNodesInner](docs/PlanPostRequestNodesInner.md)
+ - [PlanPostRequestNodesInnerAnyOf](docs/PlanPostRequestNodesInnerAnyOf.md)
+ - [PlanPostRequestNodesInnerAnyOf1](docs/PlanPostRequestNodesInnerAnyOf1.md)
+ - [PlanPostRequestNodesInnerAnyOf2](docs/PlanPostRequestNodesInnerAnyOf2.md)
+ - [PlanPostRequestNodesInnerAnyOf2AssertionsInner](docs/PlanPostRequestNodesInnerAnyOf2AssertionsInner.md)
+ - [PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf](docs/PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf.md)
+ - [PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1](docs/PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1.md)
+ - [PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf2](docs/PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf2.md)
+ - [PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfAccessor](docs/PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfAccessor.md)
+ - [PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicate](docs/PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicate.md)
+ - [PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOf](docs/PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOf.md)
+ - [PlanPostRequestNodesInnerAnyOfHeadersValue](docs/PlanPostRequestNodesInnerAnyOfHeadersValue.md)
+ - [PlanPostRequestNodesInnerAnyOfHeadersValueAnyOf](docs/PlanPostRequestNodesInnerAnyOfHeadersValueAnyOf.md)
+ - [PlanPostRequestNodesInnerAnyOfHeadersValueAnyOfSecret](docs/PlanPostRequestNodesInnerAnyOfHeadersValueAnyOfSecret.md)
+ - [PlanPostRequestNodesInnerAnyOfPath](docs/PlanPostRequestNodesInnerAnyOfPath.md)
+ - [PlanPostRequestNodesInnerAnyOfPathAnyOf](docs/PlanPostRequestNodesInnerAnyOfPathAnyOf.md)
+ - [PlanPostRequestNodesInnerAnyOfPathAnyOfVariable](docs/PlanPostRequestNodesInnerAnyOfPathAnyOfVariable.md)
  - [ResponseFormat](docs/ResponseFormat.md)
  - [RunsGet200Response](docs/RunsGet200Response.md)
  - [RunsGet200ResponseDataInner](docs/RunsGet200ResponseDataInner.md)

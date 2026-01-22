@@ -6,14 +6,23 @@ import {
   type WaitDuration,
 } from "./builder.js";
 import { START, END } from "./constants.js";
-import { TEST_PLAN_VERSION, Edge, Node, Frequency, TestPlanV1 } from "./schema.js";
+import {
+  TEST_PLAN_VERSION,
+  Edge,
+  Node,
+  Frequency,
+  TestPlanV1,
+} from "./schema.js";
 import {
   createStateProxy,
   type SerializedAssertion,
   type StateProxy,
 } from "./assertions.js";
 
-type RawPlan = Omit<TestPlanV1, "id" | "environment" | "organization" | "project">;
+type RawPlan = Omit<
+  TestPlanV1,
+  "id" | "environment" | "organization" | "project"
+>;
 
 /**
  * Callback type for building assertions with type-safe state access

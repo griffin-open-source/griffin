@@ -1,20 +1,12 @@
 import { Type, type Static } from "typebox";
 
 /**
- * State file schema for tracking synced plans and environments
+ * State file schema for tracking project configuration
  * Stored in .griffin/state.json
+ *
+ * Note: The hub is now the source of truth for plans.
+ * This file only stores configuration (project, environments, runner connection).
  */
-
-export const PlanStateEntrySchema = Type.Object({
-  localPath: Type.String(),
-  exportName: Type.String(),
-  planName: Type.String(),
-  planId: Type.String(),
-  lastAppliedHash: Type.String(),
-  lastAppliedAt: Type.String(), // ISO timestamp
-});
-
-export type PlanStateEntry = Static<typeof PlanStateEntrySchema>;
 
 export const EnvironmentConfigSchema = Type.Object({
   // Empty for now - may be used for environment-specific config in the future
@@ -36,7 +28,7 @@ export const DiscoveryConfigSchema = Type.Object({
 
 export type DiscoveryConfig = Static<typeof DiscoveryConfigSchema>;
 
-// v3 schema (current)
+// State schema (hub is source of truth for plans)
 export const StateFileSchema = Type.Object({
   stateVersion: Type.Literal(1),
   projectId: Type.String(),
@@ -50,22 +42,18 @@ export const StateFileSchema = Type.Object({
 
   // Discovery settings
   discovery: Type.Optional(DiscoveryConfigSchema),
-
-  // Per-environment plan state
-  plans: Type.Record(Type.String(), Type.Array(PlanStateEntrySchema)),
 });
 
 export type StateFile = Static<typeof StateFileSchema>;
 
 /**
- * Create an empty state file with a default environment
+ * Create an empty state file
  */
 export function createEmptyState(projectId: string): StateFile {
   return {
     stateVersion: 1,
     projectId,
     environments: {},
-    plans: {},
   };
 }
 
@@ -80,8 +68,5 @@ export function createStateWithDefaultEnv(projectId: string): StateFile {
       local: {},
     },
     defaultEnvironment: "local",
-    plans: {
-      local: [],
-    },
   };
 }

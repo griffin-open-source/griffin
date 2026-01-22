@@ -1,19 +1,21 @@
-# Endpoint1HeadersValueAnyOf
+# PlanPostRequestFrequency
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**$secret** | [**Endpoint1HeadersValueAnyOfSecret**](Endpoint1HeadersValueAnyOfSecret.md) |  | [default to undefined]
+**every** | **number** |  | [default to undefined]
+**unit** | **string** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { Endpoint1HeadersValueAnyOf } from 'griffin-hub-sdk';
+import { PlanPostRequestFrequency } from 'griffin-hub-sdk';
 
-const instance: Endpoint1HeadersValueAnyOf = {
-    $secret,
+const instance: PlanPostRequestFrequency = {
+    every,
+    unit,
 };
 ```
 

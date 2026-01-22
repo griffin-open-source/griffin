@@ -1,4 +1,5 @@
-import { Type, type Static, type TSchema } from "typebox";
+import { Type, type Static } from "typebox";
+import { StringEnum } from "./shared.js";
 
 export const TEST_PLAN_VERSION = "1.0";
 
@@ -48,26 +49,22 @@ export enum NodeType {
   WAIT = "WAIT",
   ASSERTION = "ASSERTION",
 }
-export const ResponseFormatSchema = Type.Union(
-  [
-    Type.Literal(ResponseFormat.JSON),
-    Type.Literal(ResponseFormat.XML),
-    Type.Literal(ResponseFormat.TEXT),
-  ],
+export const ResponseFormatSchema = StringEnum(
+  [ResponseFormat.JSON, ResponseFormat.XML, ResponseFormat.TEXT],
   { $id: "ResponseFormat" },
 );
 
-export const HttpMethodSchema = Type.Union(
+export const HttpMethodSchema = StringEnum(
   [
-    Type.Literal(HttpMethod.GET),
-    Type.Literal(HttpMethod.POST),
-    Type.Literal(HttpMethod.PUT),
-    Type.Literal(HttpMethod.DELETE),
-    Type.Literal(HttpMethod.PATCH),
-    Type.Literal(HttpMethod.HEAD),
-    Type.Literal(HttpMethod.OPTIONS),
-    Type.Literal(HttpMethod.CONNECT),
-    Type.Literal(HttpMethod.TRACE),
+    HttpMethod.GET,
+    HttpMethod.POST,
+    HttpMethod.PUT,
+    HttpMethod.DELETE,
+    HttpMethod.PATCH,
+    HttpMethod.HEAD,
+    HttpMethod.OPTIONS,
+    HttpMethod.CONNECT,
+    HttpMethod.TRACE,
   ],
   { $id: "HttpMethod" },
 );
@@ -247,15 +244,6 @@ export const AssertionsSchema = Type.Object(
 );
 export type Assertions = Static<typeof AssertionsSchema>;
 
-export const NodeTypeSchema = Type.Union(
-  [
-    Type.Literal(NodeType.ENDPOINT),
-    Type.Literal(NodeType.WAIT),
-    Type.Literal(NodeType.ASSERTION),
-  ],
-  { $id: "NodeType" },
-);
-
 export const NodeSchema = Type.Union(
   [EndpointSchema, WaitSchema, AssertionsSchema],
   { $id: "Node" },
@@ -273,7 +261,6 @@ export type Edge = Static<typeof EdgeSchema>;
 
 export const TestPlanV1Schema = Type.Object(
   {
-    organization: Type.String(),
     project: Type.String(),
     locations: Type.Optional(Type.Array(Type.String())),
     id: Type.Readonly(Type.String()),

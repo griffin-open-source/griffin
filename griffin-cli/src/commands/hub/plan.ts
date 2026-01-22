@@ -50,16 +50,15 @@ export async function executePlan(options: PlanOptions): Promise<void> {
       apiToken: state.runner.apiToken || undefined,
     });
 
-    // Fetch remote plans for this project
-    const response = await planApi.planGet(state.projectId);
+    // Fetch remote plans for this project + environment
+    const response = await planApi.planGet(state.projectId, envName);
     const remotePlans = response.data.data.map((p: any) => p);
 
-    // Compute diff for this environment
+    // Compute diff (no deletions shown by default)
     const diff = computeDiff(
       plans.map((p) => p.plan),
-      state,
       remotePlans,
-      envName,
+      { includeDeletions: false },
     );
 
     // Output

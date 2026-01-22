@@ -41,7 +41,6 @@ export async function executeValidate(): Promise<void> {
       const exportInfo = exportName === "default" ? "" : ` (${exportName})`;
       console.log(`  • ${plan.name}${exportInfo}`);
       console.log(`    ${shortPath}`);
-      console.log(`    ID: ${plan.id}`);
       console.log(
         `    Nodes: ${plan.nodes.length}, Edges: ${plan.edges.length}`,
       );

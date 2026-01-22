@@ -1,10 +1,14 @@
 import { loadState, resolveEnvironment } from "../../core/state.js";
+import type { TestPlanV1 } from "@griffin-app/griffin-ts/types";
 import { createSdkClients } from "../../core/sdk.js";
+import { discoverPlans, formatDiscoveryErrors } from "../../core/discovery.js";
+import { computeDiff } from "../../core/diff.js";
 
 export interface RunOptions {
   plan: string;
   env: string;
   wait?: boolean;
+  force?: boolean;
 }
 
 /**
@@ -15,6 +19,9 @@ export async function executeRun(options: RunOptions): Promise<void> {
     // Load state
     const state = await loadState();
 
+    // Resolve environment
+    const envName = await resolveEnvironment(options.env);
+
     if (!state.runner?.baseUrl) {
       console.error("Error: Hub connection not configured.");
       console.log("Connect with:");
@@ -23,36 +30,88 @@ export async function executeRun(options: RunOptions): Promise<void> {
     }
 
     // Create SDK clients
-    const { runsApi } = createSdkClients({
+    const { planApi, runsApi } = createSdkClients({
       baseUrl: state.runner.baseUrl,
       apiToken: state.runner.apiToken || undefined,
     });
 
-    // Resolve plan ID from name
-    const envName = await resolveEnvironment(options.env);
-    const envPlans = state.plans[envName] || [];
+    // Discover local plans
+    const discoveryPattern =
+      state.discovery?.pattern || "**/__griffin__/*.{ts,js}";
+    const discoveryIgnore = state.discovery?.ignore || [
+      "node_modules/**",
+      "dist/**",
+    ];
 
-    const stateEntry = envPlans.find((p) => p.planName === options.plan);
+    const { plans: discoveredPlans, errors } = await discoverPlans(
+      discoveryPattern,
+      discoveryIgnore,
+    );
 
-    if (!stateEntry) {
-      console.error(`Error: Plan "${options.plan}" not found in state`);
+    if (errors.length > 0) {
+      console.error(formatDiscoveryErrors(errors));
+      process.exit(1);
+    }
+
+    // Find local plan by name
+    const localPlan = discoveredPlans.find((p) => p.plan.name === options.plan);
+    if (!localPlan) {
+      console.error(`Error: Plan "${options.plan}" not found locally`);
+      console.error("Available plans:");
+      for (const p of discoveredPlans) {
+        console.error(`  - ${p.plan.name}`);
+      }
+      process.exit(1);
+    }
+
+    // Fetch remote plans for this project + environment
+    const response = await planApi.planGet(state.projectId, envName);
+    const remotePlans = response.data.data;
+
+    // Find remote plan by name
+    const remotePlan = remotePlans.find((p) => p.name === options.plan);
+    if (!remotePlan) {
+      console.error(`Error: Plan "${options.plan}" not found on hub`);
       console.error("Run 'griffin hub apply' to sync your plans first");
       process.exit(1);
     }
 
-    const planId = stateEntry.planId;
-
-    // Trigger the run with environment
-    console.log(`Triggering run for plan: ${options.plan}`);
-    console.log(`Target environment: ${options.env}`);
-
-    const response = await runsApi.runsTriggerPlanIdPost(planId, {
-      environment: options.env,
+    // Compute diff to check if local plan differs from remote
+    const diff = computeDiff([localPlan.plan], [remotePlan] as TestPlanV1[], {
+      includeDeletions: false,
     });
-    console.log(`Run ID: ${response.data.data.id}`);
-    console.log(`Status: ${response.data.data.status}`);
+
+    const hasDiff =
+      diff.actions.length > 0 &&
+      diff.actions.some((a) => a.type === "update" || a.type === "create");
+
+    if (hasDiff && !options.force) {
+      console.error(`Error: Local plan "${options.plan}" differs from hub`);
+      console.error("");
+      console.error(
+        "The plan on the hub is different from your local version.",
+      );
+      console.error(
+        "Run 'griffin hub apply' to sync, or use --force to run anyway.",
+      );
+      process.exit(1);
+    }
+
+    // Trigger the run
+    console.log(`Triggering run for plan: ${options.plan}`);
+    console.log(`Target environment: ${envName}`);
+
+    if (hasDiff && options.force) {
+      console.log("⚠️  Running with --force (local changes not applied)");
+    }
+
+    const runResponse = await runsApi.runsTriggerPlanIdPost(remotePlan.id, {
+      environment: envName,
+    });
+    console.log(`Run ID: ${runResponse.data.data.id}`);
+    console.log(`Status: ${runResponse.data.data.status}`);
     console.log(
-      `Started: ${new Date(response.data.data.startedAt).toLocaleString()}`,
+      `Started: ${new Date(runResponse.data.data.startedAt).toLocaleString()}`,
     );
 
     // Wait for completion if requested
@@ -60,14 +119,14 @@ export async function executeRun(options: RunOptions): Promise<void> {
       console.log("");
       console.log("Waiting for run to complete...");
 
-      const runId = response.data.data.id;
+      const runId = runResponse.data.data.id;
       let completed = false;
 
       while (!completed) {
         await new Promise((resolve) => setTimeout(resolve, 2000)); // Poll every 2 seconds
 
-        const { data: runResponse } = await runsApi.runsIdGet(runId);
-        const run = runResponse.data;
+        const { data: runStatusResponse } = await runsApi.runsIdGet(runId);
+        const run = runStatusResponse.data;
 
         if (run.status === "completed" || run.status === "failed") {
           completed = true;

@@ -6,13 +6,18 @@ import {
   ExecutionResult,
   EnvSecretProvider,
   SecretProviderRegistry,
-} from "griffin-plan-executor";
-import { TestPlanV1Schema } from "griffin/schema";
+} from "@griffin-app/griffin-plan-executor";
+import { TestPlanV1Schema } from "@griffin-app/griffin-ts/schema";
 import { Type } from "typebox";
 import { randomUUID } from "crypto";
 import { loadVariables, resolveVariablesInPlan } from "./core/variables.js";
+import { getProjectId } from "./core/state.js";
 
-const RawTestSchema = Type.Omit(TestPlanV1Schema, ["id", "environment"]);
+const RawTestSchema = Type.Omit(TestPlanV1Schema, [
+  "id",
+  "environment",
+  "project",
+]);
 
 /**
  * Runs a TypeScript test file and executes the resulting JSON plan.
@@ -22,9 +27,11 @@ export async function runTestFile(
   envName: string,
 ): Promise<ExecutionResult> {
   const variables = await loadVariables(envName);
+  const projectId = await getProjectId();
   const defaultExport = await import(filePath);
   const rawPlan = defaultExport.default;
 
+  console.log(`Project ID: ${projectId}`);
   // Resolve all variable references in the plan
   const resolvedPlan = resolveVariablesInPlan(rawPlan, variables);
 
@@ -36,9 +43,10 @@ export async function runTestFile(
     const syntheticPlan = {
       ...parsedPlan,
       id: randomUUID(),
+      project: projectId,
       environment: envName,
     };
-    const result = await executePlanV1(syntheticPlan, {
+    const result = await executePlanV1(syntheticPlan, "default-org", {
       mode: "local",
       httpClient: new AxiosAdapter(),
       secretRegistry: secretRegistry,

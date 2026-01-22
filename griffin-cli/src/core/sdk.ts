@@ -1,5 +1,5 @@
-import { ConfigApi, PlanApi, RunsApi, Configuration } from "griffin-hub-sdk";
-import type { TestPlanV1 } from "griffin-hub-sdk";
+import { PlanApi, RunsApi, Configuration } from "@griffin-app/griffin-hub-sdk";
+import type { TestPlanV1 } from "@griffin-app/griffin-ts/types";
 /**
  * Create configured SDK API instances
  */
@@ -7,7 +7,6 @@ export function createSdkClients(config: {
   baseUrl: string;
   apiToken?: string;
 }): {
-  configApi: ConfigApi;
   planApi: PlanApi;
   runsApi: RunsApi;
 } {
@@ -17,7 +16,6 @@ export function createSdkClients(config: {
   });
 
   return {
-    configApi: new ConfigApi(configuration),
     planApi: new PlanApi(configuration),
     runsApi: new RunsApi(configuration),
   };

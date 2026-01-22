@@ -12,6 +12,7 @@ import { Pool } from "pg";
 import * as schema from "./schema.js";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import { DrizzleDatabase } from "../../../plugins/storage.js";
 
 /**
  * PostgreSQL Storage implementation using Drizzle ORM.
@@ -101,7 +102,6 @@ class PostgresTransactionStorage implements Storage {
  * PostgreSQL job queue backend.
  * Provides high-performance, durable job queues using Postgres.
  *
- * TODO: Implement using 'pg' (node-postgres)
  *
  * Connection options to consider:
  * - Connection string from environment variable
@@ -110,27 +110,25 @@ class PostgresTransactionStorage implements Storage {
  * - Statement timeout for safety
  */
 export class PostgresJobQueueBackend implements JobQueueBackend {
-  private pool: Pool | null = null;
+  private db: DrizzleDatabase | null = null;
   private queues: Map<string, PostgresJobQueue<any>> = new Map();
 
   constructor(private connectionString: string) {}
 
-  queue<T = any>(name: string = "default"): JobQueue<T> {
+  queue<T = any>(name: string): JobQueue<T> {
     if (!this.queues.has(name)) {
-      this.queues.set(name, new PostgresJobQueue<T>(this.pool!, name));
+      this.queues.set(name, new PostgresJobQueue<T>(this.db!, name));
     }
     return this.queues.get(name)!;
   }
 
   async connect(): Promise<void> {
-    this.pool = new Pool({ connectionString: this.connectionString });
-    await this.pool.query("SELECT NOW()"); // Test connection
+    this.db = drizzle(this.connectionString, { schema });
   }
 
   async disconnect(): Promise<void> {
-    if (this.pool) {
-      await this.pool.end();
-      this.pool = null;
+    if (this.db) {
+      this.db = null;
     }
   }
 }

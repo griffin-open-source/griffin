@@ -1,23 +1,19 @@
-# Wait1
+# EndpointPath
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**id** | **string** |  | [default to undefined]
-**type** | **string** |  | [default to undefined]
-**duration_ms** | **number** |  | [default to undefined]
+**$variable** | [**EndpointPathAnyOfVariable**](EndpointPathAnyOfVariable.md) |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { Wait1 } from 'griffin-hub-sdk';
+import { EndpointPath } from 'griffin-hub-sdk';
 
-const instance: Wait1 = {
-    id,
-    type,
-    duration_ms,
+const instance: EndpointPath = {
+    $variable,
 };
 ```
 

@@ -12,8 +12,8 @@ Name | Type | Description | Notes
 **version** | **string** |  | [default to undefined]
 **frequency** | [**Frequency1**](Frequency1.md) |  | [default to undefined]
 **environment** | **string** |  | [default to 'default']
-**nodes** | [**Array&lt;Node1&gt;**](Node1.md) |  | [default to undefined]
-**edges** | [**Array&lt;Edge1&gt;**](Edge1.md) |  | [default to undefined]
+**nodes** | [**Array&lt;Node&gt;**](Node.md) |  | [default to undefined]
+**edges** | [**Array&lt;Edge&gt;**](Edge.md) |  | [default to undefined]
 
 ## Example
 

@@ -1,4 +1,4 @@
-# PlanPostRequestNodesInnerAnyOf2AssertionsInner
+# AssertionsAssertionsInner
 
 
 ## Properties
@@ -7,17 +7,17 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **assertionType** | **string** |  | [default to undefined]
 **nodeId** | **string** |  | [default to undefined]
-**accessor** | [**PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfAccessor**](PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfAccessor.md) |  | [default to undefined]
+**accessor** | **string** |  | [default to undefined]
 **path** | **string** |  | [default to undefined]
-**predicate** | [**PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicate**](PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicate.md) |  | [default to undefined]
+**predicate** | [**AssertionsAssertionsInnerAnyOfAllOfPredicate**](AssertionsAssertionsInnerAnyOfAllOfPredicate.md) |  | [default to undefined]
 **expected** | **any** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { PlanPostRequestNodesInnerAnyOf2AssertionsInner } from 'griffin-hub-sdk';
+import { AssertionsAssertionsInner } from 'griffin-hub-sdk';
 
-const instance: PlanPostRequestNodesInnerAnyOf2AssertionsInner = {
+const instance: AssertionsAssertionsInner = {
     assertionType,
     nodeId,
     accessor,

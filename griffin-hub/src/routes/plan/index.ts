@@ -84,10 +84,14 @@ export const GetPlanByNameEndpoint = {
 
 export default function (fastify: FastifyTypeBox) {
   fastify.addSchema(TestPlanV1Schema);
-  //fastify.addSchema(NodeSchema);
-  //fastify.addSchema(EdgeSchema);
+  fastify.addSchema(NodeSchema);
+  fastify.addSchema(EdgeSchema);
+  fastify.addSchema(EndpointSchema);
+  fastify.addSchema(WaitSchema);
+  fastify.addSchema(AssertionsSchema);
+  //fastify.addSchema(AssertionSchema);
+  //fastify.addSchema(BinaryPredicateOperatorSchema);
   //fastify.addSchema(FrequencySchema);
-  //fastify.addSchema(EndpointSchema);
   //fastify.addSchema(HttpMethodSchema);
   //fastify.addSchema(ResponseFormatSchema);
   //fastify.addSchema(WaitSchema);

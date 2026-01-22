@@ -1,21 +1,19 @@
-# Edge1
+# EndpointHeadersValueAnyOf
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**from** | **string** |  | [default to undefined]
-**to** | **string** |  | [default to undefined]
+**$secret** | [**EndpointHeadersValueAnyOfSecret**](EndpointHeadersValueAnyOfSecret.md) |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { Edge1 } from 'griffin-hub-sdk';
+import { EndpointHeadersValueAnyOf } from 'griffin-hub-sdk';
 
-const instance: Edge1 = {
-    from,
-    to,
+const instance: EndpointHeadersValueAnyOf = {
+    $secret,
 };
 ```
 

@@ -6,6 +6,8 @@ export type {
   HttpClientAdapter,
   HttpRequest,
   HttpResponse,
+  RunStatusUpdate,
+  StatusCallbacks,
 } from "./types.js";
 export type {
   TestPlan,

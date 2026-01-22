@@ -1,4 +1,4 @@
-# PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1
+# AssertionAnyOf2
 
 
 ## Properties
@@ -6,15 +6,15 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **assertionType** | **string** |  | [default to undefined]
-**path** | **Array&lt;string&gt;** |  | [default to undefined]
+**path** | **string** |  | [default to undefined]
 **expected** | **any** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1 } from 'griffin-hub-sdk';
+import { AssertionAnyOf2 } from 'griffin-hub-sdk';
 
-const instance: PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1 = {
+const instance: AssertionAnyOf2 = {
     assertionType,
     path,
     expected,

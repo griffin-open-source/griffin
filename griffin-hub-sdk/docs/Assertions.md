@@ -7,7 +7,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **string** |  | [default to undefined]
 **type** | **string** |  | [default to undefined]
-**assertions** | [**Array&lt;Assertion1&gt;**](Assertion1.md) |  | [default to undefined]
+**assertions** | [**Array&lt;AssertionsAssertionsInner&gt;**](AssertionsAssertionsInner.md) |  | [default to undefined]
 
 ## Example
 

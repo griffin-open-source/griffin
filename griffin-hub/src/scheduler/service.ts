@@ -13,8 +13,11 @@ export interface SchedulerConfig {
 export interface ExecutionJobData {
   type: "execute-plan";
   planId: string;
-  jobRunId?: string;
+  jobRunId: string;
   environment: string;
+  location: string;
+  executionGroupId: string;
+  plan: TestPlanV1; // Full plan included for executor/agent self-sufficiency
   scheduledAt: string; // ISO timestamp
 }
 
@@ -147,6 +150,9 @@ export class SchedulerService {
         planId: plan.id,
         jobRunId: jobRun.id,
         environment,
+        location,
+        executionGroupId,
+        plan, // Include full plan for executor/agent
         scheduledAt: now.toISOString(),
       },
       {

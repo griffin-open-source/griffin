@@ -1,20 +1,16 @@
 import { JobQueueBackend, MigrationRunner } from "./ports.js";
 import { Storage } from "./repositories.js";
-import { SqliteStorage } from "./adapters/sqlite/index.js";
 import {
   PostgresStorage,
   PostgresJobQueueBackend,
 } from "./adapters/postgres/index.js";
-// TODO: Uncomment when implementing migration runners
-// import { SqliteMigrationRunner } from './adapters/sqlite/migrations/runner.js';
-// import { PostgresMigrationRunner } from './adapters/postgres/migrations/runner.js';
 
 // =============================================================================
 // Backend types and configs
 // =============================================================================
 
-export type RepositoryBackendType = "memory" | "sqlite" | "postgres";
-export type JobQueueBackendType = "memory" | "postgres"; // Note: SQLite omitted intentionally
+export type RepositoryBackendType = "memory" | "postgres";
+export type JobQueueBackendType = "memory" | "postgres"; 
 
 export interface RepositoryConfig {
   backend: RepositoryBackendType;
@@ -44,9 +40,6 @@ export interface JobQueueConfig {
  */
 export function createStorage(config: RepositoryConfig): Storage {
   switch (config.backend) {
-    case "sqlite":
-      return new SqliteStorage(config.connectionString || ":memory:");
-
     case "postgres":
       if (!config.connectionString) {
         throw new Error("Connection string required for Postgres backend");
@@ -83,9 +76,6 @@ export function createMigrationRunner(
   backendType: RepositoryBackendType,
 ): MigrationRunner | null {
   switch (backendType) {
-    case "sqlite":
-      throw new Error("SQLite migration runner not yet implemented");
-
     case "postgres":
       throw new Error("Postgres migration runner not yet implemented");
 
@@ -102,7 +92,7 @@ export function createMigrationRunner(
  * Load repository configuration from environment variables.
  *
  * Environment variables:
- * - REPOSITORY_BACKEND:  'sqlite' | 'postgres'
+ * - REPOSITORY_BACKEND:  'postgres'
  * - REPOSITORY_CONNECTION_STRING: connection string for the backend
  * - SQLITE_PATH: (alias for REPOSITORY_CONNECTION_STRING when using SQLite)
  * - POSTGRESQL_URL: (alias for REPOSITORY_CONNECTION_STRING when using Postgres)
@@ -112,12 +102,7 @@ export function loadRepositoryConfig(): RepositoryConfig {
 
   let connectionString: string | undefined;
 
-  if (backend === "sqlite") {
-    connectionString =
-      process.env.REPOSITORY_CONNECTION_STRING ||
-      process.env.SQLITE_PATH ||
-      ":memory:";
-  } else if (backend === "postgres") {
+  if (backend === "postgres") {
     connectionString =
       process.env.REPOSITORY_CONNECTION_STRING || process.env.POSTGRESQL_URL;
     if (!connectionString) {

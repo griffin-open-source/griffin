@@ -18,8 +18,6 @@ export type {
 // Factory functions
 export * from "./factory.js";
 
-// Adapters
-export { SqliteStorage } from "./adapters/sqlite/index.js";
 export {
   PostgresStorage,
   PostgresJobQueueBackend,

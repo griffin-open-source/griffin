@@ -1,4 +1,4 @@
-# PlanPostRequestNodesInnerAnyOfPathAnyOfVariable
+# EndpointPathAnyOfVariable
 
 
 ## Properties
@@ -11,9 +11,9 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { PlanPostRequestNodesInnerAnyOfPathAnyOfVariable } from 'griffin-hub-sdk';
+import { EndpointPathAnyOfVariable } from 'griffin-hub-sdk';
 
-const instance: PlanPostRequestNodesInnerAnyOfPathAnyOfVariable = {
+const instance: EndpointPathAnyOfVariable = {
     key,
     template,
 };

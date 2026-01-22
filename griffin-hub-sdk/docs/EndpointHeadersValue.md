@@ -1,21 +1,19 @@
-# PlanPostRequestEdgesInner
+# EndpointHeadersValue
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**from** | **string** |  | [default to undefined]
-**to** | **string** |  | [default to undefined]
+**$secret** | [**EndpointHeadersValueAnyOfSecret**](EndpointHeadersValueAnyOfSecret.md) |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { PlanPostRequestEdgesInner } from 'griffin-hub-sdk';
+import { EndpointHeadersValue } from 'griffin-hub-sdk';
 
-const instance: PlanPostRequestEdgesInner = {
-    from,
-    to,
+const instance: EndpointHeadersValue = {
+    $secret,
 };
 ```
 

@@ -8,7 +8,7 @@ import { Value } from "typebox/value";
 export const ConfigSchema = Type.Object({
   // Repository configuration
   repository: Type.Object({
-    backend: Type.Union([Type.Literal("sqlite"), Type.Literal("postgres")]),
+    backend: Type.Union([Type.Literal("postgres")]),
     connectionString: Type.Optional(Type.String()),
   }),
 
@@ -133,29 +133,13 @@ function parseInteger(value: string | undefined, defaultValue: number): number {
  * Throws an error if required environment variables are missing.
  */
 export function loadConfigFromEnv(): Config {
-  const repositoryBackend = process.env.REPOSITORY_BACKEND as
-    | "sqlite"
-    | "postgres";
+  const repositoryBackend = process.env.REPOSITORY_BACKEND as "postgres";
 
   // Determine repository connection string
   let repositoryConnectionString = process.env.DATABASE_URL;
   if (!repositoryConnectionString) {
     throw new Error("DATABASE_URL is required");
   }
-  //if (repositoryBackend === "sqlite") {
-  //  repositoryConnectionString =
-  //    process.env.REPOSITORY_CONNECTION_STRING ||
-  //    process.env.SQLITE_PATH ||
-  //    ":memory:";
-  //} else if (repositoryBackend === "postgres") {
-  //  repositoryConnectionString =
-  //    process.env.REPOSITORY_CONNECTION_STRING || process.env.POSTGRESQL_URL;
-  //  if (!repositoryConnectionString) {
-  //    throw new Error(
-  //      "REPOSITORY_CONNECTION_STRING or POSTGRESQL_URL is required when REPOSITORY_BACKEND=postgres",
-  //    );
-  //  }
-  //}
 
   const jobQueueBackend = "postgres"; //process.env.JOBQUEUE_BACKEND as "postgres";
   const jobQueueConnectionString = process.env.DATABASE_URL;

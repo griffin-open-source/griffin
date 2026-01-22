@@ -8,9 +8,16 @@ import {
   Assertion,
 } from "@griffin-app/griffin-ts/types";
 
-import { HttpMethod, ResponseFormat, NodeType } from "@griffin-app/griffin-ts/schema";
+import {
+  HttpMethod,
+  ResponseFormat,
+  NodeType,
+} from "@griffin-app/griffin-ts/schema";
 
-import { UnaryPredicate, BinaryPredicateOperator } from "@griffin-app/griffin-ts";
+import {
+  UnaryPredicate,
+  BinaryPredicateOperator,
+} from "@griffin-app/griffin-ts";
 
 import type {
   ExecutionOptions,
@@ -424,6 +431,16 @@ export async function executePlanV1(
       edgeCount: resolvedPlan.edges.length,
     });
 
+    // Call onStart callback if provided
+    if (options.statusCallbacks?.onStart) {
+      try {
+        await options.statusCallbacks.onStart();
+      } catch (error) {
+        console.error("Error in onStart callback:", error);
+        // Don't fail execution due to callback errors
+      }
+    }
+
     // Build execution graph (state-based)
     const graph = buildGraph(resolvedPlan, options, executionContext);
 
@@ -449,6 +466,22 @@ export async function executePlanV1(
         errors: finalErrors,
       });
 
+      // Call onComplete callback if provided
+      if (options.statusCallbacks?.onComplete) {
+        try {
+          await options.statusCallbacks.onComplete({
+            status: "failed",
+            completedAt: new Date().toISOString(),
+            duration_ms: Date.now() - startTime,
+            success: false,
+            errors: finalErrors,
+          });
+        } catch (error) {
+          console.error("Error in onComplete callback:", error);
+          // Don't fail execution due to callback errors
+        }
+      }
+
       // Flush events before returning
       await options.eventEmitter?.flush?.();
 
@@ -462,16 +495,33 @@ export async function executePlanV1(
 
     const finalState = graphResult.output;
     const success = finalState.errors.length === 0;
+    const duration = Date.now() - startTime;
 
     // Emit PLAN_END event
     executionContext.emit({
       type: "PLAN_END",
       success,
-      totalDuration_ms: Date.now() - startTime,
+      totalDuration_ms: duration,
       nodeResultCount: finalState.results.length,
       errorCount: finalState.errors.length,
       errors: finalState.errors,
     });
+
+    // Call onComplete callback if provided
+    if (options.statusCallbacks?.onComplete) {
+      try {
+        await options.statusCallbacks.onComplete({
+          status: success ? "completed" : "failed",
+          completedAt: new Date().toISOString(),
+          duration_ms: duration,
+          success,
+          ...(finalState.errors.length > 0 && { errors: finalState.errors }),
+        });
+      } catch (error) {
+        console.error("Error in onComplete callback:", error);
+        // Don't fail execution due to callback errors
+      }
+    }
 
     // Flush events before returning
     await options.eventEmitter?.flush?.();
@@ -480,21 +530,40 @@ export async function executePlanV1(
       success,
       results: finalState.results,
       errors: finalState.errors,
-      totalDuration_ms: Date.now() - startTime,
+      totalDuration_ms: duration,
     };
   } catch (error: unknown) {
     // Catch any unexpected errors
     executionContext.emitError(error, "unexpected_error");
 
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const duration = Date.now() - startTime;
+
     // Emit PLAN_END event
     executionContext.emit({
       type: "PLAN_END",
       success: false,
-      totalDuration_ms: Date.now() - startTime,
+      totalDuration_ms: duration,
       nodeResultCount: 0,
       errorCount: 1,
-      errors: [error instanceof Error ? error.message : String(error)],
+      errors: [errorMessage],
     });
+
+    // Call onComplete callback if provided
+    if (options.statusCallbacks?.onComplete) {
+      try {
+        await options.statusCallbacks.onComplete({
+          status: "failed",
+          completedAt: new Date().toISOString(),
+          duration_ms: duration,
+          success: false,
+          errors: [errorMessage],
+        });
+      } catch (callbackError) {
+        console.error("Error in onComplete callback:", callbackError);
+        // Don't fail execution due to callback errors
+      }
+    }
 
     // Flush events before throwing
     await options.eventEmitter?.flush?.();

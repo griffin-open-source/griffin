@@ -1,4 +1,4 @@
-# Assertion1
+# AssertionsAssertionsInnerAnyOf
 
 
 ## Properties
@@ -8,22 +8,20 @@ Name | Type | Description | Notes
 **assertionType** | **string** |  | [default to undefined]
 **nodeId** | **string** |  | [default to undefined]
 **accessor** | **string** |  | [default to undefined]
-**path** | **string** |  | [default to undefined]
-**predicate** | [**JSONAssertion1Predicate**](JSONAssertion1Predicate.md) |  | [default to undefined]
-**expected** | **any** |  | [default to undefined]
+**path** | **Array&lt;string&gt;** |  | [default to undefined]
+**predicate** | [**AssertionsAssertionsInnerAnyOfAllOfPredicate**](AssertionsAssertionsInnerAnyOfAllOfPredicate.md) |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { Assertion1 } from 'griffin-hub-sdk';
+import { AssertionsAssertionsInnerAnyOf } from 'griffin-hub-sdk';
 
-const instance: Assertion1 = {
+const instance: AssertionsAssertionsInnerAnyOf = {
     assertionType,
     nodeId,
     accessor,
     path,
     predicate,
-    expected,
 };
 ```
 

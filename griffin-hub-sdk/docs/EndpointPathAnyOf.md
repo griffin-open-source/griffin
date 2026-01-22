@@ -1,18 +1,18 @@
-# PlanPostRequestNodesInnerAnyOfPath
+# EndpointPathAnyOf
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**$variable** | [**PlanPostRequestNodesInnerAnyOfPathAnyOfVariable**](PlanPostRequestNodesInnerAnyOfPathAnyOfVariable.md) |  | [default to undefined]
+**$variable** | [**EndpointPathAnyOfVariable**](EndpointPathAnyOfVariable.md) |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { PlanPostRequestNodesInnerAnyOfPath } from 'griffin-hub-sdk';
+import { EndpointPathAnyOf } from 'griffin-hub-sdk';
 
-const instance: PlanPostRequestNodesInnerAnyOfPath = {
+const instance: EndpointPathAnyOf = {
     $variable,
 };
 ```

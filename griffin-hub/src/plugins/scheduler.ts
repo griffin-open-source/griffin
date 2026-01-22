@@ -13,14 +13,14 @@ declare module "fastify" {
  * Fastify plugin that initializes and manages the scheduler service.
  * Configuration is loaded from fastify.config (provided by the config plugin).
  *
- * NOTE: The worker service has been moved to griffin-agent.
- * The hub only schedules jobs; agents execute them.
+ * The scheduler finds plans due for execution and enqueues them.
+ * Jobs are executed by either:
+ * - Built-in executor (server-standalone.ts)
+ * - Remote agents (griffin-agent)
  */
 const schedulerPlugin: FastifyPluginAsync = async (fastify) => {
   const {
     scheduler: schedulerConfig,
-    worker: workerConfig,
-    repository,
   } = fastify.config;
 
   fastify.log.info(
@@ -29,14 +29,6 @@ const schedulerPlugin: FastifyPluginAsync = async (fastify) => {
     },
     "Initializing scheduler service",
   );
-
-  // Warn if worker is enabled (deprecated)
-  if (workerConfig.enabled) {
-    fastify.log.warn(
-      "WORKER_ENABLED=true is deprecated. The hub no longer runs workers. " +
-        "Deploy griffin-agent separately to execute plans.",
-    );
-  }
 
   // Create scheduler service
   const scheduler = new SchedulerService(fastify.storage, fastify.jobQueue, {

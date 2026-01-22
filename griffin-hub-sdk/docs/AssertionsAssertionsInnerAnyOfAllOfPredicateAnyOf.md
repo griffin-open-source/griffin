@@ -1,4 +1,4 @@
-# PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOf
+# AssertionsAssertionsInnerAnyOfAllOfPredicateAnyOf
 
 
 ## Properties
@@ -11,9 +11,9 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOf } from 'griffin-hub-sdk';
+import { AssertionsAssertionsInnerAnyOfAllOfPredicateAnyOf } from 'griffin-hub-sdk';
 
-const instance: PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOf = {
+const instance: AssertionsAssertionsInnerAnyOfAllOfPredicateAnyOf = {
     expected,
     operator,
 };

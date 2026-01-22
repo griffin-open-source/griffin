@@ -4,7 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-griffin is an open-source API testing platform for creating TypeScript-based API tests that run against production APIs. It's a monorepo with multiple TypeScript packages.
+Griffin is an open-source API testing platform for creating TypeScript-based API tests that run against production APIs. It's a monorepo with multiple TypeScript packages following a hub-and-agent architecture.
+
+## Packages
+
+| Package | Purpose |
+|---------|---------|
+| **griffin-ts** | TypeScript DSL for defining API tests |
+| **griffin-plan-executor** | Execution engine for JSON test plans |
+| **griffin-cli** | Command-line tool for test management |
+| **griffin-hub** | Control plane & REST API service |
+| **griffin-agent** | Distributed test execution worker |
+| **griffin-hub-sdk** | Auto-generated OpenAPI client for hub |
+| **sample-apis** | Sample JSON API for testing |
 
 ## Build Commands
 
@@ -14,14 +26,20 @@ The projects must be built in dependency order:
 # Build DSL library (required first)
 cd griffin-ts && npm install && npm run build
 
-# Build plan executor (depends on ts-edge)
+# Build plan executor (depends on griffin-ts)
 cd ../griffin-plan-executor && npm install && npm run build
 
-# Build CLI (depends on plan executor)
+# Build hub SDK (auto-generated OpenAPI client)
+cd ../griffin-hub-sdk && npm install && npm run build
+
+# Build CLI (depends on griffin-ts, plan-executor, hub-sdk)
 cd ../griffin-cli && npm install && npm run build
 
-# Build runner (depends on plan executor)
-cd ../griffin-runner && npm install && npm run build:ts
+# Build hub (depends on griffin-ts, plan-executor, cli)
+cd ../griffin-hub && npm install && npm run build
+
+# Build agent (depends on griffin-ts, plan-executor, hub-sdk)
+cd ../griffin-agent && npm install && npm run build
 ```
 
 ## Running Tests
@@ -31,9 +49,8 @@ cd ../griffin-runner && npm install && npm run build:ts
 cd griffin-plan-executor && npm test           # single run
 cd griffin-plan-executor && npm run test:watch # watch mode
 
-# Runner tests
-cd griffin-runner && npm test                  # single run (builds first)
-cd griffin-runner && npm run test:watch        # watch mode
+# CLI tests
+cd griffin-cli && npm test
 ```
 
 Both projects use Vitest.
@@ -41,17 +58,47 @@ Both projects use Vitest.
 ## Running the CLI
 
 ```bash
-# Run tests locally (discovers __griffin__/*.ts files)
-node griffin-cli/dist/cli.js run-local
+# Run tests locally
+griffin local run
+griffin local run --env production
 
-# Development mode
-cd griffin-cli && npm run dev run-local
+# Hub operations
+griffin hub connect --url https://hub.example.com --token <token>
+griffin hub status
+griffin hub plan                    # show planned changes
+griffin hub apply                   # apply changes to hub
+griffin hub apply --prune           # also delete removed plans
+griffin hub runs --limit 20         # show recent runs
+griffin hub run --plan my-test --env production
+
+# Other commands
+griffin init                        # initialize griffin in directory
+griffin validate                    # validate test files
+griffin generate-key                # generate API key
 ```
 
-## Running the Runner Service
+## Running the Hub Service
 
 ```bash
-cd griffin-runner
+cd griffin-hub
+
+# Control plane only (requires separate agents)
+npm run dev      # development with hot reload
+npm start        # production mode
+
+# Standalone mode (built-in executor, no separate agents needed)
+npm run dev:standalone      # development with hot reload
+npm run start:standalone    # production mode
+
+# Database migrations (PostgreSQL)
+npm run db:generate   # generate new migrations
+npm run db:push       # apply schema to database
+```
+
+## Running the Agent
+
+```bash
+cd griffin-agent
 npm run dev      # development with hot reload
 npm start        # production mode
 ```
@@ -64,23 +111,48 @@ cd sample-apis && npm run dev   # starts on port 3000
 
 ## Architecture
 
+### Deployment Modes
+
+Griffin supports two deployment architectures:
+
+#### 1. Standalone Mode (Built-in Executor)
+- **griffin-hub-standalone** - Combined control plane + executor in single process
+- Scheduler enqueues jobs, built-in executor processes them directly
+- Uses `"local"` location for all job routing
+- Simpler deployment for single-instance usage
+- Entrypoint: `src/server-standalone.ts`
+
+#### 2. Distributed Mode (Hub + Agents)
+- **griffin-hub** - Control plane: stores plans, schedules runs, tracks agents
+- **griffin-agent** - Distributed workers: execute test plans, report results
+- Agents register with hub and receive jobs via PostgreSQL-backed queue
+- Hub monitors agent health via heartbeat protocol
+- Enables geographic distribution and horizontal scaling
+- Entrypoint: `src/server.ts`
+
 ### Execution Flow
 1. **griffin-ts** (DSL) - Builder pattern creates test definitions in TypeScript
 2. Test files serialize to JSON test plans
 3. **griffin-plan-executor** - Executes JSON plans using graph-based execution (ts-edge)
-4. **griffin-runner** - Fastify service for scheduling and orchestrating test runs
+4. **griffin-hub** - Schedules jobs and enqueues them
+5. **Executor** (built-in or agent) - Polls queue, executes plans, reports results
 
 ### Key Patterns
 - **Graph-based execution**: Uses `ts-edge` for node/edge state management. Tests are graphs with nodes (endpoints, waits, assertions) and edges defining execution flow.
-- **Builder pattern**: `ApiCheckBuilder` provides chainable API for test definitions
-- **Fastify plugins**: Runner uses autoload plugin system with plugins in `src/plugins/` and routes in `src/routes/`
+- **Builder patterns**: Two builder APIs available:
+  - `createGraphBuilder()` - Type-safe graph builder with explicit edges
+  - `createTestBuilder()` - Sequential builder with auto-generated edges (simpler for linear flows)
+- **Fastify plugins**: Hub uses autoload plugin system with plugins in `src/plugins/` and routes in `src/routes/`
+- **Ports and adapters**: Storage layer uses interfaces for PostgreSQL (via Drizzle ORM)
 
 ### Test File Structure
 Test files go in `__griffin__/` directories and export JSON plans:
-```typescript
-import { GET, ApiCheckBuilder, JSON, START, END, Frequency, Wait } from "../griffin-ts/src/index";
 
-const builder = new ApiCheckBuilder({
+```typescript
+// Graph-based builder (explicit edges)
+import { createGraphBuilder, GET, JSON, START, END, Frequency } from "griffin-ts";
+
+const builder = createGraphBuilder({
   name: "test-name",
   endpoint_host: "http://localhost:3000"
 });
@@ -88,25 +160,50 @@ const builder = new ApiCheckBuilder({
 builder
   .addEndpoint("check", { method: GET, response_format: JSON, path: "/health" })
   .addEdge(START, "check")
-  .addEdge("check", END);
-
-plan.create({ frequency: Frequency.every(1).minute() });
+  .addEdge("check", END)
+  .build({ frequency: Frequency.every(1).minute() });
 ```
 
-### Runner Configuration
+```typescript
+// Sequential builder (auto-edges, simpler for linear flows)
+import { createTestBuilder, GET, JSON, Frequency } from "griffin-ts";
+
+const builder = createTestBuilder({
+  name: "test-name",
+  endpoint_host: "http://localhost:3000"
+});
+
+builder
+  .endpoint("check", { method: GET, response_format: JSON, path: "/health" })
+  .build({ frequency: Frequency.every(1).minute() });
+```
+
+### Hub Configuration
 Environment-based config via Typebox schema. Key variables:
-- `REPOSITORY_BACKEND`: memory | sqlite | postgres
-- `JOBQUEUE_BACKEND`: memory | postgres
-- `SCHEDULER_ENABLED`, `WORKER_ENABLED`: boolean
-- See `griffin-runner/CONFIG.md` for full reference
+- `DATABASE_URL`: PostgreSQL connection string (required)
+- `SCHEDULER_ENABLED`: Enable scheduler (default: true)
+- `SCHEDULER_TICK_INTERVAL`: Scheduler polling interval in ms (default: 30000)
+- `WORKER_EMPTY_DELAY`: Executor initial empty queue delay in ms (default: 1000)
+- `WORKER_MAX_EMPTY_DELAY`: Executor max empty queue delay in ms (default: 30000)
+- `PLAN_EXECUTION_TIMEOUT`: Execution timeout in ms (default: 30000)
+- `AUTH_MODE`: none | api-key | oidc (default: none)
+- `AUTH_API_KEYS`: Comma-separated API keys (required if AUTH_MODE=api-key)
+- `AUTH_OIDC_ISSUER`: OIDC issuer URL (required if AUTH_MODE=oidc)
+
+### Agent Configuration
+- `AGENT_LOCATION`: Location identifier (required)
+- `HUB_URL`: Hub API endpoint
+- `QUEUE_BACKEND`: postgres | sqs | redis
+- `QUEUE_CONNECTION_STRING`: Backend-specific connection
+- `HEARTBEAT_ENABLED`, `HEARTBEAT_INTERVAL_SECONDS`: Heartbeat settings
 
 ### Secrets System
 Secrets are referenced in test files using `secret("provider:path")` and resolved at runtime:
 
 ```typescript
-import { secret } from "../griffin-ts/src/index";
+import { secret } from "griffin-ts";
 
-builder.addEndpoint("call", {
+builder.endpoint("call", {
   headers: {
     "Authorization": secret("env:API_KEY"),      // Environment variable
     "X-API-Key": secret("aws:prod/api-key"),     // AWS Secrets Manager
@@ -120,24 +217,31 @@ builder.addEndpoint("call", {
 - `aws` - AWS Secrets Manager (optional, requires `@aws-sdk/client-secrets-manager`)
 - `vault` - HashiCorp Vault (optional)
 
-**Runner config:**
+**Hub/Agent config:**
 - `SECRET_PROVIDERS`: Comma-separated list of enabled providers (default: "env")
 - `AWS_SECRETS_REGION`, `VAULT_ADDR`, `VAULT_TOKEN`: Provider-specific config
 
 **Key files:**
 - `griffin-ts/src/secrets.ts` - DSL secret() function
 - `griffin-plan-executor/src/secrets/` - Provider implementations and resolution
-- `griffin-runner/src/plugins/secrets.ts` - Runner integration
+- `griffin-hub/src/plugins/secrets.ts` - Hub integration
 
 ## Key Entry Points
 
 | Path | Purpose |
 |------|---------|
 | `griffin-cli/src/cli.ts` | CLI entry point |
-| `griffin-ts/src/builder.ts` | ApiCheckBuilder class |
+| `griffin-ts/src/builder.ts` | Graph-based TestBuilder |
+| `griffin-ts/src/sequential-builder.ts` | Sequential TestBuilder |
 | `griffin-ts/src/secrets.ts` | secret() function for DSL |
 | `griffin-plan-executor/src/executor.ts` | Plan execution engine |
 | `griffin-plan-executor/src/secrets/` | Secret providers and resolution |
-| `griffin-runner/src/app.ts` | Fastify app setup |
-| `griffin-runner/src/config.ts` | Configuration schema |
-| `griffin-runner/src/plugins/secrets.ts` | Secret registry initialization |
+| `griffin-hub/src/app.ts` | Fastify app setup |
+| `griffin-hub/src/server.ts` | Hub-only entry point (control plane) |
+| `griffin-hub/src/server-standalone.ts` | Standalone entry point (hub + executor) |
+| `griffin-hub/src/config.ts` | Hub configuration schema |
+| `griffin-hub/src/executor/service.ts` | Built-in executor service |
+| `griffin-hub/src/executor/plugin.ts` | Executor Fastify plugin |
+| `griffin-hub/src/plugins/secrets.ts` | Secret registry initialization |
+| `griffin-agent/src/index.ts` | Agent entry point |
+| `griffin-agent/src/config.ts` | Agent configuration schema |

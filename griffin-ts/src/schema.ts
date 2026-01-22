@@ -1,5 +1,5 @@
 import { Type, type Static } from "typebox";
-import { StringEnum } from "./shared.js";
+import { StringEnum, Ref } from "./shared.js";
 
 export const TEST_PLAN_VERSION = "1.0";
 
@@ -245,7 +245,7 @@ export const AssertionsSchema = Type.Object(
 export type Assertions = Static<typeof AssertionsSchema>;
 
 export const NodeSchema = Type.Union(
-  [EndpointSchema, WaitSchema, AssertionsSchema],
+  [Ref(EndpointSchema), Ref(WaitSchema), Ref(AssertionsSchema)],
   { $id: "Node" },
 );
 
@@ -268,8 +268,8 @@ export const TestPlanV1Schema = Type.Object(
     version: Type.Literal("1.0"),
     frequency: FrequencySchema,
     environment: Type.String({ default: "default" }),
-    nodes: Type.Array(NodeSchema),
-    edges: Type.Array(EdgeSchema),
+    nodes: Type.Array(Ref(NodeSchema)),
+    edges: Type.Array(Ref(EdgeSchema)),
   },
   {
     $id: "TestPlanV1",

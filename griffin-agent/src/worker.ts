@@ -1,4 +1,4 @@
-import type { AgentsApi, ConfigApi, RunsApi } from "griffin-hub-sdk";
+import type { AgentsApi, RunsApi } from "griffin-hub-sdk";
 import type { QueueConsumer, ExecutionJobData } from "./queue/types.js";
 //import type { HubClient } from "./hub-client.js";
 import type { SecretProviderRegistry } from "griffin-plan-executor";
@@ -57,7 +57,6 @@ export class WorkerService {
     private location: string,
     private queueConsumer: QueueConsumer,
     private runsApi: RunsApi,
-    private configApi: ConfigApi,
     config: WorkerConfig,
   ) {
     this.emptyDelay = config.emptyDelay ?? 1000;
@@ -131,11 +130,6 @@ export class WorkerService {
     try {
       const plan = data.plan;
 
-      // Update JobRun to running via hub API
-      await this.runsApi.runsIdPatch(data.jobRunId, {
-        status: "running",
-      });
-
       console.log(
         `Executing plan: ${plan.name} (${plan.id}) in environment: ${data.environment} from location: ${data.location}`,
       );
@@ -162,38 +156,37 @@ export class WorkerService {
         return baseUrl;
       };
 
-      // Execute the plan
-      const startTime = Date.now();
+      // Execute the plan with status callbacks
       const executionOptions: ExecutionOptions = {
         mode: "remote",
         httpClient: this.httpClient,
         timeout: this.timeout,
         ...(this.secretRegistry && { secretRegistry: this.secretRegistry }),
         targetResolver,
+        statusCallbacks: {
+          onStart: async () => {
+            await this.runsApi.runsIdPatch(data.jobRunId, {
+              status: "running",
+            });
+          },
+          onComplete: async (update) => {
+            await this.runsApi.runsIdPatch(data.jobRunId, update);
+          },
+        },
       };
 
-      const result = await executePlanV1(plan, executionOptions);
-      const duration = Date.now() - startTime;
-
-      // Update JobRun with results via hub API
-      await this.runsApi.runsIdPatch(data.jobRunId, {
-        status: result.success ? "completed" : "failed",
-        completedAt: new Date().toISOString(),
-        duration_ms: duration,
-        success: result.success,
-        ...(result.errors.length > 0 && { errors: result.errors }),
-      });
+      const result = await executePlanV1(plan, plan.organization!, executionOptions);
 
       // Acknowledge the job
       await this.queueConsumer.acknowledge(jobId);
 
       console.log(
-        `Plan execution ${result.success ? "succeeded" : "failed"}: ${plan.name} (${plan.id}) in ${duration}ms`,
+        `Plan execution ${result.success ? "succeeded" : "failed"}: ${plan.name} (${plan.id}) in ${result.totalDuration_ms}ms`,
       );
     } catch (error) {
       console.error(`Error processing job ${jobId}:`, error);
 
-      // Try to update JobRun to failed via hub API
+      // Try to update JobRun to failed via hub API (in case executor didn't complete)
       try {
         await this.runsApi.runsIdPatch(data.jobRunId, {
           status: "failed",

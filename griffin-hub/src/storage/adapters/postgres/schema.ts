@@ -75,6 +75,23 @@ export const runsTable = pgTable("runs", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const jobsTable = pgTable("jobs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  queueName: text("queue_name").notNull().default("default"),
+  data: jsonb("data").$type<unknown>().notNull(),
+  location: text("location").notNull(),
+  status: jobQueueStatusEnum("status").notNull(),
+  attempts: integer("attempts").notNull().default(0),
+  maxAttempts: integer("max_attempts").notNull().default(3),
+  priority: integer("priority").notNull().default(0),
+  scheduledFor: timestamp("scheduled_for").notNull(),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  error: text("error"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const agentsTable = pgTable("agents", {
   id: text("id").primaryKey(),
   location: text("location").notNull(),
@@ -85,20 +102,3 @@ export const agentsTable = pgTable("agents", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
-
-//export const jobsTable = pgTable("jobs", {
-//  id: text("id").primaryKey(),
-//  queueName: text("queue_name").notNull().default("default"),
-//  data: jsonb("data").notNull(),
-//  location: text("location").notNull(),
-//  status: statusEnum("status").notNull(),
-//  attempts: integer("attempts").notNull().default(0),
-//  maxAttempts: integer("max_attempts").notNull().default(3),
-//  priority: integer("priority").notNull().default(0),
-//  scheduledFor: timestamp("scheduled_for").notNull(),
-//  startedAt: timestamp("started_at"),
-//  completedAt: timestamp("completed_at"),
-//  error: text("error"),
-//  createdAt: timestamp("created_at").notNull().defaultNow(),
-//  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-//});

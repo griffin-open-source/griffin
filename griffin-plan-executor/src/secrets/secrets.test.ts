@@ -7,7 +7,12 @@ import {
   collectSecretsFromPlan,
   planHasSecrets,
 } from "./resolver.js";
-import { NodeType, ResponseFormat, HttpMethod, FrequencyUnit } from "@griffin-app/griffin-ts/schema";
+import {
+  NodeType,
+  ResponseFormat,
+  HttpMethod,
+  FrequencyUnit,
+} from "@griffin-app/griffin-ts/schema";
 import { TestPlanV1 } from "@griffin-app/griffin-ts/types";
 
 // Helper to create a secret ref (mirrors the DSL's secret function)

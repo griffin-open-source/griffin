@@ -40,6 +40,32 @@ export interface HttpClientAdapter {
   request(req: HttpRequest): Promise<HttpResponse>;
 }
 
+/**
+ * Status update payload for run tracking.
+ */
+export interface RunStatusUpdate {
+  status: "running" | "completed" | "failed";
+  completedAt?: string;
+  duration_ms?: number;
+  success?: boolean;
+  errors?: string[];
+}
+
+/**
+ * Callbacks for tracking execution status (typically for updating a run record).
+ */
+export interface StatusCallbacks {
+  /**
+   * Called when plan execution starts (after secret resolution, before graph execution).
+   */
+  onStart?: () => Promise<void>;
+
+  /**
+   * Called when plan execution completes (success or failure).
+   */
+  onComplete?: (update: RunStatusUpdate) => Promise<void>;
+}
+
 export interface ExecutionOptions {
   mode: "local" | "remote";
   timeout?: number;
@@ -52,6 +78,9 @@ export interface ExecutionOptions {
   executionId?: string;
 
   secretRegistry: SecretProviderRegistry;
+
+  /** Optional callbacks for tracking execution status (e.g., updating run records) */
+  statusCallbacks?: StatusCallbacks;
 }
 
 export interface NodeResult {

@@ -11,8 +11,8 @@ Name | Type | Description | Notes
 **version** | **string** |  | [default to undefined]
 **frequency** | [**PlanPostRequestFrequency**](PlanPostRequestFrequency.md) |  | [default to undefined]
 **environment** | **string** |  | [default to 'default']
-**nodes** | [**Array&lt;PlanPostRequestNodesInner&gt;**](PlanPostRequestNodesInner.md) |  | [default to undefined]
-**edges** | [**Array&lt;PlanPostRequestEdgesInner&gt;**](PlanPostRequestEdgesInner.md) |  | [default to undefined]
+**nodes** | [**Array&lt;Node&gt;**](Node.md) |  | [default to undefined]
+**edges** | [**Array&lt;Edge&gt;**](Edge.md) |  | [default to undefined]
 
 ## Example
 

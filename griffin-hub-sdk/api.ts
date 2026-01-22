@@ -94,53 +94,55 @@ export const AssertionAccessorEnum = {
 
 export type AssertionAccessorEnum = typeof AssertionAccessorEnum[keyof typeof AssertionAccessorEnum];
 
-export interface Assertion1 {
-    'assertionType': Assertion1AssertionTypeEnum;
+export interface AssertionAnyOf {
+    'assertionType': AssertionAnyOfAssertionTypeEnum;
     'nodeId': string;
-    'accessor': Assertion1AccessorEnum;
-    'path': string;
-    'predicate': JSONAssertion1Predicate;
-    'expected': any;
-}
-
-export const Assertion1AssertionTypeEnum = {
-    Text: 'TEXT'
-} as const;
-
-export type Assertion1AssertionTypeEnum = typeof Assertion1AssertionTypeEnum[keyof typeof Assertion1AssertionTypeEnum];
-export const Assertion1AccessorEnum = {
-    Body: 'body',
-    Headers: 'headers',
-    Status: 'status'
-} as const;
-
-export type Assertion1AccessorEnum = typeof Assertion1AccessorEnum[keyof typeof Assertion1AccessorEnum];
-
-export interface Assertion1AnyOf {
-    'assertionType': Assertion1AnyOfAssertionTypeEnum;
-    'nodeId': string;
-    'accessor': Assertion1AnyOfAccessorEnum;
+    'accessor': AssertionAnyOfAccessorEnum;
     'path': Array<string>;
     'predicate': JSONAssertion1Predicate;
 }
 
-export const Assertion1AnyOfAssertionTypeEnum = {
+export const AssertionAnyOfAssertionTypeEnum = {
     Json: 'JSON'
 } as const;
 
-export type Assertion1AnyOfAssertionTypeEnum = typeof Assertion1AnyOfAssertionTypeEnum[keyof typeof Assertion1AnyOfAssertionTypeEnum];
-export const Assertion1AnyOfAccessorEnum = {
+export type AssertionAnyOfAssertionTypeEnum = typeof AssertionAnyOfAssertionTypeEnum[keyof typeof AssertionAnyOfAssertionTypeEnum];
+export const AssertionAnyOfAccessorEnum = {
     Body: 'body',
     Headers: 'headers',
     Status: 'status'
 } as const;
 
-export type Assertion1AnyOfAccessorEnum = typeof Assertion1AnyOfAccessorEnum[keyof typeof Assertion1AnyOfAccessorEnum];
+export type AssertionAnyOfAccessorEnum = typeof AssertionAnyOfAccessorEnum[keyof typeof AssertionAnyOfAccessorEnum];
+
+export interface AssertionAnyOf1 {
+    'assertionType': AssertionAnyOf1AssertionTypeEnum;
+    'path': Array<string>;
+    'expected': any;
+}
+
+export const AssertionAnyOf1AssertionTypeEnum = {
+    Xml: 'XML'
+} as const;
+
+export type AssertionAnyOf1AssertionTypeEnum = typeof AssertionAnyOf1AssertionTypeEnum[keyof typeof AssertionAnyOf1AssertionTypeEnum];
+
+export interface AssertionAnyOf2 {
+    'assertionType': AssertionAnyOf2AssertionTypeEnum;
+    'path': string;
+    'expected': any;
+}
+
+export const AssertionAnyOf2AssertionTypeEnum = {
+    Text: 'TEXT'
+} as const;
+
+export type AssertionAnyOf2AssertionTypeEnum = typeof AssertionAnyOf2AssertionTypeEnum[keyof typeof AssertionAnyOf2AssertionTypeEnum];
 
 export interface Assertions {
     'id': string;
     'type': AssertionsTypeEnum;
-    'assertions': Array<Assertion1>;
+    'assertions': Array<AssertionsAssertionsInner>;
 }
 
 export const AssertionsTypeEnum = {
@@ -149,17 +151,92 @@ export const AssertionsTypeEnum = {
 
 export type AssertionsTypeEnum = typeof AssertionsTypeEnum[keyof typeof AssertionsTypeEnum];
 
-export interface Assertions1 {
-    'id': string;
-    'type': Assertions1TypeEnum;
-    'assertions': Array<Assertion1>;
+export interface AssertionsAssertionsInner {
+    'assertionType': AssertionsAssertionsInnerAssertionTypeEnum;
+    'nodeId': string;
+    'accessor': AssertionsAssertionsInnerAccessorEnum;
+    'path': string;
+    'predicate': AssertionsAssertionsInnerAnyOfAllOfPredicate;
+    'expected': any;
 }
 
-export const Assertions1TypeEnum = {
-    Assertion: 'ASSERTION'
+export const AssertionsAssertionsInnerAssertionTypeEnum = {
+    Text: 'TEXT'
 } as const;
 
-export type Assertions1TypeEnum = typeof Assertions1TypeEnum[keyof typeof Assertions1TypeEnum];
+export type AssertionsAssertionsInnerAssertionTypeEnum = typeof AssertionsAssertionsInnerAssertionTypeEnum[keyof typeof AssertionsAssertionsInnerAssertionTypeEnum];
+export const AssertionsAssertionsInnerAccessorEnum = {
+    Body: 'body',
+    Headers: 'headers',
+    Status: 'status'
+} as const;
+
+export type AssertionsAssertionsInnerAccessorEnum = typeof AssertionsAssertionsInnerAccessorEnum[keyof typeof AssertionsAssertionsInnerAccessorEnum];
+
+export interface AssertionsAssertionsInnerAnyOf {
+    'assertionType': AssertionsAssertionsInnerAnyOfAssertionTypeEnum;
+    'nodeId': string;
+    'accessor': AssertionsAssertionsInnerAnyOfAccessorEnum;
+    'path': Array<string>;
+    'predicate': AssertionsAssertionsInnerAnyOfAllOfPredicate;
+}
+
+export const AssertionsAssertionsInnerAnyOfAssertionTypeEnum = {
+    Json: 'JSON'
+} as const;
+
+export type AssertionsAssertionsInnerAnyOfAssertionTypeEnum = typeof AssertionsAssertionsInnerAnyOfAssertionTypeEnum[keyof typeof AssertionsAssertionsInnerAnyOfAssertionTypeEnum];
+export const AssertionsAssertionsInnerAnyOfAccessorEnum = {
+    Body: 'body',
+    Headers: 'headers',
+    Status: 'status'
+} as const;
+
+export type AssertionsAssertionsInnerAnyOfAccessorEnum = typeof AssertionsAssertionsInnerAnyOfAccessorEnum[keyof typeof AssertionsAssertionsInnerAnyOfAccessorEnum];
+
+export interface AssertionsAssertionsInnerAnyOfAllOfPredicate {
+    'expected': any;
+    'operator': AssertionsAssertionsInnerAnyOfAllOfPredicateOperatorEnum;
+}
+
+export const AssertionsAssertionsInnerAnyOfAllOfPredicateOperatorEnum = {
+    Equal: 'EQUAL',
+    NotEqual: 'NOT_EQUAL',
+    GreaterThan: 'GREATER_THAN',
+    LessThan: 'LESS_THAN',
+    GreaterThanOrEqual: 'GREATER_THAN_OR_EQUAL',
+    LessThanOrEqual: 'LESS_THAN_OR_EQUAL',
+    Contains: 'CONTAINS',
+    NotContains: 'NOT_CONTAINS',
+    StartsWith: 'STARTS_WITH',
+    EndsWith: 'ENDS_WITH',
+    NotStartsWith: 'NOT_STARTS_WITH',
+    NotEndsWith: 'NOT_ENDS_WITH'
+} as const;
+
+export type AssertionsAssertionsInnerAnyOfAllOfPredicateOperatorEnum = typeof AssertionsAssertionsInnerAnyOfAllOfPredicateOperatorEnum[keyof typeof AssertionsAssertionsInnerAnyOfAllOfPredicateOperatorEnum];
+
+export interface AssertionsAssertionsInnerAnyOfAllOfPredicateAnyOf {
+    'expected': any;
+    'operator': AssertionsAssertionsInnerAnyOfAllOfPredicateAnyOfOperatorEnum;
+}
+
+export const AssertionsAssertionsInnerAnyOfAllOfPredicateAnyOfOperatorEnum = {
+    Equal: 'EQUAL',
+    NotEqual: 'NOT_EQUAL',
+    GreaterThan: 'GREATER_THAN',
+    LessThan: 'LESS_THAN',
+    GreaterThanOrEqual: 'GREATER_THAN_OR_EQUAL',
+    LessThanOrEqual: 'LESS_THAN_OR_EQUAL',
+    Contains: 'CONTAINS',
+    NotContains: 'NOT_CONTAINS',
+    StartsWith: 'STARTS_WITH',
+    EndsWith: 'ENDS_WITH',
+    NotStartsWith: 'NOT_STARTS_WITH',
+    NotEndsWith: 'NOT_ENDS_WITH'
+} as const;
+
+export type AssertionsAssertionsInnerAnyOfAllOfPredicateAnyOfOperatorEnum = typeof AssertionsAssertionsInnerAnyOfAllOfPredicateAnyOfOperatorEnum[keyof typeof AssertionsAssertionsInnerAnyOfAllOfPredicateAnyOfOperatorEnum];
 
 export interface BinaryPredicate {
     'expected': any;
@@ -228,17 +305,13 @@ export interface Edge {
     'from': string;
     'to': string;
 }
-export interface Edge1 {
-    'from': string;
-    'to': string;
-}
 export interface Endpoint {
     'id': string;
     'type': EndpointTypeEnum;
     'method': EndpointMethodEnum;
-    'path': PlanPostRequestNodesInnerAnyOfPath;
-    'base': PlanPostRequestNodesInnerAnyOfPath;
-    'headers'?: { [key: string]: PlanPostRequestNodesInnerAnyOfHeadersValue; };
+    'path': EndpointPath;
+    'base': EndpointPath;
+    'headers'?: { [key: string]: EndpointHeadersValue; };
     'body'?: any;
     'response_format': EndpointResponseFormatEnum;
 }
@@ -269,43 +342,28 @@ export const EndpointResponseFormatEnum = {
 
 export type EndpointResponseFormatEnum = typeof EndpointResponseFormatEnum[keyof typeof EndpointResponseFormatEnum];
 
-export interface Endpoint1 {
-    'id': string;
-    'type': Endpoint1TypeEnum;
-    'method': Endpoint1MethodEnum;
-    'path': PlanPostRequestNodesInnerAnyOfPath;
-    'base': PlanPostRequestNodesInnerAnyOfPath;
-    'headers'?: { [key: string]: PlanPostRequestNodesInnerAnyOfHeadersValue; };
-    'body'?: any;
-    'response_format': Endpoint1ResponseFormatEnum;
+export interface EndpointHeadersValue {
+    '$secret': EndpointHeadersValueAnyOfSecret;
 }
-
-export const Endpoint1TypeEnum = {
-    Endpoint: 'ENDPOINT'
-} as const;
-
-export type Endpoint1TypeEnum = typeof Endpoint1TypeEnum[keyof typeof Endpoint1TypeEnum];
-export const Endpoint1MethodEnum = {
-    Get: 'GET',
-    Post: 'POST',
-    Put: 'PUT',
-    Delete: 'DELETE',
-    Patch: 'PATCH',
-    Head: 'HEAD',
-    Options: 'OPTIONS',
-    Connect: 'CONNECT',
-    Trace: 'TRACE'
-} as const;
-
-export type Endpoint1MethodEnum = typeof Endpoint1MethodEnum[keyof typeof Endpoint1MethodEnum];
-export const Endpoint1ResponseFormatEnum = {
-    Json: 'JSON',
-    Xml: 'XML',
-    Text: 'TEXT'
-} as const;
-
-export type Endpoint1ResponseFormatEnum = typeof Endpoint1ResponseFormatEnum[keyof typeof Endpoint1ResponseFormatEnum];
-
+export interface EndpointHeadersValueAnyOf {
+    '$secret': EndpointHeadersValueAnyOfSecret;
+}
+export interface EndpointHeadersValueAnyOfSecret {
+    'provider': string;
+    'ref': string;
+    'version'?: string;
+    'field'?: string;
+}
+export interface EndpointPath {
+    '$variable': EndpointPathAnyOfVariable;
+}
+export interface EndpointPathAnyOf {
+    '$variable': EndpointPathAnyOfVariable;
+}
+export interface EndpointPathAnyOfVariable {
+    'key': string;
+    'template'?: string;
+}
 export interface Frequency {
     'every': number;
     'unit': FrequencyUnitEnum;
@@ -388,48 +446,7 @@ export type JSONAssertion1PredicateOperatorEnum = typeof JSONAssertion1Predicate
 /**
  * @type Node
  */
-export type Node = Assertions1 | Endpoint1 | Wait1;
-
-export interface Node1 {
-    'id': string;
-    'type': Node1TypeEnum;
-    'method': Node1MethodEnum;
-    'path': PlanPostRequestNodesInnerAnyOfPath;
-    'base': PlanPostRequestNodesInnerAnyOfPath;
-    'headers'?: { [key: string]: PlanPostRequestNodesInnerAnyOfHeadersValue; };
-    'body'?: any;
-    'response_format': Node1ResponseFormatEnum;
-    'duration_ms': number;
-    'assertions': Array<Assertion1>;
-}
-
-export const Node1TypeEnum = {
-    Endpoint: 'ENDPOINT',
-    Wait: 'WAIT',
-    Assertion: 'ASSERTION'
-} as const;
-
-export type Node1TypeEnum = typeof Node1TypeEnum[keyof typeof Node1TypeEnum];
-export const Node1MethodEnum = {
-    Get: 'GET',
-    Post: 'POST',
-    Put: 'PUT',
-    Delete: 'DELETE',
-    Patch: 'PATCH',
-    Head: 'HEAD',
-    Options: 'OPTIONS',
-    Connect: 'CONNECT',
-    Trace: 'TRACE'
-} as const;
-
-export type Node1MethodEnum = typeof Node1MethodEnum[keyof typeof Node1MethodEnum];
-export const Node1ResponseFormatEnum = {
-    Json: 'JSON',
-    Xml: 'XML',
-    Text: 'TEXT'
-} as const;
-
-export type Node1ResponseFormatEnum = typeof Node1ResponseFormatEnum[keyof typeof Node1ResponseFormatEnum];
+export type Node = Assertions | Endpoint | Wait;
 
 export interface PlanGet200Response {
     'data': Array<TestPlanV1>;
@@ -447,8 +464,8 @@ export interface PlanPostRequest {
     'version': PlanPostRequestVersionEnum;
     'frequency': PlanPostRequestFrequency;
     'environment': string;
-    'nodes': Array<PlanPostRequestNodesInner>;
-    'edges': Array<PlanPostRequestEdgesInner>;
+    'nodes': Array<Node>;
+    'edges': Array<Edge>;
 }
 
 export const PlanPostRequestVersionEnum = {
@@ -457,10 +474,6 @@ export const PlanPostRequestVersionEnum = {
 
 export type PlanPostRequestVersionEnum = typeof PlanPostRequestVersionEnum[keyof typeof PlanPostRequestVersionEnum];
 
-export interface PlanPostRequestEdgesInner {
-    'from': string;
-    'to': string;
-}
 export interface PlanPostRequestFrequency {
     'every': number;
     'unit': PlanPostRequestFrequencyUnitEnum;
@@ -474,237 +487,6 @@ export const PlanPostRequestFrequencyUnitEnum = {
 
 export type PlanPostRequestFrequencyUnitEnum = typeof PlanPostRequestFrequencyUnitEnum[keyof typeof PlanPostRequestFrequencyUnitEnum];
 
-export interface PlanPostRequestNodesInner {
-    'id': string;
-    'type': PlanPostRequestNodesInnerTypeEnum;
-    'method': PlanPostRequestNodesInnerMethodEnum;
-    'path': PlanPostRequestNodesInnerAnyOfPath;
-    'base': PlanPostRequestNodesInnerAnyOfPath;
-    'headers'?: { [key: string]: PlanPostRequestNodesInnerAnyOfHeadersValue; };
-    'body'?: any;
-    'response_format': PlanPostRequestNodesInnerResponseFormatEnum;
-    'duration_ms': number;
-    'assertions': Array<PlanPostRequestNodesInnerAnyOf2AssertionsInner>;
-}
-
-export const PlanPostRequestNodesInnerTypeEnum = {
-    Endpoint: 'ENDPOINT',
-    Wait: 'WAIT',
-    Assertion: 'ASSERTION'
-} as const;
-
-export type PlanPostRequestNodesInnerTypeEnum = typeof PlanPostRequestNodesInnerTypeEnum[keyof typeof PlanPostRequestNodesInnerTypeEnum];
-export const PlanPostRequestNodesInnerMethodEnum = {
-    Get: 'GET',
-    Post: 'POST',
-    Put: 'PUT',
-    Delete: 'DELETE',
-    Patch: 'PATCH',
-    Head: 'HEAD',
-    Options: 'OPTIONS',
-    Connect: 'CONNECT',
-    Trace: 'TRACE'
-} as const;
-
-export type PlanPostRequestNodesInnerMethodEnum = typeof PlanPostRequestNodesInnerMethodEnum[keyof typeof PlanPostRequestNodesInnerMethodEnum];
-export const PlanPostRequestNodesInnerResponseFormatEnum = {
-    Json: 'JSON',
-    Xml: 'XML',
-    Text: 'TEXT'
-} as const;
-
-export type PlanPostRequestNodesInnerResponseFormatEnum = typeof PlanPostRequestNodesInnerResponseFormatEnum[keyof typeof PlanPostRequestNodesInnerResponseFormatEnum];
-
-export interface PlanPostRequestNodesInnerAnyOf {
-    'id': string;
-    'type': PlanPostRequestNodesInnerAnyOfTypeEnum;
-    'method': PlanPostRequestNodesInnerAnyOfMethodEnum;
-    'path': PlanPostRequestNodesInnerAnyOfPath;
-    'base': PlanPostRequestNodesInnerAnyOfPath;
-    'headers'?: { [key: string]: PlanPostRequestNodesInnerAnyOfHeadersValue; };
-    'body'?: any;
-    'response_format': PlanPostRequestNodesInnerAnyOfResponseFormatEnum;
-}
-
-export const PlanPostRequestNodesInnerAnyOfTypeEnum = {
-    Endpoint: 'ENDPOINT'
-} as const;
-
-export type PlanPostRequestNodesInnerAnyOfTypeEnum = typeof PlanPostRequestNodesInnerAnyOfTypeEnum[keyof typeof PlanPostRequestNodesInnerAnyOfTypeEnum];
-export const PlanPostRequestNodesInnerAnyOfMethodEnum = {
-    Get: 'GET',
-    Post: 'POST',
-    Put: 'PUT',
-    Delete: 'DELETE',
-    Patch: 'PATCH',
-    Head: 'HEAD',
-    Options: 'OPTIONS',
-    Connect: 'CONNECT',
-    Trace: 'TRACE'
-} as const;
-
-export type PlanPostRequestNodesInnerAnyOfMethodEnum = typeof PlanPostRequestNodesInnerAnyOfMethodEnum[keyof typeof PlanPostRequestNodesInnerAnyOfMethodEnum];
-export const PlanPostRequestNodesInnerAnyOfResponseFormatEnum = {
-    Json: 'JSON',
-    Xml: 'XML',
-    Text: 'TEXT'
-} as const;
-
-export type PlanPostRequestNodesInnerAnyOfResponseFormatEnum = typeof PlanPostRequestNodesInnerAnyOfResponseFormatEnum[keyof typeof PlanPostRequestNodesInnerAnyOfResponseFormatEnum];
-
-export interface PlanPostRequestNodesInnerAnyOf1 {
-    'id': string;
-    'type': PlanPostRequestNodesInnerAnyOf1TypeEnum;
-    'duration_ms': number;
-}
-
-export const PlanPostRequestNodesInnerAnyOf1TypeEnum = {
-    Wait: 'WAIT'
-} as const;
-
-export type PlanPostRequestNodesInnerAnyOf1TypeEnum = typeof PlanPostRequestNodesInnerAnyOf1TypeEnum[keyof typeof PlanPostRequestNodesInnerAnyOf1TypeEnum];
-
-export interface PlanPostRequestNodesInnerAnyOf2 {
-    'id': string;
-    'type': PlanPostRequestNodesInnerAnyOf2TypeEnum;
-    'assertions': Array<PlanPostRequestNodesInnerAnyOf2AssertionsInner>;
-}
-
-export const PlanPostRequestNodesInnerAnyOf2TypeEnum = {
-    Assertion: 'ASSERTION'
-} as const;
-
-export type PlanPostRequestNodesInnerAnyOf2TypeEnum = typeof PlanPostRequestNodesInnerAnyOf2TypeEnum[keyof typeof PlanPostRequestNodesInnerAnyOf2TypeEnum];
-
-export interface PlanPostRequestNodesInnerAnyOf2AssertionsInner {
-    'assertionType': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAssertionTypeEnum;
-    'nodeId': string;
-    'accessor': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfAccessor;
-    'path': string;
-    'predicate': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicate;
-    'expected': any;
-}
-
-export const PlanPostRequestNodesInnerAnyOf2AssertionsInnerAssertionTypeEnum = {
-    Text: 'TEXT'
-} as const;
-
-export type PlanPostRequestNodesInnerAnyOf2AssertionsInnerAssertionTypeEnum = typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAssertionTypeEnum[keyof typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAssertionTypeEnum];
-
-export interface PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf {
-    'assertionType': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAssertionTypeEnum;
-    'nodeId': string;
-    'accessor': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfAccessor;
-    'path': Array<string>;
-    'predicate': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicate;
-}
-
-export const PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAssertionTypeEnum = {
-    Json: 'JSON'
-} as const;
-
-export type PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAssertionTypeEnum = typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAssertionTypeEnum[keyof typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAssertionTypeEnum];
-
-export interface PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1 {
-    'assertionType': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1AssertionTypeEnum;
-    'path': Array<string>;
-    'expected': any;
-}
-
-export const PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1AssertionTypeEnum = {
-    Xml: 'XML'
-} as const;
-
-export type PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1AssertionTypeEnum = typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1AssertionTypeEnum[keyof typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf1AssertionTypeEnum];
-
-export interface PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf2 {
-    'assertionType': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf2AssertionTypeEnum;
-    'path': string;
-    'expected': any;
-}
-
-export const PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf2AssertionTypeEnum = {
-    Text: 'TEXT'
-} as const;
-
-export type PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf2AssertionTypeEnum = typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf2AssertionTypeEnum[keyof typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOf2AssertionTypeEnum];
-
-
-export const PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfAccessor = {
-    Body: 'body',
-    Headers: 'headers',
-    Status: 'status'
-} as const;
-
-export type PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfAccessor = typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfAccessor[keyof typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfAccessor];
-
-
-export interface PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicate {
-    'expected': any;
-    'operator': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateOperatorEnum;
-}
-
-export const PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateOperatorEnum = {
-    Equal: 'EQUAL',
-    NotEqual: 'NOT_EQUAL',
-    GreaterThan: 'GREATER_THAN',
-    LessThan: 'LESS_THAN',
-    GreaterThanOrEqual: 'GREATER_THAN_OR_EQUAL',
-    LessThanOrEqual: 'LESS_THAN_OR_EQUAL',
-    Contains: 'CONTAINS',
-    NotContains: 'NOT_CONTAINS',
-    StartsWith: 'STARTS_WITH',
-    EndsWith: 'ENDS_WITH',
-    NotStartsWith: 'NOT_STARTS_WITH',
-    NotEndsWith: 'NOT_ENDS_WITH'
-} as const;
-
-export type PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateOperatorEnum = typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateOperatorEnum[keyof typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateOperatorEnum];
-
-export interface PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOf {
-    'expected': any;
-    'operator': PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOfOperatorEnum;
-}
-
-export const PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOfOperatorEnum = {
-    Equal: 'EQUAL',
-    NotEqual: 'NOT_EQUAL',
-    GreaterThan: 'GREATER_THAN',
-    LessThan: 'LESS_THAN',
-    GreaterThanOrEqual: 'GREATER_THAN_OR_EQUAL',
-    LessThanOrEqual: 'LESS_THAN_OR_EQUAL',
-    Contains: 'CONTAINS',
-    NotContains: 'NOT_CONTAINS',
-    StartsWith: 'STARTS_WITH',
-    EndsWith: 'ENDS_WITH',
-    NotStartsWith: 'NOT_STARTS_WITH',
-    NotEndsWith: 'NOT_ENDS_WITH'
-} as const;
-
-export type PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOfOperatorEnum = typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOfOperatorEnum[keyof typeof PlanPostRequestNodesInnerAnyOf2AssertionsInnerAnyOfAllOfPredicateAnyOfOperatorEnum];
-
-export interface PlanPostRequestNodesInnerAnyOfHeadersValue {
-    '$secret': PlanPostRequestNodesInnerAnyOfHeadersValueAnyOfSecret;
-}
-export interface PlanPostRequestNodesInnerAnyOfHeadersValueAnyOf {
-    '$secret': PlanPostRequestNodesInnerAnyOfHeadersValueAnyOfSecret;
-}
-export interface PlanPostRequestNodesInnerAnyOfHeadersValueAnyOfSecret {
-    'provider': string;
-    'ref': string;
-    'version'?: string;
-    'field'?: string;
-}
-export interface PlanPostRequestNodesInnerAnyOfPath {
-    '$variable': PlanPostRequestNodesInnerAnyOfPathAnyOfVariable;
-}
-export interface PlanPostRequestNodesInnerAnyOfPathAnyOf {
-    '$variable': PlanPostRequestNodesInnerAnyOfPathAnyOfVariable;
-}
-export interface PlanPostRequestNodesInnerAnyOfPathAnyOfVariable {
-    'key': string;
-    'template'?: string;
-}
 
 export const ResponseFormat = {
     Json: 'JSON',
@@ -814,8 +596,8 @@ export interface TestPlanV1 {
     'version': TestPlanV1VersionEnum;
     'frequency': Frequency1;
     'environment': string;
-    'nodes': Array<Node1>;
-    'edges': Array<Edge1>;
+    'nodes': Array<Node>;
+    'edges': Array<Edge>;
 }
 
 export const TestPlanV1VersionEnum = {
@@ -848,18 +630,6 @@ export const WaitTypeEnum = {
 } as const;
 
 export type WaitTypeEnum = typeof WaitTypeEnum[keyof typeof WaitTypeEnum];
-
-export interface Wait1 {
-    'id': string;
-    'type': Wait1TypeEnum;
-    'duration_ms': number;
-}
-
-export const Wait1TypeEnum = {
-    Wait: 'WAIT'
-} as const;
-
-export type Wait1TypeEnum = typeof Wait1TypeEnum[keyof typeof Wait1TypeEnum];
 
 
 /**

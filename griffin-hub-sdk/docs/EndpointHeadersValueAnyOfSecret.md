@@ -1,4 +1,4 @@
-# PlanPostRequestNodesInnerAnyOfHeadersValueAnyOfSecret
+# EndpointHeadersValueAnyOfSecret
 
 
 ## Properties
@@ -13,9 +13,9 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { PlanPostRequestNodesInnerAnyOfHeadersValueAnyOfSecret } from 'griffin-hub-sdk';
+import { EndpointHeadersValueAnyOfSecret } from 'griffin-hub-sdk';
 
-const instance: PlanPostRequestNodesInnerAnyOfHeadersValueAnyOfSecret = {
+const instance: EndpointHeadersValueAnyOfSecret = {
     provider,
     ref,
     version,

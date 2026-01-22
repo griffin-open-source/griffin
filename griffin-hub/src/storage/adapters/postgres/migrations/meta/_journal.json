@@ -8,6 +8,13 @@
       "when": 1769007714244,
       "tag": "0000_smooth_iceman",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769123432748,
+      "tag": "0001_cuddly_scarlet_witch",
+      "breakpoints": true
     }
   ]
 }

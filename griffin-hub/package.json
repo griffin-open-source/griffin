@@ -22,7 +22,7 @@
     "dev": "npm run build && concurrently -k -p \"[{name}]\" -n \"TypeScript,App\" -c \"yellow.bold,cyan.bold\" \"npm:watch:ts\" \"npm:dev:start\"",
     "dev:start": "fastify start --ignore-watch=.ts$ -w -l info -P dist/app.js",
     "dev:standalone": "npm run build && concurrently -k -p \"[{name}]\" -n \"TypeScript,App\" -c \"yellow.bold,cyan.bold\" \"npm:watch:ts\" \"npm:dev:start:standalone\"",
-    "dev:start:standalone": "fastify start --ignore-watch=.ts$ -w -l info -P dist/server-standalone.js",
+    "dev:start:standalone": "node --watch dist/server-standalone.js",
     "generate:openapi": "npm run build && node dist/generate-openapi-spec.js"
   },
   "keywords": [],

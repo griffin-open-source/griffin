@@ -21,37 +21,50 @@ export class PostgresJobQueue<T = any> implements JobQueue<T> {
     const scheduledFor = options.runAt || new Date();
     const priority = options.priority ?? 0;
     const maxAttempts = options.maxAttempts ?? 3;
-    const result = await this.db.insert(jobsTable).values({
-      queueName: this.queueName,
-      data: JSON.stringify(data),
-      location: options.location,
-      status: JobStatus.PENDING,
-      attempts: 0,
-      maxAttempts: maxAttempts,
-      priority: priority,
-      scheduledFor: scheduledFor,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).returning();
+    const result = await this.db
+      .insert(jobsTable)
+      .values({
+        queueName: this.queueName,
+        data: JSON.stringify(data),
+        location: options.location,
+        status: JobStatus.PENDING,
+        attempts: 0,
+        maxAttempts: maxAttempts,
+        priority: priority,
+        scheduledFor: scheduledFor,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
     return result[0].id;
   }
 
   async dequeue(location?: string): Promise<Job<T> | null> {
-    const subquery = this.db.select({ id: jobsTable.id }).from(jobsTable).where(and(
-      eq(jobsTable.queueName, this.queueName),
-      eq(jobsTable.status, JobStatus.PENDING),
-      location ? eq(jobsTable.location, location) : undefined,
-    )).orderBy(desc(jobsTable.priority)).limit(1).for("update", { skipLocked: true }).as("subquery");
+    const now = new Date();
+    const subquery = this.db
+      .select({ id: jobsTable.id })
+      .from(jobsTable)
+      .where(
+        and(
+          eq(jobsTable.queueName, this.queueName),
+          eq(jobsTable.status, JobStatus.PENDING),
+          location ? eq(jobsTable.location, location) : undefined,
+        ),
+      )
+      .orderBy(desc(jobsTable.priority))
+      .limit(1)
+      .for("update", { skipLocked: true });
 
-    const result = await this.db.update(jobsTable).set({
-      status: JobStatus.RUNNING,
-      startedAt: new Date(),
-      attempts: sql`attempts + 1`,
-      updatedAt: new Date(),
-    }).where(eq(
-      jobsTable.id,
-      subquery.id,
-    )).returning();
+    const result = await this.db
+      .update(jobsTable)
+      .set({
+        status: JobStatus.RUNNING,
+        startedAt: now,
+        attempts: sql`attempts + 1`,
+        updatedAt: now,
+      })
+      .where(eq(jobsTable.id, sql`(${subquery})`))
+      .returning();
     if (result.length === 0) {
       return null;
     }
@@ -66,11 +79,14 @@ export class PostgresJobQueue<T = any> implements JobQueue<T> {
   }
 
   async acknowledge(jobId: string): Promise<void> {
-    await this.db.update(jobsTable).set({
-      status: JobStatus.COMPLETED,
-      completedAt: new Date(),
-      updatedAt: new Date(),
-    }).where(eq(jobsTable.id, jobId));
+    await this.db
+      .update(jobsTable)
+      .set({
+        status: JobStatus.COMPLETED,
+        completedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(jobsTable.id, jobId));
   }
 
   async fail(
@@ -86,7 +102,6 @@ export class PostgresJobQueue<T = any> implements JobQueue<T> {
     const shouldRetry = retry && job.attempts < job.maxAttempts;
     const newStatus = shouldRetry ? JobStatus.RETRYING : JobStatus.FAILED;
 
-
     //let query: string;
     //let params: unknown[];
 
@@ -95,19 +110,25 @@ export class PostgresJobQueue<T = any> implements JobQueue<T> {
       const backoffSeconds = Math.pow(2, job.attempts);
       const nextRunAt = new Date(Date.now() + backoffSeconds * 1000);
 
-      await this.db.update(jobsTable).set({
-        status: newStatus,
-        error: error.message,
-        scheduledFor: nextRunAt,
-        updatedAt: new Date(),
-      }).where(eq(jobsTable.id, jobId));
+      await this.db
+        .update(jobsTable)
+        .set({
+          status: newStatus,
+          error: error.message,
+          scheduledFor: nextRunAt,
+          updatedAt: new Date(),
+        })
+        .where(eq(jobsTable.id, jobId));
     } else {
-      await this.db.update(jobsTable).set({
-        status: newStatus,
-        error: error.message,
-        completedAt: new Date(),
-        updatedAt: new Date(),
-      }).where(eq(jobsTable.id, jobId));
+      await this.db
+        .update(jobsTable)
+        .set({
+          status: newStatus,
+          error: error.message,
+          completedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(jobsTable.id, jobId));
     }
   }
 

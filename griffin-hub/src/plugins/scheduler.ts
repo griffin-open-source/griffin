@@ -19,9 +19,7 @@ declare module "fastify" {
  * - Remote agents (griffin-agent)
  */
 const schedulerPlugin: FastifyPluginAsync = async (fastify) => {
-  const {
-    scheduler: schedulerConfig,
-  } = fastify.config;
+  const { scheduler: schedulerConfig } = fastify.config;
 
   fastify.log.info(
     {

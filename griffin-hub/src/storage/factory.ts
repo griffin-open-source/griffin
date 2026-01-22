@@ -10,7 +10,7 @@ import {
 // =============================================================================
 
 export type RepositoryBackendType = "memory" | "postgres";
-export type JobQueueBackendType = "memory" | "postgres"; 
+export type JobQueueBackendType = "memory" | "postgres";
 
 export interface RepositoryConfig {
   backend: RepositoryBackendType;

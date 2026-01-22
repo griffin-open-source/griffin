@@ -159,7 +159,7 @@ export default function (fastify: FastifyTypeBox) {
       if (projectId && environment) {
         whereClause = and(
           eq(plansTable.project, projectId),
-          eq(plansTable.environment, environment)
+          eq(plansTable.environment, environment),
         );
       } else if (projectId) {
         whereClause = eq(plansTable.project, projectId);
@@ -272,7 +272,7 @@ export default function (fastify: FastifyTypeBox) {
         where: and(
           eq(plansTable.project, projectId),
           eq(plansTable.environment, environment),
-          eq(plansTable.name, name)
+          eq(plansTable.name, name),
         ),
         limit: 1,
       });

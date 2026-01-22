@@ -55,5 +55,5 @@ const executorPlugin: FastifyPluginAsync = async (fastify) => {
 
 export default fp(executorPlugin, {
   name: "executor",
-  dependencies: ["config", "storage", "jobQueue", "secrets"],
+  dependencies: ["config", "storage", "secrets"],
 });

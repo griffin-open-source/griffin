@@ -15,7 +15,7 @@ import type {
   QueryOptions,
 } from "../../repositories.js";
 import type { DrizzleDatabase } from "../../../plugins/storage.js";
-import * as schema from "./schema.js";
+import { agentsTable, plansTable, runsTable } from "./schema.js";
 import type { TestPlanDB } from "../../repositories.js";
 
 // =============================================================================
@@ -27,7 +27,7 @@ export class PostgresPlansRepository implements PlansRepository {
 
   async create(data: Omit<TestPlanDB, "id">): Promise<TestPlanDB> {
     const result = await this.db
-      .insert(schema.plansTable)
+      .insert(plansTable)
       .values({
         ...data,
         id: randomUUID(),
@@ -44,7 +44,7 @@ export class PostgresPlansRepository implements PlansRepository {
 
   async findById(id: string): Promise<TestPlanDB | null> {
     const result = await this.db.query.plansTable.findFirst({
-      where: eq(schema.plansTable.id, id),
+      where: eq(plansTable.id, id),
     });
 
     if (!result) {
@@ -78,9 +78,9 @@ export class PostgresPlansRepository implements PlansRepository {
     data: Partial<Omit<TestPlanDB, "id">>,
   ): Promise<TestPlanDB> {
     const result = await this.db
-      .update(schema.plansTable)
+      .update(plansTable)
       .set(data)
-      .where(eq(schema.plansTable.id, id))
+      .where(eq(plansTable.id, id))
       .returning();
 
     return {
@@ -91,16 +91,11 @@ export class PostgresPlansRepository implements PlansRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.db.delete(schema.plansTable).where(eq(schema.plansTable.id, id));
+    await this.db.delete(plansTable).where(eq(plansTable.id, id));
   }
 
   async count(where?: SQL): Promise<number> {
-    const result = await this.db
-      .select({ count: count() })
-      .from(schema.plansTable)
-      .where(where);
-
-    return result[0]?.count || 0;
+    return this.db.$count(plansTable, where);
   }
 
   async findDue(): Promise<TestPlanV1[]> {
@@ -108,26 +103,33 @@ export class PostgresPlansRepository implements PlansRepository {
     // A plan is due if:
     // 1. It has a frequency defined AND
     // 2. Either it has never run OR its next scheduled run time has passed
+    //
+    // NOTE: We must use "plans.id" (not just "id") in the correlated subquery
+    // because the runs table also has an "id" column. Without the table qualifier,
+    // PostgreSQL resolves "id" to runs.id, making the subquery always return NULL.
 
-    const result = await this.findMany({
-      where: sql`
+    const result = await this.db
+      .select({
+        plans: plansTable,
+      })
+      .from(plansTable)
+      .leftJoin(runsTable, eq(plansTable.id, runsTable.planId)).where(sql`
         frequency IS NOT NULL
         AND (
-          (SELECT MAX(started_at) FROM runs WHERE plan_id = id) IS NULL
+          (SELECT MAX(started_at) FROM ${runsTable} WHERE ${runsTable.planId} = ${plansTable.id}) IS NULL
           OR (
-            (SELECT MAX(started_at) FROM runs WHERE plan_id = id) + make_interval(
+            (SELECT MAX(started_at) FROM ${runsTable} WHERE ${runsTable.planId} = ${plansTable.id}) + make_interval(
               mins := CASE WHEN (frequency->>'unit') = 'MINUTE' THEN (frequency->>'every')::int END,
               hours := CASE WHEN (frequency->>'unit') = 'HOUR' THEN (frequency->>'every')::int END,
               days := CASE WHEN (frequency->>'unit') = 'DAY' THEN (frequency->>'every')::int END
             ) <= NOW()
           )
         )
-      `,
-    });
+      `);
 
     return result.map((plan) => ({
-      ...plan,
-      locations: plan.locations || [],
+      ...plan.plans,
+      locations: plan.plans.locations || [],
       version: "1.0",
     }));
   }
@@ -142,7 +144,7 @@ export class PostgresRunsRepository implements RunsRepository {
 
   async create(data: Omit<JobRun, "id">): Promise<JobRun> {
     const result = await this.db
-      .insert(schema.runsTable)
+      .insert(runsTable)
       .values({
         ...data,
         id: randomUUID(),
@@ -165,7 +167,7 @@ export class PostgresRunsRepository implements RunsRepository {
 
   async findById(id: string): Promise<JobRun | null> {
     const result = await this.db.query.runsTable.findFirst({
-      where: eq(schema.runsTable.id, id),
+      where: eq(runsTable.id, id),
     });
 
     return result
@@ -202,13 +204,13 @@ export class PostgresRunsRepository implements RunsRepository {
 
   async update(id: string, data: Partial<Omit<JobRun, "id">>): Promise<JobRun> {
     const result = await this.db
-      .update(schema.runsTable)
+      .update(runsTable)
       .set({
         ...data,
         completedAt: data.completedAt ? new Date(data.completedAt) : undefined,
         startedAt: data.startedAt ? new Date(data.startedAt) : undefined,
       })
-      .where(eq(schema.runsTable.id, id))
+      .where(eq(runsTable.id, id))
       .returning();
 
     return {
@@ -224,22 +226,17 @@ export class PostgresRunsRepository implements RunsRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.db.delete(schema.runsTable).where(eq(schema.runsTable.id, id));
+    await this.db.delete(runsTable).where(eq(runsTable.id, id));
   }
 
   async count(where?: SQL): Promise<number> {
-    const result = await this.db
-      .select({ count: count() })
-      .from(schema.runsTable)
-      .where(where);
-
-    return result[0]?.count || 0;
+    return this.db.$count(runsTable, where);
   }
 
   async findLatestForPlan(planId: string): Promise<JobRun | null> {
     const result = await this.db.query.runsTable.findFirst({
-      where: eq(schema.runsTable.planId, planId),
-      orderBy: [desc(schema.runsTable.startedAt)],
+      where: eq(runsTable.planId, planId),
+      orderBy: [desc(runsTable.startedAt)],
     });
 
     return result
@@ -266,7 +263,7 @@ export class PostgresAgentsRepository implements AgentsRepository {
 
   async create(data: Omit<Agent, "id">): Promise<Agent> {
     const result = await this.db
-      .insert(schema.agentsTable)
+      .insert(agentsTable)
       .values({
         ...data,
         id: randomUUID(),
@@ -285,7 +282,7 @@ export class PostgresAgentsRepository implements AgentsRepository {
 
   async findById(id: string): Promise<Agent | null> {
     const result = await this.db.query.agentsTable.findFirst({
-      where: eq(schema.agentsTable.id, id),
+      where: eq(agentsTable.id, id),
     });
 
     return result
@@ -316,7 +313,7 @@ export class PostgresAgentsRepository implements AgentsRepository {
 
   async update(id: string, data: Partial<Omit<Agent, "id">>): Promise<Agent> {
     const result = await this.db
-      .update(schema.agentsTable)
+      .update(agentsTable)
       .set({
         ...data,
         lastHeartbeat: data.lastHeartbeat
@@ -326,7 +323,7 @@ export class PostgresAgentsRepository implements AgentsRepository {
           ? new Date(data.registeredAt)
           : undefined,
       })
-      .where(eq(schema.agentsTable.id, id))
+      .where(eq(agentsTable.id, id))
       .returning();
 
     return {
@@ -338,30 +335,23 @@ export class PostgresAgentsRepository implements AgentsRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.db
-      .delete(schema.agentsTable)
-      .where(eq(schema.agentsTable.id, id));
+    await this.db.delete(agentsTable).where(eq(agentsTable.id, id));
   }
 
   async count(where?: SQL): Promise<number> {
-    const result = await this.db
-      .select({ count: count() })
-      .from(schema.agentsTable)
-      .where(where);
-
-    return result[0]?.count || 0;
+    return this.db.$count(agentsTable, where);
   }
 
   async findDistinctLocations(onlineOnly?: boolean): Promise<string[]> {
     const whereClause = onlineOnly
-      ? eq(schema.agentsTable.status, "online" as AgentStatus)
+      ? eq(agentsTable.status, "online" as AgentStatus)
       : undefined;
 
     const result = await this.db
-      .selectDistinct({ location: schema.agentsTable.location })
-      .from(schema.agentsTable)
+      .selectDistinct({ location: agentsTable.location })
+      .from(agentsTable)
       .where(whereClause)
-      .orderBy(asc(schema.agentsTable.location));
+      .orderBy(asc(agentsTable.location));
 
     return result.map((row) => row.location);
   }

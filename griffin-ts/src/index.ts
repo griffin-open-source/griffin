@@ -37,7 +37,7 @@ export { WaitDuration } from "./wait.js";
 export { variable, isVariableRef } from "./variable.js";
 export type { VariableRef } from "./variable.js";
 export { secret, isSecretRef } from "./secrets.js";
-export type { SecretRefData, SecretOptions } from "./secrets.js";
+export type { SecretOptions } from "./secrets.js";
 
 // ============================================================================
 // DSL Constants

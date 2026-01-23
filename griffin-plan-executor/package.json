@@ -21,7 +21,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@griffin-app/griffin-ts": "0.1.7",
+    "@griffin-app/griffin-hub-sdk": "file:../griffin-hub-sdk",
     "axios": "^1.13.2",
     "ts-edge": "^1.0.4",
     "typebox": "^1.0.77"

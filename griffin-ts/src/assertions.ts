@@ -7,6 +7,8 @@
  * - Support for unary and binary predicates with negation
  */
 
+import { JSONAccessor } from "./schema.js";
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -16,7 +18,7 @@
  */
 export interface PathDescriptor {
   nodeId: string;
-  accessor: "body" | "headers" | "status";
+  accessor: JSONAccessor;
   path: string[]; // JSONPath segments (e.g., ["data", "id"])
 }
 
@@ -63,7 +65,7 @@ export interface BinaryPredicate {
  */
 export interface SerializedAssertion {
   nodeId: string;
-  accessor: "body" | "headers" | "status";
+  accessor: JSONAccessor;
   path: string[];
   predicate: UnaryPredicate | BinaryPredicate;
 }
@@ -139,9 +141,9 @@ function createNestedProxy(descriptor: PathDescriptor): NestedProxy {
  */
 function createNodeResultProxy(nodeId: string): NodeResultProxy {
   return {
-    body: createNestedProxy({ nodeId, accessor: "body", path: [] }),
-    headers: createNestedProxy({ nodeId, accessor: "headers", path: [] }),
-    status: createNestedProxy({ nodeId, accessor: "status", path: [] }),
+    body: createNestedProxy({ nodeId, accessor: JSONAccessor.BODY, path: [] }),
+    headers: createNestedProxy({ nodeId, accessor: JSONAccessor.HEADERS, path: [] }),
+    status: createNestedProxy({ nodeId, accessor: JSONAccessor.STATUS, path: [] }),
   };
 }
 

@@ -7,13 +7,7 @@ import {
   collectSecretsFromPlan,
   planHasSecrets,
 } from "./resolver.js";
-import {
-  NodeType,
-  ResponseFormat,
-  HttpMethod,
-  FrequencyUnit,
-} from "@griffin-app/griffin-ts/schema";
-import { TestPlanV1 } from "@griffin-app/griffin-ts/types";
+import { PlanV1 } from "@griffin-app/griffin-hub-sdk";
 
 // Helper to create a secret ref (mirrors the DSL's secret function)
 function createSecretRef(path: string) {
@@ -121,21 +115,21 @@ describe("Plan Secret Resolution", () => {
   const createTestPlan = (
     headers?: Record<string, any>,
     body?: any,
-  ): TestPlanV1 => ({
+  ): PlanV1 => ({
     id: "test-plan-1",
     name: "Test Plan",
     version: "1.0",
     environment: "default",
     project: "test-project",
-    frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+    frequency: { every: 1, unit: "MINUTE" },
     nodes: [
       {
         id: "endpoint-1",
-        type: NodeType.ENDPOINT,
-        method: HttpMethod.GET,
+        type: "ENDPOINT",
+        method: "GET",
         path: "/api/test",
-        base: { $variable: { key: "api-gateway" } },
-        response_format: ResponseFormat.JSON,
+        base: "https://api.example.com",
+        response_format: "JSON",
         headers,
         body,
       },
@@ -235,7 +229,7 @@ describe("Plan Secret Resolution", () => {
       const resolved = await resolveSecretsInPlan(plan, registry);
 
       const endpoint = resolved.nodes[0];
-      if (endpoint.type !== NodeType.ENDPOINT) {
+      if (endpoint.type !== "ENDPOINT") {
         throw new Error("Endpoint not found");
       }
       expect(endpoint.headers?.Authorization).toBe("Bearer secret-token");
@@ -258,11 +252,11 @@ describe("Plan Secret Resolution", () => {
       const resolved = await resolveSecretsInPlan(plan, registry);
 
       const endpoint = resolved.nodes[0];
-      if (endpoint.type !== NodeType.ENDPOINT) {
+      if (endpoint.type !== "ENDPOINT") {
         throw new Error("Endpoint not found");
       }
-      expect(endpoint.body.token).toBe("resolved-token");
-      expect(endpoint.body.data).toBe("plain-value");
+      expect((endpoint.body as { token: string }).token).toBe("resolved-token");
+      expect((endpoint.body as { data: string }).data).toBe("plain-value");
     });
 
     it("should not modify original plan", async () => {
@@ -281,7 +275,7 @@ describe("Plan Secret Resolution", () => {
 
       // Original should still have secret ref
       const originalEndpoint = plan.nodes[0];
-      if (originalEndpoint.type !== NodeType.ENDPOINT) {
+      if (originalEndpoint.type !== "ENDPOINT") {
         throw new Error("Endpoint not found");
       }
       expect(originalEndpoint.headers?.Authorization).toEqual(
@@ -290,7 +284,7 @@ describe("Plan Secret Resolution", () => {
 
       // Resolved should have string
       const resolvedEndpoint = resolved.nodes[0];
-      if (resolvedEndpoint.type !== NodeType.ENDPOINT) {
+      if (resolvedEndpoint.type !== "ENDPOINT") {
         throw new Error("Endpoint not found");
       }
       expect(resolvedEndpoint.headers?.Authorization).toBe("secret");

@@ -1,11 +1,11 @@
 import {
-  TestPlanV1,
-  Node,
+  PlanDSL,
+  NodeDSL,
   Edge,
   Frequency,
   HttpMethod,
   ResponseFormat,
-  Endpoint,
+  EndpointDSL,
   NodeType,
   Wait,
   Assertions,
@@ -14,16 +14,13 @@ import {
 } from "./schema.js";
 import { type START as StartType, type END as EndType } from "./constants.js";
 
-type RawPlan = Omit<
-  TestPlanV1,
-  "id" | "environment" | "organization" | "project"
->;
+
 
 /**
  * A node definition without the id field.
  * The id is provided separately to addNode for cleaner separation of concerns.
  */
-export type NodeWithoutId = Omit<Node, "id">;
+export type NodeWithoutId = Omit<NodeDSL, "id">;
 
 /**
  * TestBuilder provides a type-safe DSL for constructing test plans with compile-time graph validation.
@@ -98,7 +95,7 @@ export interface TestBuilder<
    */
   build: [Exclude<NodeName, HasOutput>] extends [never]
     ? [Exclude<NodeName, HasInput>] extends [never]
-      ? () => TestPlanV1
+      ? () => PlanDSL
       : {
           error: "Some nodes have no incoming edges";
           unconnected: Exclude<NodeName, HasInput>;
@@ -118,7 +115,7 @@ class TestBuilderImpl<
   HasOutput extends string = never,
   HasInput extends string = never,
 > {
-  private nodes: Node[] = [];
+  private nodes: NodeDSL[] = [];
   private edges: Edge[] = [];
 
   constructor(
@@ -135,7 +132,7 @@ class TestBuilderImpl<
   ): TestBuilder<NodeName | Name, HasOutput, HasInput> {
     // Merge the name into the node to create a complete Node
     // Type assertion required: spreading Omit<Node, 'id'> + id produces a valid Node at runtime
-    this.nodes.push({ ...node, id: name } as unknown as Node);
+    this.nodes.push({ ...node, id: name } as unknown as NodeDSL);
     // Type assertion: we've added Name to NodeName union
     return this as unknown as TestBuilder<NodeName | Name, HasOutput, HasInput>;
   }
@@ -165,7 +162,7 @@ class TestBuilderImpl<
     const nodes = this.nodes;
     const edges = this.edges;
 
-    const buildFn = (): RawPlan => {
+    const buildFn = (): PlanDSL => {
       return {
         name,
         version: TEST_PLAN_VERSION,
@@ -231,8 +228,8 @@ export interface EndpointConfig {
     | "OPTIONS"
     | "CONNECT"
     | "TRACE";
-  path: string | Endpoint["path"];
-  base: string | Endpoint["base"];
+  path: string | EndpointDSL["path"];
+  base: string | EndpointDSL["base"];
   response_format: "JSON" | "XML" | "TEXT";
   headers?: Record<string, any>;
   body?: any;
@@ -256,12 +253,12 @@ export interface EndpointConfig {
  * }));
  * ```
  */
-export function Endpoint(config: EndpointConfig): Omit<Endpoint, "id"> {
+export function Endpoint(config: EndpointConfig): Omit<EndpointDSL, "id"> {
   return {
     type: NodeType.ENDPOINT,
     method: config.method as HttpMethod,
-    path: config.path,
-    base: config.base,
+    path: typeof config.path === "string" ? { $literal: config.path } : config.path,
+    base: typeof config.base === "string" ? { $literal: config.base } : config.base,
     response_format: config.response_format as ResponseFormat,
     headers: config.headers,
     body: config.body,
@@ -331,9 +328,6 @@ export function Wait(duration: WaitDuration): Omit<Wait, "id"> {
 export function Assertion(assertions: JSONAssertion[]): Omit<Assertions, "id"> {
   return {
     type: NodeType.ASSERTION,
-    assertions: assertions.map((assertion) => ({
-      assertionType: ResponseFormat.JSON,
-      ...assertion,
-    })),
+    assertions: assertions,
   };
 }

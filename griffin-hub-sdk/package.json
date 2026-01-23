@@ -1,33 +1,33 @@
 {
   "name": "@griffin-app/griffin-hub-sdk",
-  "version": "1.0.1",
-  "description": "OpenAPI client for griffin-hub-sdk",
-  "author": "OpenAPI-Generator Contributors",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/GIT_USER_ID/GIT_REPO_ID.git"
-  },
-  "keywords": [
-    "axios",
-    "typescript",
-    "openapi-client",
-    "openapi-generator",
-    "griffin-hub-sdk"
-  ],
-  "license": "Unlicense",
-  "main": "./dist/index.js",
-  "typings": "./dist/index.d.ts",
-  "module": "./dist/esm/index.js",
-  "sideEffects": false,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
   "scripts": {
-    "build": "tsc && tsc -p tsconfig.esm.json",
-    "prepare": "npm run build"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "generate": "npx @hey-api/openapi-ts"
+    
   },
-  "dependencies": {
-    "axios": "^1.6.1"
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client/index.d.ts",
+      "default": "./dist/client/index.js"
+    }
   },
   "devDependencies": {
-    "@types/node": "12.11.5 - 12.20.42",
-    "typescript": "^4.0 || ^5.0"
+    "@hey-api/openapi-ts": "0.90.9"
+  },
+  "dependencies": {
+    "axios": "^1.13.2",
+    "typescript": "^5.9.3"
   }
 }

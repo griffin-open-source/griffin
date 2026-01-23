@@ -9,20 +9,16 @@ import { START, END } from "./constants.js";
 import {
   TEST_PLAN_VERSION,
   Edge,
-  Node,
+  NodeDSL,
   Frequency,
-  TestPlanV1,
+  PlanDSL,
+  ResponseFormat,
 } from "./schema.js";
 import {
   createStateProxy,
   type SerializedAssertion,
   type StateProxy,
 } from "./assertions.js";
-
-type RawPlan = Omit<
-  TestPlanV1,
-  "id" | "environment" | "organization" | "project"
->;
 
 /**
  * Callback type for building assertions with type-safe state access
@@ -108,7 +104,7 @@ export interface SequentialTestBuilder<NodeNames extends string = never> {
    *
    * @returns The completed TestPlan
    */
-  build(): RawPlan;
+  build(): PlanDSL;
 }
 
 /**
@@ -117,7 +113,7 @@ export interface SequentialTestBuilder<NodeNames extends string = never> {
 class SequentialTestBuilderImpl<
   NodeNames extends string = never,
 > implements SequentialTestBuilder<NodeNames> {
-  private nodes: Node[] = [];
+  private nodes: NodeDSL[] = [];
   private nodeNames: string[] = [];
   private nodeCounter = 0;
 
@@ -141,7 +137,7 @@ class SequentialTestBuilderImpl<
     config: EndpointConfig,
   ): SequentialTestBuilder<NodeNames | Name> {
     const node = Endpoint(config);
-    this.nodes.push({ ...node, id: name } as Node);
+    this.nodes.push({ ...node, id: name } as NodeDSL);
     this.nodeNames.push(name);
     return this as unknown as SequentialTestBuilder<NodeNames | Name>;
   }
@@ -151,7 +147,7 @@ class SequentialTestBuilderImpl<
     duration: WaitDuration,
   ): SequentialTestBuilder<NodeNames | Name> {
     const node = Wait(duration);
-    this.nodes.push({ ...node, id: name } as Node);
+    this.nodes.push({ ...node, id: name } as NodeDSL);
     this.nodeNames.push(name);
     return this as unknown as SequentialTestBuilder<NodeNames | Name>;
   }
@@ -163,13 +159,16 @@ class SequentialTestBuilderImpl<
     const serializedAssertions = callback(stateProxy);
 
     const nodeName = this.generateNodeName();
-    const node = Assertion(serializedAssertions);
-    this.nodes.push({ ...node, id: nodeName } as Node);
+    const node = Assertion(serializedAssertions.map((assertion) => ({
+      ...assertion,
+      assertionType: ResponseFormat.JSON,
+    })));
+    this.nodes.push({ ...node, id: nodeName } as NodeDSL);
     this.nodeNames.push(nodeName);
     return this as unknown as SequentialTestBuilder<NodeNames>;
   }
 
-  build(): RawPlan {
+  build(): PlanDSL {
     const { name, frequency, locations } = this.config;
     const edges: Edge[] = [];
 

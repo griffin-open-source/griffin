@@ -2,12 +2,11 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { executePlanV1 } from "./executor.js";
 import { StubAdapter } from "./adapters/stub.js";
 import {
-  NodeType,
+  FrequencyUnit,
   HttpMethod,
   ResponseFormat,
-  FrequencyUnit,
-} from "@griffin-app/griffin-ts/schema";
-import { TestPlanV1 } from "@griffin-app/griffin-ts/types";
+} from "@griffin-app/griffin-hub-sdk";
+import { PlanV1 } from "@griffin-app/griffin-hub-sdk";
 import { START, END, type ExecutionOptions } from "./types.js";
 import { LocalEventEmitter, type ExecutionEvent } from "./events";
 import { SecretProviderRegistry } from "./secrets/registry.js";
@@ -31,21 +30,21 @@ describe("executePlanV1", () => {
 
   describe("Single Endpoint Execution", () => {
     it("should execute a simple GET request successfully", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-1",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Simple GET Test",
         environment: "default",
         version: "1.0",
         nodes: [
           {
             id: "get-users",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/users",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -83,26 +82,26 @@ describe("executePlanV1", () => {
     });
 
     it("should execute a POST request with body and headers", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-2",
         name: "POST Test",
         version: "1.0",
         environment: "default",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         nodes: [
           {
             id: "create-user",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.POST,
+            type: "ENDPOINT",
+            method: "POST",
             base: "https://api.example.com",
             path: "/users",
             headers: {
-              "Content-Type": "application/json",
-              Authorization: "Bearer token123",
+              "Content-Type": { $literal: "application/json" },
+              Authorization: { $literal: "Bearer token123" },
             },
             body: { name: "Bob", email: "bob@example.com" },
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -138,21 +137,21 @@ describe("executePlanV1", () => {
     });
 
     it("should handle JSON string responses by parsing them", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-3",
         name: "JSON String Response Test",
         version: "1.0",
         environment: "default",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         nodes: [
           {
             id: "get-data",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/data",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -183,21 +182,21 @@ describe("executePlanV1", () => {
     });
 
     it("should override endpoint_host with baseUrl option", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-4",
         name: "BaseUrl Override Test",
         version: "1.0",
         environment: "default",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         nodes: [
           {
             id: "get-users",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             base: "https://api.example.com",
             path: "/users",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -229,22 +228,22 @@ describe("executePlanV1", () => {
 
   describe("Multiple HTTP Methods", () => {
     it("should handle PUT requests", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-5",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "PUT Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "update-user",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.PUT,
+            type: "ENDPOINT",
+            method: "PUT",
             path: "/users/1",
             base: "https://api.example.com",
             body: { name: "Updated Name" },
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -278,21 +277,21 @@ describe("executePlanV1", () => {
     });
 
     it("should handle DELETE requests", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-6",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "DELETE Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "delete-user",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.DELETE,
+            type: "ENDPOINT",
+            method: "DELETE",
             path: "/users/1",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -323,22 +322,22 @@ describe("executePlanV1", () => {
     });
 
     it("should handle PATCH requests", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-7",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "PATCH Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "patch-user",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.PATCH,
+            type: "ENDPOINT",
+            method: "PATCH",
             path: "/users/1",
             base: "https://api.example.com",
             body: { email: "newemail@example.com" },
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -370,29 +369,29 @@ describe("executePlanV1", () => {
 
   describe("Sequential Execution", () => {
     it("should execute two endpoints in sequence", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-8",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Sequential Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "first",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/first",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
           {
             id: "second",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/second",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -440,45 +439,45 @@ describe("executePlanV1", () => {
     });
 
     it("should execute a linear chain of multiple endpoints", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-9",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Multi-Step Linear Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "step1",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/step1",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
           {
             id: "step2",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/step2",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
           {
             id: "step3",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/step3",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
           {
             id: "step4",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/step4",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -536,17 +535,17 @@ describe("executePlanV1", () => {
 
   describe("Wait Node", () => {
     it("should execute a wait node successfully", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-10",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Wait Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "wait-node",
-            type: NodeType.WAIT,
+            type: "WAIT",
             duration_ms: 100,
           },
         ],
@@ -575,34 +574,34 @@ describe("executePlanV1", () => {
     });
 
     it("should execute endpoints with waits in between", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-11",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Endpoint-Wait-Endpoint Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "first-request",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/first",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
           {
             id: "wait",
-            type: NodeType.WAIT,
+            type: "WAIT",
             duration_ms: 50,
           },
           {
             id: "second-request",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/second",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -646,25 +645,25 @@ describe("executePlanV1", () => {
 
   describe("Assertion Node", () => {
     it("should execute an assertion node (currently no-op)", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-12",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Assertion Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "get-data",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/data",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
           {
             id: "assert",
-            type: NodeType.ASSERTION,
+            type: "ASSERTION",
             assertions: [],
           },
         ],
@@ -704,21 +703,21 @@ describe("executePlanV1", () => {
 
   describe("Error Handling", () => {
     it("should handle failed HTTP requests gracefully", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-13",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Failed Request Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "failing-request",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/fail",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -746,29 +745,29 @@ describe("executePlanV1", () => {
     });
 
     it("should handle disconnected nodes gracefully", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-14",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Disconnected Nodes Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "node1",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/path",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
           {
             id: "node2",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/path",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -795,29 +794,29 @@ describe("executePlanV1", () => {
     });
 
     it("should continue execution after a failed node", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-15",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Continue After Failure Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "success-node",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/success",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
           {
             id: "fail-node",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/fail",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -853,29 +852,29 @@ describe("executePlanV1", () => {
 
   describe("Response Storage", () => {
     it("should store successful responses for downstream nodes", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-16",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Response Storage Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "get-user-id",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/user",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
           {
             id: "get-profile",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/profile",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -920,21 +919,21 @@ describe("executePlanV1", () => {
     });
 
     it("should not store failed responses", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-17",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Failed Response Not Stored Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "failing-endpoint",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/fail",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -960,21 +959,21 @@ describe("executePlanV1", () => {
 
   describe("Timing and Performance", () => {
     it("should track total execution duration", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-18",
         name: "Timing Test",
         version: "1.0",
         environment: "default",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         nodes: [
           {
             id: "endpoint",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/data",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -1007,34 +1006,34 @@ describe("executePlanV1", () => {
     });
 
     it("should track individual node durations", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-19",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Node Duration Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "node1",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/1",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
           {
             id: "wait",
-            type: NodeType.WAIT,
+            type: "WAIT",
             duration_ms: 50,
           },
           {
             id: "node2",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/2",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -1079,10 +1078,10 @@ describe("executePlanV1", () => {
 
   describe("Edge Cases", () => {
     it("should handle empty plan (no nodes)", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-20",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Empty Plan Test",
         version: "1.0",
         environment: "default",
@@ -1104,21 +1103,21 @@ describe("executePlanV1", () => {
     });
 
     it("should handle single node with no edges", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-21",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Single Node Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "only-node",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/single",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -1149,21 +1148,21 @@ describe("executePlanV1", () => {
     });
 
     it("should handle complex response data types", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "test-plan-22",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Complex Data Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "complex",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/complex",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -1218,21 +1217,21 @@ describe("executePlanV1", () => {
     });
 
     it("should emit PLAN_START and PLAN_END events", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "event-test-1",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Event Test Plan",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "node-1",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/test",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -1283,34 +1282,34 @@ describe("executePlanV1", () => {
     });
 
     it("should emit NODE_START and NODE_END events for each node", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "event-test-2",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Multi-Node Event Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "endpoint-1",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/first",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
           {
             id: "wait-1",
-            type: NodeType.WAIT,
+            type: "WAIT",
             duration_ms: 10,
           },
           {
             id: "endpoint-2",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/second",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -1370,23 +1369,23 @@ describe("executePlanV1", () => {
     });
 
     it("should emit HTTP_REQUEST and HTTP_RESPONSE events for endpoint nodes", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "event-test-3",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "HTTP Event Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "http-node",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.POST,
+            type: "ENDPOINT",
+            method: "POST",
             path: "/create",
             base: "https://api.example.com",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": { $literal: "application/json" } },
             body: { name: "test" },
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -1445,17 +1444,17 @@ describe("executePlanV1", () => {
     });
 
     it("should emit WAIT_START event for wait nodes", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "event-test-4",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Wait Event Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "wait-node",
-            type: NodeType.WAIT,
+            type: "WAIT",
             duration_ms: 50,
           },
         ],
@@ -1487,21 +1486,21 @@ describe("executePlanV1", () => {
     });
 
     it("should emit ERROR event on HTTP request failure", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "event-test-5",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Error Event Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "failing-node",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/fail",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -1530,21 +1529,21 @@ describe("executePlanV1", () => {
     });
 
     it("should maintain monotonic sequence numbers", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "event-test-6",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Sequence Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "node-1",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/test",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -1586,21 +1585,21 @@ describe("executePlanV1", () => {
     it("should use provided executionId if given", async () => {
       const customExecutionId = "custom-exec-id-123";
 
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "event-test-7",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Custom Execution ID Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "node-1",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/test",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -1633,21 +1632,21 @@ describe("executePlanV1", () => {
     });
 
     it("should emit events in correct order", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "event-test-8",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         name: "Event Order Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "node-1",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/test",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [
@@ -1684,21 +1683,21 @@ describe("executePlanV1", () => {
     });
 
     it("should handle failed HTTP requests correctly", async () => {
-      const plan: TestPlanV1 = {
+      const plan: PlanV1 = {
         id: "event-test-9",
         name: "Failed Request Event Test",
         version: "1.0",
         environment: "default",
         project: "test-project",
-        frequency: { every: 1, unit: FrequencyUnit.MINUTE },
+        frequency: { every: 1, unit: "MINUTE" },
         nodes: [
           {
             id: "failing-node",
-            type: NodeType.ENDPOINT,
-            method: HttpMethod.GET,
+            type: "ENDPOINT",
+            method: "GET",
             path: "/fail",
             base: "https://api.example.com",
-            response_format: ResponseFormat.JSON,
+            response_format: "JSON",
           },
         ],
         edges: [

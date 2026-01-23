@@ -1,20 +1,4 @@
-/**
- * Secret reference types and utilities for griffin DSL.
- *
- * Secrets are referenced by provider and path, and resolved at runtime
- * by the plan executor using configured secret providers.
- */
-
-export interface SecretRefData {
-  provider: string;
-  ref: string;
-  version?: string;
-  field?: string;
-}
-
-export interface SecretRef {
-  $secret: SecretRefData;
-}
+import type { SecretRef } from "./schema.js";
 
 export interface SecretOptions {
   /** Pin to a specific version (provider-dependent) */

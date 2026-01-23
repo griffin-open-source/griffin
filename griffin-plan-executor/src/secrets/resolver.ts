@@ -2,8 +2,12 @@
  * Secret resolution utilities for test plans.
  */
 
-import { TestPlanV1, Node } from "@griffin-app/griffin-ts/types";
-import { NodeType } from "@griffin-app/griffin-ts/schema";
+//import { TestPlanV1, Node } from "@griffin-app/griffin-ts/types";
+//import { NodeType } from "@griffin-app/griffin-ts/schema";
+import {
+  type PlanV1,
+} from "@griffin-app/griffin-hub-sdk";
+//import { NodeType}
 import type { SecretProviderRegistry } from "./registry.js";
 import type { SecretRef, SecretRefData } from "./types.js";
 import { isSecretRef } from "./types.js";
@@ -63,7 +67,7 @@ function collectSecretsFromValue(
  * Collect all secret references from a test plan.
  * Scans endpoint headers and bodies for $secret markers.
  */
-export function collectSecretsFromPlan(plan: TestPlanV1): CollectedSecrets {
+export function collectSecretsFromPlan(plan: PlanV1): CollectedSecrets {
   const collected: CollectedSecrets = {
     refs: [],
     paths: [],
@@ -73,7 +77,7 @@ export function collectSecretsFromPlan(plan: TestPlanV1): CollectedSecrets {
     const node = plan.nodes[nodeIndex];
 
     // Only endpoints can have secrets (in headers and body)
-    if (node.type !== NodeType.ENDPOINT) {
+    if (node.type !== "ENDPOINT") {
       continue;
     }
 
@@ -162,9 +166,9 @@ function deepClone<T>(value: T): T {
  * @throws SecretResolutionError if any secret cannot be resolved (fail-fast)
  */
 export async function resolveSecretsInPlan(
-  plan: TestPlanV1,
+  plan: PlanV1,
   registry: SecretProviderRegistry,
-): Promise<TestPlanV1> {
+): Promise<PlanV1> {
   // Collect all secret references
   const collected = collectSecretsFromPlan(plan);
 
@@ -201,9 +205,9 @@ export async function resolveSecretsInPlan(
  * Check if a plan contains any secret references.
  * Useful for short-circuiting resolution when no secrets are present.
  */
-export function planHasSecrets(plan: TestPlanV1): boolean {
+export function planHasSecrets(plan: PlanV1): boolean {
   for (const node of plan.nodes) {
-    if (node.type !== NodeType.ENDPOINT) {
+    if (node.type !== "ENDPOINT") {
       continue;
     }
 

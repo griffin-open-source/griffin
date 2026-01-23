@@ -4,16 +4,18 @@
  */
 
 export type {
-  Endpoint,
+  String,
+  EndpointDSL,
   Frequency,
   Wait,
+  VariableRef,
   BinaryPredicate,
   JSONAssertion,
   XMLAssertion,
   TextAssertion,
   Assertion,
   Assertions,
-  Node,
+  NodeDSL,
   Edge,
-  TestPlanV1,
+  PlanDSL,
 } from "./schema.js";

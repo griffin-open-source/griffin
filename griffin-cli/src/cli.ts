@@ -4,6 +4,7 @@ import { Command } from "commander";
 import { executeInit } from "./commands/init.js";
 import { executeValidate } from "./commands/validate.js";
 import { executeGenerateKey } from "./commands/generate-key.js";
+import { executeEnvList } from "./commands/env.js";
 
 // Local commands
 import { executeRunLocal } from "./commands/local/run.js";
@@ -49,18 +50,24 @@ program
     await executeGenerateKey();
   });
 
+// Environment command group
+const env = program.command("env").description("Manage environments");
+
+env
+  .command("list")
+  .description("List all available environments")
+  .action(async () => {
+    await executeEnvList();
+  });
+
 // Local command group
 const local = program.command("local").description("Local test execution");
 
 local
-  .command("run")
+  .command("run [env]")
   .description("Run tests locally against an environment")
-  .option(
-    "--env <name>",
-    "Environment to run against (uses default if not specified)",
-  )
-  .action(async (options) => {
-    await executeRunLocal(options);
+  .action(async (env, options) => {
+    await executeRunLocal({ env });
   });
 
 // Hub command group
@@ -95,40 +102,31 @@ hub
   });
 
 hub
-  .command("plan")
+  .command("plan [env]")
   .description("Show what changes would be applied")
-  .option(
-    "--env <name>",
-    "Environment to plan for (uses default if not specified)",
-  )
   .option("--json", "Output in JSON format")
-  .action(async (options) => {
-    await executePlan(options);
+  .action(async (env, options) => {
+    await executePlan({ ...options, env });
   });
 
 hub
-  .command("apply")
+  .command("apply [env]")
   .description("Apply changes to the hub")
-  .option(
-    "--env <name>",
-    "Environment to apply to (uses default if not specified)",
-  )
   .option("--auto-approve", "Skip confirmation prompt")
   .option("--dry-run", "Show what would be done without making changes")
   .option("--prune", "Delete plans on hub that don't exist locally")
-  .action(async (options) => {
-    await executeApply(options);
+  .action(async (env, options) => {
+    await executeApply({ ...options, env });
   });
 
 hub
-  .command("run")
+  .command("run <env>")
   .description("Trigger a plan run on the hub")
   .requiredOption("--plan <name>", "Plan name to run")
-  .requiredOption("--env <name>", "Target environment")
   .option("--wait", "Wait for run to complete")
   .option("--force", "Run even if local plan differs from hub")
-  .action(async (options) => {
-    await executeRun(options);
+  .action(async (env, options) => {
+    await executeRun({ ...options, env });
   });
 
 // Parse arguments

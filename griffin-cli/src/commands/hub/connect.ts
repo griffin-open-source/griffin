@@ -1,4 +1,5 @@
 import { loadState, saveState } from "../../core/state.js";
+import { terminal } from "../../utils/terminal.js";
 
 export interface ConnectOptions {
   url: string;
@@ -20,14 +21,14 @@ export async function executeConnect(options: ConnectOptions): Promise<void> {
 
     await saveState(state);
 
-    console.log("✓ Hub connection configured");
-    console.log(`  URL: ${options.url}`);
+    terminal.success("Hub connection configured");
+    terminal.log(`  URL: ${terminal.colors.cyan(options.url)}`);
     if (options.token) {
-      console.log("  API Token: ***");
+      terminal.log(`  API Token: ${terminal.colors.dim("***")}`);
     }
-    console.log("");
+    terminal.blank();
   } catch (error: any) {
-    console.error(`Error: ${error.message}`);
-    process.exit(1);
+    terminal.error(error.message);
+    terminal.exit(1);
   }
 }

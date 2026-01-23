@@ -1,12 +1,12 @@
 import { loadState } from "../core/state.js";
 import { discoverPlans, formatDiscoveryErrors } from "../core/discovery.js";
+import { terminal } from "../utils/terminal.js";
 
 /**
  * Validate test plan files without syncing
  */
 export async function executeValidate(): Promise<void> {
-  console.log("Validating test plans...");
-  console.log("");
+  const spinner = terminal.spinner("Validating test plans...").start();
 
   try {
     // Load state for discovery settings
@@ -26,35 +26,36 @@ export async function executeValidate(): Promise<void> {
 
     // Report errors
     if (errors.length > 0) {
-      console.error(formatDiscoveryErrors(errors));
-      console.error("");
-      console.error(`✗ Validation failed with ${errors.length} error(s)`);
-      process.exit(1);
+      spinner.fail(`Validation failed with ${errors.length} error(s)`);
+      terminal.blank();
+      terminal.error(formatDiscoveryErrors(errors));
+      terminal.exit(1);
     }
 
     // Report success
-    console.log(`✓ Found ${plans.length} valid plan(s):`);
-    console.log("");
+    spinner.succeed(`Found ${terminal.colors.bold(plans.length.toString())} valid plan(s)`);
+    terminal.blank();
 
     for (const { plan, filePath, exportName } of plans) {
       const shortPath = filePath.replace(process.cwd(), ".");
-      const exportInfo = exportName === "default" ? "" : ` (${exportName})`;
-      console.log(`  • ${plan.name}${exportInfo}`);
-      console.log(`    ${shortPath}`);
-      console.log(
+      const exportInfo = exportName === "default" ? "" : terminal.colors.dim(` (${exportName})`);
+      terminal.log(`  ${terminal.colors.green("●")} ${terminal.colors.cyan(plan.name)}${exportInfo}`);
+      terminal.dim(`    ${shortPath}`);
+      terminal.dim(
         `    Nodes: ${plan.nodes.length}, Edges: ${plan.edges.length}`,
       );
       if (plan.frequency) {
-        console.log(
+        terminal.dim(
           `    Schedule: Every ${plan.frequency.every} ${plan.frequency.unit}`,
         );
       }
-      console.log("");
+      terminal.blank();
     }
 
-    console.log("✓ All plans are valid");
+    terminal.success("All plans are valid");
   } catch (error) {
-    console.error(`Error: ${(error as Error).message}`);
-    process.exit(1);
+    spinner.fail("Validation failed");
+    terminal.error((error as Error).message);
+    terminal.exit(1);
   }
 }

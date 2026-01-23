@@ -15,6 +15,13 @@
       "when": 1769123432748,
       "tag": "0001_cuddly_scarlet_witch",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769190850721,
+      "tag": "0002_silky_callisto",
+      "breakpoints": true
     }
   ]
 }

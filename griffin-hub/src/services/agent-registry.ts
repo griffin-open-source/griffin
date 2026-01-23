@@ -4,6 +4,7 @@ import { AgentStatus } from "../schemas/agent.js";
 import { randomUUID } from "node:crypto";
 import { eq, and, asc } from "drizzle-orm";
 import { agentsTable } from "../storage/adapters/postgres/schema.js";
+import { utcNow } from "../utils/dates.js";
 
 export interface RegisterAgentOptions {
   location: string;
@@ -31,7 +32,7 @@ export class AgentRegistry {
    * Returns the agent record with generated ID.
    */
   async register(options: RegisterAgentOptions): Promise<Agent> {
-    const now = new Date().toISOString();
+    const now = utcNow();
     const agent = await this.storage.agents.create({
       location: options.location,
       status: AgentStatus.ONLINE,
@@ -56,7 +57,7 @@ export class AgentRegistry {
       }
 
       await this.storage.agents.update(agentId, {
-        lastHeartbeat: new Date().toISOString(),
+        lastHeartbeat: utcNow(),
         status: AgentStatus.ONLINE,
       });
 

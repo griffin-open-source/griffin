@@ -2,6 +2,7 @@ import { JobQueue, Job, JobStatus, EnqueueOptions } from "../../ports.js";
 import { sql, and, eq, desc } from "drizzle-orm";
 import { DrizzleDatabase } from "../../../plugins/storage.js";
 import { jobsTable } from "./schema.js";
+import { fromUTC } from "../../../utils/dates.js";
 
 /**
  * PostgreSQL implementation of JobQueue.
@@ -18,7 +19,8 @@ export class PostgresJobQueue<T = any> implements JobQueue<T> {
   ) {}
 
   async enqueue(data: T, options: EnqueueOptions): Promise<string> {
-    const scheduledFor = options.runAt || new Date();
+    const now = new Date();
+    const scheduledFor = options.runAt || now;
     const priority = options.priority ?? 0;
     const maxAttempts = options.maxAttempts ?? 3;
     const result = await this.db
@@ -32,8 +34,8 @@ export class PostgresJobQueue<T = any> implements JobQueue<T> {
         maxAttempts: maxAttempts,
         priority: priority,
         scheduledFor: scheduledFor,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: now,
+        updatedAt: now,
       })
       .returning();
     return result[0].id;
@@ -79,12 +81,13 @@ export class PostgresJobQueue<T = any> implements JobQueue<T> {
   }
 
   async acknowledge(jobId: string): Promise<void> {
+    const now = new Date();
     await this.db
       .update(jobsTable)
       .set({
         status: JobStatus.COMPLETED,
-        completedAt: new Date(),
-        updatedAt: new Date(),
+        completedAt: now,
+        updatedAt: now,
       })
       .where(eq(jobsTable.id, jobId));
   }
@@ -109,6 +112,7 @@ export class PostgresJobQueue<T = any> implements JobQueue<T> {
       // Calculate exponential backoff: 2^attempts seconds
       const backoffSeconds = Math.pow(2, job.attempts);
       const nextRunAt = new Date(Date.now() + backoffSeconds * 1000);
+      const now = new Date();
 
       await this.db
         .update(jobsTable)
@@ -116,17 +120,18 @@ export class PostgresJobQueue<T = any> implements JobQueue<T> {
           status: newStatus,
           error: error.message,
           scheduledFor: nextRunAt,
-          updatedAt: new Date(),
+          updatedAt: now,
         })
         .where(eq(jobsTable.id, jobId));
     } else {
+      const now = new Date();
       await this.db
         .update(jobsTable)
         .set({
           status: newStatus,
           error: error.message,
-          completedAt: new Date(),
-          updatedAt: new Date(),
+          completedAt: now,
+          updatedAt: now,
         })
         .where(eq(jobsTable.id, jobId));
     }

@@ -38,8 +38,6 @@ export async function discoverPlans(
     cwd: process.cwd(),
   });
 
-  console.log(`Found ${files.length} test file(s)`);
-
   // Load each file
   for (const filePath of files) {
     try {

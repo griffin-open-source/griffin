@@ -7,6 +7,7 @@ import type {
   ExecutionOptions,
 } from "@griffin-app/griffin-plan-executor";
 import { JobRunStatus } from "../schemas/job-run.js";
+import { utcNow } from "../utils/dates.js";
 
 /**
  * Execution job data structure.
@@ -201,7 +202,7 @@ export class ExecutorService {
       try {
         await this.storage.runs.update(data.jobRunId, {
           status: JobRunStatus.FAILED,
-          completedAt: new Date().toISOString(),
+          completedAt: utcNow(),
           errors: [error instanceof Error ? error.message : String(error)],
         });
       } catch (updateError) {

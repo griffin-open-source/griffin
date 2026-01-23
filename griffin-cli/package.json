@@ -26,9 +26,13 @@
     "@griffin-app/griffin-hub-sdk": "file:../griffin-hub-sdk",
     "@griffin-app/griffin-plan-executor": "file:../griffin-plan-executor",
     "@griffin-app/griffin-ts": "file:../griffin-ts",
+    "cli-table3": "^0.6.5",
     "commander": "^12.1.0",
+    "enquirer": "^2.4.1",
     "glob": "^11.0.0",
     "object-hash": "^3.0.0",
+    "ora": "^8.1.1",
+    "picocolors": "^1.1.1",
     "typebox": "^1.0.78",
     "yaml": "^2.8.2"
   },

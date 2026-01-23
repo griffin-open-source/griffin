@@ -119,9 +119,9 @@ export class PostgresPlansRepository implements PlansRepository {
           (SELECT MAX(started_at) FROM ${runsTable} WHERE ${runsTable.planId} = ${plansTable.id}) IS NULL
           OR (
             (SELECT MAX(started_at) FROM ${runsTable} WHERE ${runsTable.planId} = ${plansTable.id}) + make_interval(
-              mins := CASE WHEN (frequency->>'unit') = 'MINUTE' THEN (frequency->>'every')::int END,
-              hours := CASE WHEN (frequency->>'unit') = 'HOUR' THEN (frequency->>'every')::int END,
-              days := CASE WHEN (frequency->>'unit') = 'DAY' THEN (frequency->>'every')::int END
+              mins => CASE WHEN (frequency->>'unit') = 'MINUTE' THEN (frequency->>'every')::int ELSE 0 END,
+              hours => CASE WHEN (frequency->>'unit') = 'HOUR' THEN (frequency->>'every')::int ELSE 0 END,
+              days => CASE WHEN (frequency->>'unit') = 'DAY' THEN (frequency->>'every')::int ELSE 0 END
             ) <= NOW()
           )
         )

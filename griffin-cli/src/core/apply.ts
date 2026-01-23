@@ -3,6 +3,7 @@ import type { GriffinHubSdk } from "@griffin-app/griffin-hub-sdk";
 import type { PlanV1 } from "@griffin-app/griffin-hub-sdk";
 import { loadVariables } from "./variables.js";
 import { resolvePlan } from "../resolve.js";
+import { terminal } from "../utils/terminal.js";
 
 export interface ApplyResult {
   success: boolean;
@@ -42,17 +43,14 @@ export async function applyDiff(
   const actionsToApply = diff.actions.filter((a) => a.type !== "noop");
 
   if (actionsToApply.length === 0) {
-    console.log("No changes to apply.");
     return { success: true, applied: [], errors: [] };
   }
-
-  console.log(`Applying ${actionsToApply.length} change(s)...`);
 
   // Process each action
   for (const action of actionsToApply) {
     try {
       if (options?.dryRun) {
-        console.log(
+        terminal.dim(
           `[DRY RUN] Would ${action.type} plan: ${action.plan?.name || action.remotePlan?.name}`,
         );
         continue;
@@ -70,7 +68,7 @@ export async function applyDiff(
           break;
       }
     } catch (error) {
-      console.error(error);
+      terminal.error((error as Error).message);
       errors.push({
         action,
         error: error as Error,
@@ -107,8 +105,6 @@ async function applyCreate(
   const variables = await loadVariables(environment);
   const resolvedPlan = resolvePlan(plan, projectId, environment, variables);
 
-  console.log(`Creating plan: ${plan.name}`);
-
   const { data: createdPlan } = await sdk.postPlan({
     body: resolvedPlan,
   });
@@ -119,7 +115,7 @@ async function applyCreate(
     success: true,
   });
 
-  console.log(`✓ Created: ${createdPlan!.data.name}`);
+  terminal.success(`Created: ${terminal.colors.cyan(createdPlan!.data.name)}`);
 }
 
 /**
@@ -137,8 +133,6 @@ async function applyUpdate(
   const variables = await loadVariables(environment);
   const resolvedPlan = resolvePlan(plan, projectId, environment, variables);
 
-  console.log(`Updating plan: ${plan.name}`);
-
   // Use the remote plan's ID for the update
   await sdk.putPlanById({
     path: {
@@ -153,7 +147,7 @@ async function applyUpdate(
     success: true,
   });
 
-  console.log(`✓ Updated: ${plan.name}`);
+  terminal.success(`Updated: ${terminal.colors.cyan(plan.name)}`);
 }
 
 /**
@@ -165,8 +159,6 @@ async function applyDelete(
   applied: ApplyAction[],
 ): Promise<void> {
   const remotePlan = action.remotePlan!;
-
-  console.log(`Deleting plan: ${remotePlan.name}`);
 
   await sdk.deletePlanById({
     path: {
@@ -180,7 +172,7 @@ async function applyDelete(
     success: true,
   });
 
-  console.log(`✓ Deleted: ${remotePlan.name}`);
+  terminal.success(`Deleted: ${terminal.colors.cyan(remotePlan.name)}`);
 }
 
 /**

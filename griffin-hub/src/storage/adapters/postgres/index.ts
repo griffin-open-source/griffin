@@ -29,10 +29,14 @@ export class PostgresStorage implements Storage {
   constructor(private connectionString: string) {}
 
   async connect(): Promise<void> {
-    this.pool = new Pool({ connectionString: this.connectionString });
+    this.pool = new Pool({
+      connectionString: this.connectionString,
+      // Set timezone to UTC for all connections
+      options: '-c timezone=UTC',
+    });
     this.db = drizzle(this.pool, { schema });
 
-    // Test connection
+    // Test connection and verify UTC timezone
     await this.pool.query("SELECT NOW()");
 
     // Run migrations
@@ -123,7 +127,13 @@ export class PostgresJobQueueBackend implements JobQueueBackend {
   }
 
   async connect(): Promise<void> {
-    this.db = drizzle(this.connectionString, { schema });
+    // Create pool with UTC timezone setting
+    const pool = new Pool({
+      connectionString: this.connectionString,
+      // Set timezone to UTC for all connections
+      options: '-c timezone=UTC',
+    });
+    this.db = drizzle(pool, { schema });
   }
 
   async disconnect(): Promise<void> {

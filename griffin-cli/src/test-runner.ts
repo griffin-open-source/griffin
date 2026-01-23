@@ -13,6 +13,7 @@ import { loadVariables } from "./core/variables.js";
 import { getProjectId } from "./core/state.js";
 import { PlanDSL } from "@griffin-app/griffin-ts/types";
 import { resolvePlan } from "./resolve.js";
+import { terminal } from "./utils/terminal.js";
 
 function validateDsl(plan: unknown): PlanDSL {
   const errors = Value.Errors(PlanDSLSchema, plan);
@@ -34,7 +35,7 @@ export async function runTestFile(
   const defaultExport = await import(filePath);
   const rawPlan = validateDsl(defaultExport.default);
 
-  console.log(`Project ID: ${projectId}`);
+  terminal.dim(`Project ID: ${projectId}`);
   const resolvedPlan = resolvePlan(rawPlan, projectId, envName, variables);
   const secretRegistry = new SecretProviderRegistry();
   secretRegistry.register(new EnvSecretProvider());

@@ -4,6 +4,7 @@ import { discoverPlans, formatDiscoveryErrors } from "../../core/discovery.js";
 import { computeDiff, formatDiff } from "../../core/diff.js";
 import { applyDiff, formatApplyResult } from "../../core/apply.js";
 import { createSdk } from "../../core/sdk.js";
+import { terminal } from "../../utils/terminal.js";
 
 export interface ApplyOptions {
   autoApprove?: boolean;
@@ -25,19 +26,21 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
 
     // Check if runner is configured
     if (!state.runner?.baseUrl) {
-      console.error("Error: Hub connection not configured.");
-      console.log("Connect with:");
-      console.log("  griffin hub connect --url <url> --token <token>");
-      process.exit(1);
+      terminal.error("Hub connection not configured.");
+      terminal.dim("Connect with:");
+      terminal.dim("  griffin hub connect --url <url> --token <token>");
+      terminal.exit(1);
     }
 
-    console.log(`Applying to '${envName}' environment`);
-    console.log("");
+    terminal.info(
+      `Applying to ${terminal.colors.cyan(envName)} environment`,
+    );
+    terminal.blank();
 
     // Create SDK clients
     const sdk = createSdk({
-      baseUrl: state.runner.baseUrl,
-      apiToken: state.runner.apiToken || undefined,
+      baseUrl: state.runner?.baseUrl || "",
+      apiToken: state.runner?.apiToken || "",
     });
 
     // Discover local plans
@@ -48,17 +51,24 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
       "dist/**",
     ];
 
+    const spinner = terminal.spinner("Discovering local plans...").start();
     const { plans, errors } = await discoverPlans(
       discoveryPattern,
       discoveryIgnore,
     );
 
     if (errors.length > 0) {
-      console.error(formatDiscoveryErrors(errors));
-      process.exit(1);
+      spinner.fail("Discovery failed");
+      terminal.error(formatDiscoveryErrors(errors));
+      terminal.exit(1);
     }
 
+    spinner.succeed(`Found ${plans.length} local plan(s)`);
+
     // Fetch remote plans for this project + environment
+    const fetchSpinner = terminal
+      .spinner("Fetching remote plans...")
+      .start();
     const response = await sdk.getPlan({
       query: {
         projectId: state.projectId,
@@ -66,6 +76,7 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
       },
     });
     const remotePlans = response?.data?.data!;
+    fetchSpinner.succeed(`Found ${remotePlans.length} remote plan(s)`);
 
     // Compute diff (include deletions if --prune)
     const diff = computeDiff(
@@ -75,48 +86,58 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
     );
 
     // Show plan
-    console.log(formatDiff(diff));
-    console.log("");
+    terminal.blank();
+    terminal.log(formatDiff(diff));
+    terminal.blank();
 
     // Check if there are changes
     if (
       diff.summary.creates + diff.summary.updates + diff.summary.deletes ===
       0
     ) {
-      console.log("No changes to apply.");
+      terminal.success("No changes to apply.");
       return;
     }
 
     // Show deletions warning if --prune
     if (options.prune && diff.summary.deletes > 0) {
-      console.warn(
-        `⚠️  --prune will DELETE ${diff.summary.deletes} plan(s) from the hub`,
+      terminal.warn(
+        `--prune will DELETE ${diff.summary.deletes} plan(s) from the hub`,
       );
-      console.log("");
+      terminal.blank();
     }
 
     // Ask for confirmation unless auto-approved
     if (!options.autoApprove && !options.dryRun) {
-      console.log("Do you want to perform these actions? (yes/no)");
-      // For now, just proceed - in a real implementation, we'd use readline
-      // to get user input
-      console.log("Note: Use --auto-approve flag to skip confirmation");
-      console.log("");
+      const confirmed = await terminal.confirm(
+        "Do you want to perform these actions?",
+      );
+      if (!confirmed) {
+        terminal.warn("Apply cancelled.");
+        return;
+      }
     }
 
     // Apply changes with environment injection
+    const applySpinner = terminal.spinner("Applying changes...").start();
     const result = await applyDiff(diff, sdk, state.projectId, envName, {
       dryRun: options.dryRun,
     });
 
-    console.log("");
-    console.log(formatApplyResult(result));
+    if (result.success) {
+      applySpinner.succeed("Changes applied successfully");
+    } else {
+      applySpinner.fail("Apply failed");
+    }
+
+    terminal.blank();
+    terminal.log(formatApplyResult(result));
 
     if (!result.success) {
-      process.exit(1);
+      terminal.exit(1);
     }
   } catch (error) {
-    console.error(`Error: ${(error as Error).message}`);
-    process.exit(1);
+    terminal.error((error as Error).message);
+    terminal.exit(1);
   }
 }

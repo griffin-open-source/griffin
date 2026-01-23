@@ -14,7 +14,7 @@
 #   path: variable("api-version", "/api/${api-version}/health")
 
 environments:
-  local:
+  dev:
     griffin-hub: http://localhost:3000
     api-version: v1
 

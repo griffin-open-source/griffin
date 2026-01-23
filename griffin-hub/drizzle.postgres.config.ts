@@ -10,8 +10,7 @@ import { defineConfig } from "drizzle-kit";
  * For push operations, set POSTGRESQL_URL or REPOSITORY_CONNECTION_STRING environment variable.
  */
 
-const connectionString =
-  process.env.REPOSITORY_CONNECTION_STRING || process.env.POSTGRESQL_URL;
+const connectionString = process.env.DATABASE_URL;
 
 export default defineConfig({
   out: "./src/storage/adapters/postgres/migrations",

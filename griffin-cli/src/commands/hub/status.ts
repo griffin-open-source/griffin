@@ -1,4 +1,5 @@
 import { loadState } from "../../core/state.js";
+import { terminal } from "../../utils/terminal.js";
 
 /**
  * Show hub connection status
@@ -8,23 +9,25 @@ export async function executeStatus(): Promise<void> {
     const state = await loadState();
 
     if (!state.runner) {
-      console.log("No hub connection configured.");
-      console.log("");
-      console.log("Connect with:");
-      console.log("  griffin hub connect --url <url> --token <token>");
+      terminal.warn("No hub connection configured.");
+      terminal.blank();
+      terminal.dim("Connect with:");
+      terminal.dim("  griffin hub connect --url <url> --token <token>");
       return;
     }
 
-    console.log("Hub connection:");
-    console.log(`  URL: ${state.runner.baseUrl}`);
+    terminal.info("Hub connection:");
+    terminal.log(`  URL: ${terminal.colors.cyan(state.runner.baseUrl)}`);
     if (state.runner.apiToken) {
-      console.log(`  API Token: ${state.runner.apiToken.substring(0, 8)}...`);
+      terminal.log(
+        `  API Token: ${terminal.colors.dim(state.runner.apiToken.substring(0, 8) + "...")}`,
+      );
     } else {
-      console.log("  API Token: (not set)");
+      terminal.log(`  API Token: ${terminal.colors.dim("(not set)")}`);
     }
-    console.log("");
+    terminal.blank();
   } catch (error: any) {
-    console.error(`Error: ${error.message}`);
-    process.exit(1);
+    terminal.error(error.message);
+    terminal.exit(1);
   }
 }

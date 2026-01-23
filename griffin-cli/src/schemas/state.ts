@@ -9,7 +9,7 @@ import { Type, type Static } from "typebox";
  */
 
 export const EnvironmentConfigSchema = Type.Object({
-  // Empty for now - may be used for environment-specific config in the future
+
 });
 
 export type EnvironmentConfig = Static<typeof EnvironmentConfigSchema>;

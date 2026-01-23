@@ -35,18 +35,12 @@ This creates `.griffin/state.json` which tracks:
 
 Override project ID with `--project <name>`.
 
-### 2. Configure Targets
-
-Add targets to your local environment:
-
-```bash
-griffin local config add-target --env local --key api --url http://localhost:3000
-```
+### 2. View Environments
 
 View configured environments:
 
 ```bash
-griffin local config list
+griffin env list
 ```
 
 ### 3. Create Test Plans
@@ -56,10 +50,10 @@ Create test files in `__griffin__/` directories. These files export test plans t
 ### 4. Run Tests Locally
 
 ```bash
-griffin local run --env local
+griffin local run local
 ```
 
-Executes tests locally against configured targets.
+Executes tests locally using variables from `variables.yaml` for the specified environment.
 
 ### 5. Connect to Hub (Optional)
 
@@ -71,32 +65,35 @@ griffin hub connect --url https://hub.example.com --token <token>
 
 ```bash
 griffin hub plan
+griffin hub plan production
 ```
 
-Shows what will be created, updated, or deleted on the hub.
+Shows what will be created, updated, or deleted on the hub for the specified environment.
 
 ### 7. Apply to Hub
 
 ```bash
 griffin hub apply
+griffin hub apply production
 ```
 
-Syncs plans to the hub.
+Syncs plans to the hub for the specified environment.
 
 ### 8. Trigger Hub Run
 
 ```bash
-griffin hub run --plan <name> --env production
+griffin hub run production --plan <name>
 ```
 
-Triggers a plan execution on the hub.
+Triggers a plan execution on the hub in the specified environment.
 
 ## Commands
 
-Commands are organized into three groups:
+Commands are organized into four groups:
 
 - **Top-level**: Project initialization and utilities
-- **local**: Local test execution and configuration
+- **env**: Environment management
+- **local**: Local test execution
 - **hub**: Hub operations (plan sync, remote execution)
 
 ### Top-Level Commands
@@ -136,78 +133,34 @@ Generate a cryptographically secure API key for authentication.
 griffin generate-key
 ```
 
+### Environment Commands
+
+#### `griffin env list`
+
+List all available environments.
+
+**Example:**
+
+```bash
+griffin env list
+```
+
+Shows all configured environments with an asterisk (*) marking the default environment.
+
 ### Local Commands
 
-#### `griffin local run`
+#### `griffin local run [env]`
 
-Run tests locally against configured targets.
-
-**Options:**
-
-- `--env <name>` - Environment to run against (uses default if not specified)
+Run tests locally against an environment. Environment can be specified as a positional argument, or uses the default environment if omitted.
 
 **Example:**
 
 ```bash
 griffin local run
-griffin local run --env staging
+griffin local run staging
 ```
 
-#### `griffin local config list`
-
-List all local environments and their targets.
-
-**Example:**
-
-```bash
-griffin local config list
-```
-
-#### `griffin local config add-target`
-
-Add a target to a local environment.
-
-**Options:**
-
-- `--env <name>` - Environment name (required)
-- `--key <key>` - Target key (required)
-- `--url <url>` - Target URL (required)
-
-**Example:**
-
-```bash
-griffin local config add-target --env local --key api --url http://localhost:3000
-griffin local config add-target --env staging --key billing --url http://localhost:3001
-```
-
-#### `griffin local config remove-target`
-
-Remove a target from a local environment.
-
-**Options:**
-
-- `--env <name>` - Environment name (required)
-- `--key <key>` - Target key (required)
-
-**Example:**
-
-```bash
-griffin local config remove-target --env local --key api
-```
-
-#### `griffin local config set-default-env`
-
-Set the default environment for local runs.
-
-**Options:**
-
-- `--env <name>` - Environment name (required)
-
-**Example:**
-
-```bash
-griffin local config set-default-env --env local
-```
+Variables are loaded from `variables.yaml` for the specified environment.
 
 ### Hub Commands
 
@@ -252,20 +205,20 @@ griffin hub runs
 griffin hub runs --plan health-check --limit 5
 ```
 
-#### `griffin hub plan`
+#### `griffin hub plan [env]`
 
-Show what changes would be applied to the hub.
+Show what changes would be applied to the hub. Environment can be specified as a positional argument, or uses the default environment if omitted.
 
 **Options:**
 
-- `--env <name>` - Environment to plan for (uses default if not specified)
 - `--json` - Output in JSON format
 
 **Example:**
 
 ```bash
 griffin hub plan
-griffin hub plan --env production --json
+griffin hub plan production
+griffin hub plan staging --json
 ```
 
 **Exit codes:**
@@ -274,89 +227,43 @@ griffin hub plan --env production --json
 - `1` - Error
 - `2` - Changes pending
 
-#### `griffin hub apply`
+#### `griffin hub apply [env]`
 
-Apply changes to the hub.
+Apply changes to the hub. Environment can be specified as a positional argument, or uses the default environment if omitted.
 
 **Options:**
 
-- `--env <name>` - Environment to apply to (uses default if not specified)
 - `--auto-approve` - Skip confirmation prompt
 - `--dry-run` - Show what would be done without making changes
+- `--prune` - Delete plans on hub that don't exist locally
 
 **Example:**
 
 ```bash
 griffin hub apply
-griffin hub apply --env production --auto-approve
-griffin hub apply --dry-run
+griffin hub apply production --auto-approve
+griffin hub apply staging --dry-run
+griffin hub apply production --prune
 ```
 
-#### `griffin hub run`
+#### `griffin hub run <env>`
 
-Trigger a plan run on the hub.
+Trigger a plan run on the hub in the specified environment.
 
 **Options:**
 
 - `--plan <name>` - Plan name to run (required)
-- `--env <name>` - Target environment (required)
 - `--wait` - Wait for run to complete
+- `--force` - Run even if local plan differs from hub
 
 **Example:**
 
 ```bash
-griffin hub run --plan health-check --env production
-griffin hub run --plan health-check --env staging --wait
+griffin hub run production --plan health-check
+griffin hub run staging --plan health-check --wait
+griffin hub run production --plan api-check --force
 ```
 
-#### `griffin hub config list`
-
-List all hub target configurations.
-
-**Options:**
-
-- `--org <id>` - Filter by organization ID
-- `--env <name>` - Filter by environment name
-
-**Example:**
-
-```bash
-griffin hub config list
-griffin hub config list --org acme --env production
-```
-
-#### `griffin hub config add-target`
-
-Add a target to hub configuration.
-
-**Options:**
-
-- `--org <id>` - Organization ID (required)
-- `--env <name>` - Environment name (required)
-- `--key <key>` - Target key (required)
-- `--url <url>` - Target URL (required)
-
-**Example:**
-
-```bash
-griffin hub config add-target --org acme --env production --key api --url https://api.example.com
-```
-
-#### `griffin hub config remove-target`
-
-Remove a target from hub configuration.
-
-**Options:**
-
-- `--org <id>` - Organization ID (required)
-- `--env <name>` - Environment name (required)
-- `--key <key>` - Target key (required)
-
-**Example:**
-
-```bash
-griffin hub config remove-target --org acme --env production --key api
-```
 
 ## Configuration
 
@@ -370,15 +277,10 @@ Griffin stores configuration in `.griffin/state.json`:
 
 ```json
 {
-  "stateVersion": 3,
+  "stateVersion": 1,
   "projectId": "my-project",
   "environments": {
-    "local": {
-      "targets": {
-        "api": "http://localhost:3000",
-        "billing": "http://localhost:3001"
-      }
-    }
+    "local": {}
   },
   "defaultEnvironment": "local",
   "runner": {
@@ -388,37 +290,43 @@ Griffin stores configuration in `.griffin/state.json`:
   "discovery": {
     "pattern": "**/__griffin__/*.{ts,js}",
     "ignore": ["node_modules/**", "dist/**"]
-  },
-  "plans": {
-    "local": []
   }
 }
 ```
 
 **Important:** Add `.griffin/` to `.gitignore` as it contains local state and potentially sensitive tokens.
 
-## Environments and Targets
+## Environments and Variables
 
-Griffin uses environments to organize target configurations. Each environment contains multiple named targets (key-value pairs of target keys to URLs).
+Griffin uses environments to organize test configurations. Each environment maps to a section in `variables.yaml` which contains environment-specific variable values.
 
-**Local environments:**
+**Example `variables.yaml`:**
 
-- Defined in `.griffin/state.json`
-- Used for local test execution
-- Managed via `griffin local config` commands
+```yaml
+environments:
+  local:
+    api_host: "localhost:3000"
+    api_key: "local-test-key"
+  staging:
+    api_host: "staging.example.com"
+    api_key: "staging-key"
+  production:
+    api_host: "api.example.com"
+    api_key: "prod-key"
+```
 
 **Example workflow:**
 
 ```bash
-# Create local environment with targets
-griffin local config add-target --env local --key api --url http://localhost:3000
-griffin local config add-target --env local --key billing --url http://localhost:3001
+# List available environments
+griffin env list
 
-# Set default environment
-griffin local config set-default-env --env local
+# Run tests against different environments
+griffin local run local
+griffin local run staging
 
-# Run tests using default environment
-griffin local run
+# Sync to hub for specific environment
+griffin hub apply production
 ```
 
 ## Test Plan Discovery
@@ -448,10 +356,7 @@ Required endpoints:
 - `GET /plan` - List plans
 - `GET /runs` - List runs
 - `GET /runs/:id` - Get run details
-- `POST /runs/trigger/:id` - Trigger run
-- `GET /config` - List configurations
-- `PUT /config/:org/:env/targets/:key` - Set target
-- `DELETE /config/:org/:env/targets/:key` - Delete target
+- `POST /runs/trigger/:planId` - Trigger run
 
 ## Development
 
@@ -476,16 +381,15 @@ griffin-cli/
 ├── src/
 │   ├── commands/           # Command implementations
 │   │   ├── local/          # Local execution commands
-│   │   │   ├── run.ts
-│   │   │   └── config.ts
+│   │   │   └── run.ts
 │   │   ├── hub/            # Hub operation commands
 │   │   │   ├── connect.ts
 │   │   │   ├── status.ts
 │   │   │   ├── runs.ts
 │   │   │   ├── plan.ts
 │   │   │   ├── apply.ts
-│   │   │   ├── run.ts
-│   │   │   └── config.ts
+│   │   │   └── run.ts
+│   │   ├── env.ts          # Environment commands
 │   │   ├── init.ts
 │   │   ├── validate.ts
 │   │   └── generate-key.ts
@@ -495,9 +399,9 @@ griffin-cli/
 │   │   ├── diff.ts        # Diff computation
 │   │   ├── discovery.ts   # Plan discovery
 │   │   ├── state.ts       # State management
+│   │   ├── variables.ts   # Variable resolution
 │   │   └── project.ts     # Project detection
 │   ├── schemas/           # Type definitions
-│   │   ├── payload.ts     # Plan payload schemas
 │   │   └── state.ts       # State file schemas
 │   ├── cli.ts             # CLI entry point
 │   └── index.ts           # Public API exports

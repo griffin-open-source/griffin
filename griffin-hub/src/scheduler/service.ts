@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Storage, JobQueueBackend } from "../storage/index.js";
 import type { PlanV1 } from "../schemas/plans.js";
 import { JobRunStatus, TriggerType, type JobRun } from "../schemas/job-run.js";
+import { utcNow } from "../utils/dates.js";
 export interface SchedulerConfig {
   /**
    * Interval between scheduler ticks in milliseconds.
@@ -124,7 +125,7 @@ export class SchedulerService {
   }
 
   private async enqueuePlanExecution(plan: PlanV1): Promise<void> {
-    const now = new Date();
+    const now = utcNow();
     const queue = this.jobQueue.queue<ExecutionJobData>("plan-executions");
 
     const environment = plan.environment ?? "default";
@@ -140,7 +141,7 @@ export class SchedulerService {
       environment: plan.environment,
       status: JobRunStatus.PENDING,
       triggeredBy: TriggerType.SCHEDULE,
-      startedAt: now.toISOString(),
+      startedAt: now,
     });
 
     // Enqueue the job
@@ -153,11 +154,11 @@ export class SchedulerService {
         location,
         executionGroupId,
         plan, // Include full plan for executor/agent
-        scheduledAt: now.toISOString(),
+        scheduledAt: now,
       },
       {
         location,
-        runAt: now,
+        runAt: new Date(now),
         priority: 0,
         maxAttempts: 3,
       },

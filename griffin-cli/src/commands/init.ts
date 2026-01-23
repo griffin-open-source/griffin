@@ -5,6 +5,7 @@ import {
   addEnvironment,
 } from "../core/state.js";
 import { detectProjectId } from "../core/project.js";
+import { terminal } from "../utils/terminal.js";
 
 export interface InitOptions {
   project?: string;
@@ -14,14 +15,13 @@ export interface InitOptions {
  * Initialize griffin in the current directory
  */
 export async function executeInit(options: InitOptions): Promise<void> {
-  console.log("Initializing griffin...");
+  const spinner = terminal.spinner("Initializing griffin...").start();
 
   // Check if already initialized
   if (await stateExists()) {
-    console.error(
-      `Error: Already initialized (state file exists: ${getStateFilePath()})`,
-    );
-    process.exit(1);
+    spinner.fail("Already initialized");
+    terminal.dim(`State file exists: ${getStateFilePath()}`);
+    terminal.exit(1);
   }
 
   // Determine project ID
@@ -30,32 +30,38 @@ export async function executeInit(options: InitOptions): Promise<void> {
     projectId = await detectProjectId();
   }
 
-  console.log(`Project: ${projectId}`);
-  console.log("");
+  spinner.succeed(`Project: ${terminal.colors.cyan(projectId)}`);
 
   // Initialize state file
   await initState(projectId);
-  console.log(`✓ Created state file: ${getStateFilePath()}`);
+  terminal.success(`Created state file: ${terminal.colors.dim(getStateFilePath())}`);
 
-  // Create a default local environment
-  await addEnvironment("local", {});
-  console.log(`✓ Created default 'local' environment`);
+  // Create default environments
+  await addEnvironment("dev", {});
+  await addEnvironment("staging", {});
+  await addEnvironment("production", {});
+  terminal.success("Created default environments (dev, staging, production)");
 
-  console.log("");
-  console.log("Initialization complete!");
-  console.log("");
-  console.log("Next steps:");
-  console.log("  1. Create a variables.yaml file in the project root:");
-  console.log("     environments:");
-  console.log("       local:");
-  console.log("         api-service: http://localhost:3000");
-  console.log(
+  terminal.blank();
+  terminal.success("Initialization complete!");
+  terminal.blank();
+  terminal.info("Next steps:");
+  terminal.dim("  1. Create a variables.yaml file in the project root:");
+  terminal.dim("     environments:");
+  terminal.dim("       dev:");
+  terminal.dim("         api-service: http://localhost:3000");
+  terminal.dim("       staging:");
+  terminal.dim("         api-service: https://staging.api.com");
+  terminal.dim("       production:");
+  terminal.dim("         api-service: https://api.example.com");
+  terminal.dim(
     "  2. Create test plans (*.griffin.ts files in __griffin__/ directories)",
   );
-  console.log("  3. Run tests locally:");
-  console.log("     griffin local run");
-  console.log("  4. Connect to hub (optional):");
-  console.log("     griffin hub connect --url <url> --token <token>");
-  console.log("  5. Deploy to hub:");
-  console.log("     griffin hub apply");
+  terminal.dim("  3. Run tests locally:");
+  terminal.dim("     griffin local run");
+  terminal.dim("  4. Connect to hub (optional):");
+  terminal.dim("     griffin hub connect --url <url> --token <token>");
+  terminal.dim("  5. Deploy to hub:");
+  terminal.dim("     griffin hub apply");
+  terminal.blank();
 }

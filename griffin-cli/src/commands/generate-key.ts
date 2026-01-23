@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { terminal } from "../utils/terminal.js";
 
 /**
  * Generate a cryptographically secure API key for griffin-runner authentication.
@@ -18,16 +19,21 @@ export async function executeGenerateKey(): Promise<void> {
   // Add prefix following the pattern: grfn_sk_<secret>
   const apiKey = `grfn_sk_${keySecret}`;
 
-  console.log("\n✓ Generated API key:\n");
-  console.log(`  ${apiKey}\n`);
-  console.log("⚠️  Store this key securely - it cannot be retrieved later.\n");
-  console.log("To use this key:");
-  console.log(
+  terminal.blank();
+  terminal.success("Generated API key:");
+  terminal.blank();
+  terminal.log(`  ${terminal.colors.cyan(apiKey)}`);
+  terminal.blank();
+  terminal.warn("Store this key securely - it cannot be retrieved later.");
+  terminal.blank();
+  terminal.info("To use this key:");
+  terminal.dim(
     "  1. Add it to your runner's AUTH_API_KEYS environment variable:",
   );
-  console.log(`     AUTH_API_KEYS=${apiKey}`);
-  console.log("  2. Or add it to your .griffinrc.json:");
-  console.log(`     { "runner": { "apiToken": "${apiKey}" } }`);
-  console.log("  3. Or pass it via environment variable:");
-  console.log(`     GRIFFIN_API_TOKEN=${apiKey}\n`);
+  terminal.dim(`     AUTH_API_KEYS=${apiKey}`);
+  terminal.dim("  2. Or add it to your .griffinrc.json:");
+  terminal.dim(`     { "runner": { "apiToken": "${apiKey}" } }`);
+  terminal.dim("  3. Or pass it via environment variable:");
+  terminal.dim(`     GRIFFIN_API_TOKEN=${apiKey}`);
+  terminal.blank();
 }

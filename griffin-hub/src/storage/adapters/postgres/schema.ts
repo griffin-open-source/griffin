@@ -49,8 +49,8 @@ export const plansTable = pgTable("plans", {
   nodes: jsonb("nodes").$type<Node[]>().notNull(),
   edges: jsonb("edges").$type<Edge[]>().notNull(),
   environment: text("environment").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const runsTable = pgTable("runs", {
@@ -62,14 +62,14 @@ export const runsTable = pgTable("runs", {
   location: text("location").notNull(),
   environment: text("environment").notNull(),
   triggeredBy: triggerTypeEnum("triggered_by").notNull(),
-  startedAt: timestamp("started_at").notNull(),
-  completedAt: timestamp("completed_at"),
+  startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
   status: jobRunStatusEnum("status").notNull(),
   duration_ms: integer("duration_ms"),
   success: boolean("success"),
   errors: jsonb("errors").$type<string[]>(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const jobsTable = pgTable("jobs", {
@@ -81,21 +81,21 @@ export const jobsTable = pgTable("jobs", {
   attempts: integer("attempts").notNull().default(0),
   maxAttempts: integer("max_attempts").notNull().default(3),
   priority: integer("priority").notNull().default(0),
-  scheduledFor: timestamp("scheduled_for").notNull(),
-  startedAt: timestamp("started_at"),
-  completedAt: timestamp("completed_at"),
+  scheduledFor: timestamp("scheduled_for", { withTimezone: true }).notNull(),
+  startedAt: timestamp("started_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
   error: text("error"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const agentsTable = pgTable("agents", {
   id: text("id").primaryKey(),
   location: text("location").notNull(),
   status: agentStatusEnum("status").notNull(),
-  lastHeartbeat: timestamp("last_heartbeat").notNull(),
-  registeredAt: timestamp("registered_at").notNull(),
+  lastHeartbeat: timestamp("last_heartbeat", { withTimezone: true }).notNull(),
+  registeredAt: timestamp("registered_at", { withTimezone: true }).notNull(),
   metadata: jsonb("metadata").$type<Record<string, string>>(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

@@ -3,6 +3,7 @@ import type { PlanV1 } from "@griffin-app/griffin-hub-sdk";
 import { createSdk } from "../../core/sdk.js";
 import { discoverPlans, formatDiscoveryErrors } from "../../core/discovery.js";
 import { computeDiff } from "../../core/diff.js";
+import { terminal } from "../../utils/terminal.js";
 
 export interface RunOptions {
   plan: string;
@@ -23,16 +24,16 @@ export async function executeRun(options: RunOptions): Promise<void> {
     const envName = await resolveEnvironment(options.env);
 
     if (!state.runner?.baseUrl) {
-      console.error("Error: Hub connection not configured.");
-      console.log("Connect with:");
-      console.log("  griffin hub connect --url <url> --token <token>");
-      process.exit(1);
+      terminal.error("Hub connection not configured.");
+      terminal.dim("Connect with:");
+      terminal.dim("  griffin hub connect --url <url> --token <token>");
+      terminal.exit(1);
     }
 
     // Create SDK clients
     const sdk = createSdk({
-      baseUrl: state.runner.baseUrl,
-      apiToken: state.runner.apiToken || undefined,
+      baseUrl: state.runner?.baseUrl || "",
+      apiToken: state.runner?.apiToken || "",
     });
 
     // Discover local plans
@@ -43,28 +44,33 @@ export async function executeRun(options: RunOptions): Promise<void> {
       "dist/**",
     ];
 
+    const spinner = terminal.spinner("Discovering local plans...").start();
     const { plans: discoveredPlans, errors } = await discoverPlans(
       discoveryPattern,
       discoveryIgnore,
     );
 
     if (errors.length > 0) {
-      console.error(formatDiscoveryErrors(errors));
-      process.exit(1);
+      spinner.fail("Discovery failed");
+      terminal.error(formatDiscoveryErrors(errors));
+      terminal.exit(1);
     }
 
     // Find local plan by name
     const localPlan = discoveredPlans.find((p) => p.plan.name === options.plan);
     if (!localPlan) {
-      console.error(`Error: Plan "${options.plan}" not found locally`);
-      console.error("Available plans:");
+      spinner.fail(`Plan "${options.plan}" not found locally`);
+      terminal.blank();
+      terminal.info("Available plans:");
       for (const p of discoveredPlans) {
-        console.error(`  - ${p.plan.name}`);
+        terminal.dim(`  - ${p.plan.name}`);
       }
-      process.exit(1);
+      terminal.exit(1);
     }
+    spinner.succeed(`Found local plan: ${terminal.colors.cyan(options.plan)}`);
 
     // Fetch remote plans for this project + environment
+    const fetchSpinner = terminal.spinner("Checking hub...").start();
     const response = await sdk.getPlan({
       query: {
         projectId: state.projectId,
@@ -76,13 +82,14 @@ export async function executeRun(options: RunOptions): Promise<void> {
     // Find remote plan by name
     const remotePlan = remotePlans.find((p) => p.name === options.plan);
     if (!remotePlan) {
-      console.error(`Error: Plan "${options.plan}" not found on hub`);
-      console.error("Run 'griffin hub apply' to sync your plans first");
-      process.exit(1);
+      fetchSpinner.fail(`Plan "${options.plan}" not found on hub`);
+      terminal.dim("Run 'griffin hub apply' to sync your plans first");
+      terminal.exit(1);
     }
+    fetchSpinner.succeed("Plan found on hub");
 
     // Compute diff to check if local plan differs from remote
-    const diff = computeDiff([localPlan.plan], [remotePlan] as PlanV1[], {
+    const diff = computeDiff([localPlan!.plan], [remotePlan!] as PlanV1[], {
       includeDeletions: false,
     });
 
@@ -91,42 +98,43 @@ export async function executeRun(options: RunOptions): Promise<void> {
       diff.actions.some((a) => a.type === "update" || a.type === "create");
 
     if (hasDiff && !options.force) {
-      console.error(`Error: Local plan "${options.plan}" differs from hub`);
-      console.error("");
-      console.error(
-        "The plan on the hub is different from your local version.",
-      );
-      console.error(
-        "Run 'griffin hub apply' to sync, or use --force to run anyway.",
-      );
-      process.exit(1);
+      terminal.error(`Local plan "${options.plan}" differs from hub`);
+      terminal.blank();
+      terminal.warn("The plan on the hub is different from your local version.");
+      terminal.dim("Run 'griffin hub apply' to sync, or use --force to run anyway.");
+      terminal.exit(1);
     }
 
     // Trigger the run
-    console.log(`Triggering run for plan: ${options.plan}`);
-    console.log(`Target environment: ${envName}`);
+    terminal.blank();
+    terminal.info(`Triggering run for plan: ${terminal.colors.cyan(options.plan)}`);
+    terminal.log(`Target environment: ${terminal.colors.cyan(envName)}`);
 
     if (hasDiff && options.force) {
-      console.log("⚠️  Running with --force (local changes not applied)");
+      terminal.warn("Running with --force (local changes not applied)");
     }
 
+    const triggerSpinner = terminal.spinner("Triggering run...").start();
     const runResponse = await sdk.postRunsTriggerByPlanId({
       path: {
-        planId: remotePlan.id,
+        planId: remotePlan!.id,
       },
       body: {
         environment: envName,
       },
     });
     const run = runResponse?.data?.data!;
-    console.log(`Run ID: ${run.id}`);
-    console.log(`Status: ${run.status}`);
-    console.log(`Started: ${new Date(run.startedAt).toLocaleString()}`);
+    triggerSpinner.succeed("Run triggered");
+    
+    terminal.blank();
+    terminal.log(`Run ID: ${terminal.colors.dim(run.id)}`);
+    terminal.log(`Status: ${terminal.colors.cyan(run.status)}`);
+    terminal.log(`Started: ${terminal.colors.dim(new Date(run.startedAt).toLocaleString())}`);
 
     // Wait for completion if requested
     if (options.wait) {
-      console.log("");
-      console.log("Waiting for run to complete...");
+      terminal.blank();
+      const waitSpinner = terminal.spinner("Waiting for run to complete...").start();
 
       const runId = run.id;
       let completed = false;
@@ -144,38 +152,41 @@ export async function executeRun(options: RunOptions): Promise<void> {
         if (run.status === "completed" || run.status === "failed") {
           completed = true;
 
-          console.log("");
-          console.log(`✓ Run ${run.status}`);
+          if (run.success) {
+            waitSpinner.succeed(`Run ${run.status}`);
+          } else {
+            waitSpinner.fail(`Run ${run.status}`);
+          }
 
+          terminal.blank();
           if (run.duration_ms) {
-            console.log(`Duration: ${(run.duration_ms / 1000).toFixed(2)}s`);
+            terminal.log(`Duration: ${terminal.colors.dim((run.duration_ms / 1000).toFixed(2) + "s")}`);
           }
 
           if (run.success !== undefined) {
-            console.log(`Success: ${run.success ? "Yes" : "No"}`);
+            const successText = run.success ? terminal.colors.green("Yes") : terminal.colors.red("No");
+            terminal.log(`Success: ${successText}`);
           }
 
           if (run.errors && run.errors.length > 0) {
-            console.log("");
-            console.log("Errors:");
+            terminal.blank();
+            terminal.error("Errors:");
             for (const error of run.errors) {
-              console.log(`  - ${error}`);
+              terminal.dim(`  - ${error}`);
             }
           }
 
           if (!run.success) {
-            process.exit(1);
+            terminal.exit(1);
           }
-        } else {
-          process.stdout.write(".");
         }
       }
     } else {
-      console.log("");
-      console.log("Run started. Use 'griffin hub runs' to check progress.");
+      terminal.blank();
+      terminal.dim("Run started. Use 'griffin hub runs' to check progress.");
     }
   } catch (error) {
-    console.error(`Error: ${(error as Error).message}`);
-    process.exit(1);
+    terminal.error((error as Error).message);
+    terminal.exit(1);
   }
 }

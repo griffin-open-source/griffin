@@ -59,17 +59,21 @@ Both projects use Vitest.
 
 ```bash
 # Run tests locally
-griffin local run
-griffin local run --env production
+griffin local run                   # use default environment
+griffin local run production        # use production environment
+
+# Environment commands
+griffin env list                    # list available environments
 
 # Hub operations
 griffin hub connect --url https://hub.example.com --token <token>
 griffin hub status
-griffin hub plan                    # show planned changes
-griffin hub apply                   # apply changes to hub
-griffin hub apply --prune           # also delete removed plans
+griffin hub plan                    # show planned changes for default environment
+griffin hub plan production         # show planned changes for production
+griffin hub apply                   # apply changes for default environment
+griffin hub apply production --prune # apply and delete removed plans
 griffin hub runs --limit 20         # show recent runs
-griffin hub run --plan my-test --env production
+griffin hub run production --plan my-test # trigger run in production
 
 # Other commands
 griffin init                        # initialize griffin in directory

@@ -4,11 +4,9 @@ import {
   PlanV1,
   Endpoint,
   JsonAssertion,
-  ResponseFormat,
   Wait,
   Assertion,
   UnaryPredicate,
-  BinaryPredicateOperator,
   BinaryPredicate,
 } from "@griffin-app/griffin-hub-sdk";
 
@@ -30,6 +28,7 @@ import {
   planHasSecrets,
   SecretResolutionError,
 } from "./secrets/index.js";
+import { utcNow } from "./utils/dates.js";
 
 // Define context type that matches ts-edge's GraphNodeExecuteContext (not exported from library)
 interface NodeExecuteContext {
@@ -435,7 +434,7 @@ export async function executePlanV1(
         try {
           await options.statusCallbacks.onComplete({
             status: "failed",
-            completedAt: new Date().toISOString(),
+            completedAt: utcNow(),
             duration_ms: Date.now() - startTime,
             success: false,
             errors: finalErrors,
@@ -476,7 +475,7 @@ export async function executePlanV1(
       try {
         await options.statusCallbacks.onComplete({
           status: success ? "completed" : "failed",
-          completedAt: new Date().toISOString(),
+          completedAt: utcNow(),
           duration_ms: duration,
           success,
           ...(finalState.errors.length > 0 && { errors: finalState.errors }),
@@ -518,7 +517,7 @@ export async function executePlanV1(
       try {
         await options.statusCallbacks.onComplete({
           status: "failed",
-          completedAt: new Date().toISOString(),
+          completedAt: utcNow(),
           duration_ms: duration,
           success: false,
           errors: [errorMessage],

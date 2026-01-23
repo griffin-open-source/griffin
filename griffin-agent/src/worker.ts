@@ -7,6 +7,7 @@ import type {
   HttpClientAdapter,
   ExecutionOptions,
 } from "griffin-plan-executor";
+import { utcNow } from "./utils/dates.js";
 
 export interface WorkerConfig {
   /**
@@ -190,7 +191,7 @@ export class WorkerService {
       try {
         await this.runsApi.runsIdPatch(data.jobRunId, {
           status: "failed",
-          completedAt: new Date().toISOString(),
+          completedAt: utcNow(),
           errors: [error instanceof Error ? error.message : String(error)],
         });
       } catch (updateError) {

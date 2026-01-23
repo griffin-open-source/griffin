@@ -1,13 +1,13 @@
-import type { TestPlanV1 } from "@griffin-app/griffin-ts/types";
-import { RawTestPlan } from "./discovery.js";
+import type { PlanV1 } from "@griffin-app/griffin-hub-sdk";
+import type { PlanDSL } from "@griffin-app/griffin-ts/types";
 import { comparePlans, type PlanChanges } from "./plan-diff.js";
 
 export type DiffActionType = "create" | "update" | "delete" | "noop";
 
 export interface DiffAction {
   type: DiffActionType;
-  plan: RawTestPlan | null; // Local plan (null for delete actions)
-  remotePlan: TestPlanV1 | null; // Hub plan (null for create actions)
+  plan: PlanDSL | null; // Local plan (null for delete actions)
+  remotePlan: PlanV1 | null; // Hub plan (null for create actions)
   reason: string;
   changes?: PlanChanges; // Granular changes for 'update' actions
 }
@@ -37,14 +37,14 @@ export interface DiffOptions {
  * - NOOP: Plan exists in both with same content
  */
 export function computeDiff(
-  localPlans: RawTestPlan[],
-  remotePlans: TestPlanV1[],
+  localPlans: PlanDSL[],
+  remotePlans: PlanV1[],
   options: DiffOptions,
 ): DiffResult {
   const actions: DiffAction[] = [];
 
   // Build lookup: remote plans by name
-  const remoteByName = new Map<string, TestPlanV1>();
+  const remoteByName = new Map<string, PlanV1>();
   for (const plan of remotePlans) {
     remoteByName.set(plan.name, plan);
   }

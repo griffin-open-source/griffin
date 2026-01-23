@@ -1,6 +1,6 @@
 import { loadState, resolveEnvironment } from "../../core/state.js";
 import { discoverPlans, formatDiscoveryErrors } from "../../core/discovery.js";
-import { createSdkClients } from "../../core/sdk.js";
+import { createSdk } from "../../core/sdk.js";
 import { computeDiff, formatDiff, formatDiffJson } from "../../core/diff.js";
 
 export interface PlanOptions {
@@ -45,14 +45,19 @@ export async function executePlan(options: PlanOptions): Promise<void> {
     }
 
     // Create SDK clients
-    const { planApi } = createSdkClients({
+    const sdk = createSdk({
       baseUrl: state.runner.baseUrl,
       apiToken: state.runner.apiToken || undefined,
     });
 
     // Fetch remote plans for this project + environment
-    const response = await planApi.planGet(state.projectId, envName);
-    const remotePlans = response.data.data.map((p: any) => p);
+    const response = await sdk.getPlan({
+      query: {
+        projectId: state.projectId,
+        environment: envName,
+      },
+    });
+    const remotePlans = response?.data?.data!;
 
     // Compute diff (no deletions shown by default)
     const diff = computeDiff(

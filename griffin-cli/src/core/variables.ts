@@ -56,7 +56,7 @@ export async function loadVariables(
 /**
  * Check if a value is a variable reference.
  */
-function isVariableRef(value: unknown): value is VariableRef {
+function isVariableRef<A>(value: A): value is A & VariableRef {
   if (typeof value !== "object" || value === null) {
     return false;
   }

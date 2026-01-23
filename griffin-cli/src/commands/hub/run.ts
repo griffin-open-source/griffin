@@ -1,6 +1,6 @@
 import { loadState, resolveEnvironment } from "../../core/state.js";
-import type { TestPlanV1 } from "@griffin-app/griffin-ts/types";
-import { createSdkClients } from "../../core/sdk.js";
+import type { PlanV1 } from "@griffin-app/griffin-hub-sdk";
+import { createSdk } from "../../core/sdk.js";
 import { discoverPlans, formatDiscoveryErrors } from "../../core/discovery.js";
 import { computeDiff } from "../../core/diff.js";
 
@@ -30,7 +30,7 @@ export async function executeRun(options: RunOptions): Promise<void> {
     }
 
     // Create SDK clients
-    const { planApi, runsApi } = createSdkClients({
+    const sdk = createSdk({
       baseUrl: state.runner.baseUrl,
       apiToken: state.runner.apiToken || undefined,
     });
@@ -65,8 +65,13 @@ export async function executeRun(options: RunOptions): Promise<void> {
     }
 
     // Fetch remote plans for this project + environment
-    const response = await planApi.planGet(state.projectId, envName);
-    const remotePlans = response.data.data;
+    const response = await sdk.getPlan({
+      query: {
+        projectId: state.projectId,
+        environment: envName,
+      },
+    });
+    const remotePlans = response?.data?.data!;
 
     // Find remote plan by name
     const remotePlan = remotePlans.find((p) => p.name === options.plan);
@@ -77,7 +82,7 @@ export async function executeRun(options: RunOptions): Promise<void> {
     }
 
     // Compute diff to check if local plan differs from remote
-    const diff = computeDiff([localPlan.plan], [remotePlan] as TestPlanV1[], {
+    const diff = computeDiff([localPlan.plan], [remotePlan] as PlanV1[], {
       includeDeletions: false,
     });
 
@@ -105,28 +110,36 @@ export async function executeRun(options: RunOptions): Promise<void> {
       console.log("⚠️  Running with --force (local changes not applied)");
     }
 
-    const runResponse = await runsApi.runsTriggerPlanIdPost(remotePlan.id, {
-      environment: envName,
+    const runResponse = await sdk.postRunsTriggerByPlanId({
+      path: {
+        planId: remotePlan.id,
+      },
+      body: {
+        environment: envName,
+      },
     });
-    console.log(`Run ID: ${runResponse.data.data.id}`);
-    console.log(`Status: ${runResponse.data.data.status}`);
-    console.log(
-      `Started: ${new Date(runResponse.data.data.startedAt).toLocaleString()}`,
-    );
+    const run = runResponse?.data?.data!;
+    console.log(`Run ID: ${run.id}`);
+    console.log(`Status: ${run.status}`);
+    console.log(`Started: ${new Date(run.startedAt).toLocaleString()}`);
 
     // Wait for completion if requested
     if (options.wait) {
       console.log("");
       console.log("Waiting for run to complete...");
 
-      const runId = runResponse.data.data.id;
+      const runId = run.id;
       let completed = false;
 
       while (!completed) {
         await new Promise((resolve) => setTimeout(resolve, 2000)); // Poll every 2 seconds
 
-        const { data: runStatusResponse } = await runsApi.runsIdGet(runId);
-        const run = runStatusResponse.data;
+        const runStatusResponse = await sdk.getRunsById({
+          path: {
+            id: runId,
+          },
+        });
+        const run = runStatusResponse?.data?.data!;
 
         if (run.status === "completed" || run.status === "failed") {
           completed = true;

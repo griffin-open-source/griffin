@@ -35,7 +35,7 @@ export { computeDiff, formatDiff, formatDiffJson } from "./core/diff.js";
 
 export { applyDiff, formatApplyResult } from "./core/apply.js";
 
-export { createSdkClients, injectProjectId } from "./core/sdk.js";
+export { createSdk } from "./core/sdk.js";
 
 export { detectProjectId } from "./core/project.js";
 

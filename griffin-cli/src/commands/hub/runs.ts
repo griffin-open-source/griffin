@@ -1,5 +1,5 @@
 import { loadState } from "../../core/state.js";
-import { createSdkClients } from "../../core/sdk.js";
+import { createSdk } from "../../core/sdk.js";
 
 export interface RunsOptions {
   plan?: string;
@@ -22,7 +22,7 @@ export async function executeRuns(options: RunsOptions): Promise<void> {
     }
 
     // Create SDK clients
-    const { runsApi } = createSdkClients({
+    const sdk = createSdk({
       baseUrl: state.runner.baseUrl,
       apiToken: state.runner.apiToken || undefined,
     });
@@ -32,24 +32,30 @@ export async function executeRuns(options: RunsOptions): Promise<void> {
 
     // Get recent runs
     const limit = options.limit || 10;
-    const response = await runsApi.runsGet(options.plan, undefined, limit, 0);
-    const runs = response.data as any;
+    const response = await sdk.getRuns({
+      query: {
+        planId: options.plan,
+        limit: limit,
+        offset: 0,
+      },
+    });
+    const runsData = response?.data!;
 
-    if (runs.total === 0) {
+    if (runsData.total === 0) {
       console.log("No runs found.");
       return;
     }
 
-    console.log(`Recent runs (${runs.total} total):`);
+    console.log(`Recent runs (${runsData.total} total):`);
     console.log("");
 
-    for (const run of runs.runs) {
+    for (const run of runsData.data) {
       const statusIcon = getStatusIcon(run.status, run.success);
       const duration = run.duration_ms
         ? ` (${(run.duration_ms / 1000).toFixed(2)}s)`
         : "";
 
-      console.log(`${statusIcon} ${run.planName}`);
+      console.log(`${statusIcon} ${run.planId}`);
       console.log(`  ID: ${run.id}`);
       console.log(`  Status: ${run.status}${duration}`);
       console.log(`  Started: ${new Date(run.startedAt).toLocaleString()}`);

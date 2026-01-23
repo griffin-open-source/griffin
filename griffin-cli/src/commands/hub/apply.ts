@@ -1,9 +1,9 @@
 import { loadState, resolveEnvironment } from "../../core/state.js";
-import type { TestPlanV1 } from "@griffin-app/griffin-ts/types";
+import type { PlanV1 } from "@griffin-app/griffin-hub-sdk";
 import { discoverPlans, formatDiscoveryErrors } from "../../core/discovery.js";
 import { computeDiff, formatDiff } from "../../core/diff.js";
 import { applyDiff, formatApplyResult } from "../../core/apply.js";
-import { createSdkClients } from "../../core/sdk.js";
+import { createSdk } from "../../core/sdk.js";
 
 export interface ApplyOptions {
   autoApprove?: boolean;
@@ -35,7 +35,7 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
     console.log("");
 
     // Create SDK clients
-    const { planApi } = createSdkClients({
+    const sdk = createSdk({
       baseUrl: state.runner.baseUrl,
       apiToken: state.runner.apiToken || undefined,
     });
@@ -59,8 +59,13 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
     }
 
     // Fetch remote plans for this project + environment
-    const response = await planApi.planGet(state.projectId, envName);
-    const remotePlans = response.data.data as TestPlanV1[];
+    const response = await sdk.getPlan({
+      query: {
+        projectId: state.projectId,
+        environment: envName,
+      },
+    });
+    const remotePlans = response?.data?.data!;
 
     // Compute diff (include deletions if --prune)
     const diff = computeDiff(
@@ -100,7 +105,7 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
     }
 
     // Apply changes with environment injection
-    const result = await applyDiff(diff, planApi, state.projectId, envName, {
+    const result = await applyDiff(diff, sdk, state.projectId, envName, {
       dryRun: options.dryRun,
     });
 

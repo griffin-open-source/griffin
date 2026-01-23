@@ -1,35 +1,23 @@
-import { PlanApi, RunsApi, Configuration } from "@griffin-app/griffin-hub-sdk";
-import type { TestPlanV1 } from "@griffin-app/griffin-ts/types";
+import { GriffinHubSdk } from "@griffin-app/griffin-hub-sdk";
+import { createClient } from "@griffin-app/griffin-hub-sdk/client";
 /**
  * Create configured SDK API instances
  */
-export function createSdkClients(config: {
+export function createSdk(config: {
   baseUrl: string;
   apiToken?: string;
-}): {
-  planApi: PlanApi;
-  runsApi: RunsApi;
-} {
-  const configuration = new Configuration({
-    basePath: config.baseUrl.replace(/\/$/, ""), // Remove trailing slash
-    accessToken: config.apiToken,
+}): GriffinHubSdk {
+  const client = createClient({
+    baseURL: config.baseUrl,
+  });
+  client.setConfig({
+    auth() {
+      return config.apiToken;
+    },
+  });
+  const sdk = new GriffinHubSdk({
+    client: client,
   });
 
-  return {
-    planApi: new PlanApi(configuration),
-    runsApi: new RunsApi(configuration),
-  };
-}
-
-/**
- * Inject projectId into a plan payload before sending to runner
- */
-export function injectProjectId(
-  plan: Omit<TestPlanV1, "project">,
-  projectId: string,
-): TestPlanV1 {
-  return {
-    ...plan,
-    project: projectId,
-  };
+  return sdk;
 }

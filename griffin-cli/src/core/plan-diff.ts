@@ -1,13 +1,17 @@
 //import type { TestPlanV1 } from "griffin-hub-sdk";
-import type { RawTestPlan } from "./discovery.js";
 import type {
-  Node,
+  PlanDSL,
+  NodeDSL,
   Edge,
+  EndpointDSL,
+} from "@griffin-app/griffin-ts/types";
+import {
+  PlanV1,
+  Node,
   Endpoint,
   Wait,
   Assertions,
-  TestPlanV1,
-} from "@griffin-app/griffin-ts/types";
+} from "@griffin-app/griffin-hub-sdk";
 import objectHash from "object-hash";
 import { NodeType } from "@griffin-app/griffin-ts/schema";
 
@@ -26,7 +30,7 @@ export interface FieldChange {
 export interface NodeChange {
   type: "add" | "remove" | "modify";
   nodeId: string;
-  nodeType: NodeType;
+  nodeType: NodeType.ASSERTION | NodeType.ENDPOINT | NodeType.WAIT;
   summary: string; // e.g., "GET /health" or "wait 5000ms"
   fieldChanges: FieldChange[]; // Empty for add/remove, populated for modify
 }
@@ -53,10 +57,7 @@ export interface PlanChanges {
 /**
  * Compare two test plans and return granular changes
  */
-export function comparePlans(
-  local: RawTestPlan,
-  remote: TestPlanV1,
-): PlanChanges {
+export function comparePlans(local: PlanDSL, remote: PlanV1): PlanChanges {
   const nodeChanges = compareNodes(local.nodes, remote.nodes);
   const edgeChanges = compareEdges(local.edges, remote.edges);
   const topLevelChanges = compareTopLevel(local, remote);
@@ -77,7 +78,10 @@ export function comparePlans(
 /**
  * Compare nodes between local and remote plans
  */
-function compareNodes(localNodes: Node[], remoteNodes: Node[]): NodeChange[] {
+function compareNodes(
+  localNodes: NodeDSL[],
+  remoteNodes: Node[],
+): NodeChange[] {
   const changes: NodeChange[] = [];
 
   // Build map of remote nodes by id
@@ -125,7 +129,7 @@ function compareNodes(localNodes: Node[], remoteNodes: Node[]): NodeChange[] {
       changes.push({
         type: "remove",
         nodeId: remote.id,
-        nodeType: remote.type,
+        nodeType: remote.type as NodeType,
         summary: getNodeSummary(remote),
         fieldChanges: [],
       });
@@ -138,7 +142,7 @@ function compareNodes(localNodes: Node[], remoteNodes: Node[]): NodeChange[] {
 /**
  * Get a human-readable summary of a node
  */
-function getNodeSummary(node: Node): string {
+function getNodeSummary(node: Node | NodeDSL): string {
   switch (node.type) {
     case "ENDPOINT":
       return `${node.method} ${formatValue(node.path)}`;
@@ -172,7 +176,7 @@ function formatValue(value: unknown): string {
 /**
  * Compare fields within two nodes of the same type
  */
-function compareNodeFields(local: Node, remote: Node): FieldChange[] {
+function compareNodeFields(local: NodeDSL, remote: Node): FieldChange[] {
   const changes: FieldChange[] = [];
 
   // Type should match, but check anyway
@@ -186,13 +190,13 @@ function compareNodeFields(local: Node, remote: Node): FieldChange[] {
   }
 
   switch (local.type) {
-    case "ENDPOINT":
-      compareEndpointFields(local as Endpoint, remote as Endpoint, changes);
+    case NodeType.ENDPOINT:
+      compareEndpointFields(local, remote as Endpoint, changes);
       break;
-    case "WAIT":
-      compareWaitFields(local as Wait, remote as Wait, changes);
+    case NodeType.WAIT:
+      compareWaitFields(local, remote as Wait, changes);
       break;
-    case "ASSERTION":
+    case NodeType.ASSERTION:
       compareAssertionFields(
         local as Assertions,
         remote as Assertions,
@@ -208,7 +212,7 @@ function compareNodeFields(local: Node, remote: Node): FieldChange[] {
  * Compare fields specific to Endpoint nodes
  */
 function compareEndpointFields(
-  local: Endpoint,
+  local: EndpointDSL,
   remote: Endpoint,
   changes: FieldChange[],
 ): void {
@@ -316,10 +320,7 @@ function compareEdges(localEdges: Edge[], remoteEdges: Edge[]): EdgeChange[] {
 /**
  * Compare top-level fields: frequency, version, locations
  */
-function compareTopLevel(
-  local: RawTestPlan,
-  remote: TestPlanV1,
-): FieldChange[] {
+function compareTopLevel(local: PlanDSL, remote: PlanV1): FieldChange[] {
   const changes: FieldChange[] = [];
 
   // Compare frequency

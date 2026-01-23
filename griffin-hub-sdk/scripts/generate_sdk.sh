@@ -39,13 +39,15 @@ echo "🔄 Patched .components.schemas.Node to use oneOf"
 
 
 # Generate the SDK using openapi-generator
-echo "🔨 Generating TypeScript SDK with openapi-generator..."
-find "$SDK_DIR/docs" -type f -delete || true
-npx @openapitools/openapi-generator-cli generate \
-    -i "$SPEC_FILE" \
-    -g typescript-axios \
-    -o "$SDK_DIR" \
-    --additional-properties=npmName=griffin-hub-sdk,supportsES6=true,typescriptThreePlus=true
+echo "🔨 Generating TypeScript SDK with hey-api/openapi-ts..."
+cd $SDK_DIR
+npm run generate
+#find "$SDK_DIR/docs" -type f -delete || true
+#npx @openapitools/openapi-generator-cli generate \
+#    -i "$SPEC_FILE" \
+#    -g typescript-axios \
+#    -o "$SDK_DIR" \
+#    --additional-properties=npmName=griffin-hub-sdk,supportsES6=true,typescriptThreePlus=true
 
 (cd $SDK_DIR && npm run build)
 #echo "🔨 Generating TypeScript SDK with hey-api/openapi-ts..."

@@ -1,5 +1,5 @@
 import { Type, type Static } from "typebox";
-import { StringEnum, Ref } from "./shared.js";
+import { StringEnum } from "./shared.js";
 
 export const TEST_PLAN_VERSION = "1.0";
 
@@ -27,9 +27,9 @@ export const StringLiteralSchema = Type.Object({
 }, { $id: "StringLiteral" });
 // Union type for values that can be either a literal or a secret reference
 export const StringSchema = Type.Union([
-  Ref(StringLiteralSchema),
-  Ref(SecretRefSchema),
-  Ref(VariableRefSchema),
+  StringLiteralSchema,
+  SecretRefSchema,
+  VariableRefSchema,
 ]);
 
 export enum FrequencyUnit {
@@ -117,7 +117,7 @@ export const EndpointDSLSchema = Type.Object(
     base: StringSchema,
     headers: Type.Optional(Type.Record(Type.String(), StringSchema)),
     body: Type.Optional(Type.Any()), // Body can contain nested SecretRefs
-    response_format: Ref(ResponseFormatSchema),
+    response_format: ResponseFormatSchema,
   },
   { $id: "Endpoint" },
 );
@@ -130,7 +130,7 @@ export const FrequencyUnitSchema = StringEnum(
 export const FrequencySchema = Type.Object(
   {
     every: Type.Number(),
-    unit: Ref(FrequencyUnitSchema),
+    unit: FrequencyUnitSchema,
   },
   { $id: "Frequency" },
 );
@@ -196,7 +196,7 @@ export const JSONAccessorSchema = StringEnum(
 export const JSONAssertionSchema = Type.Object(
   {
     nodeId: Type.String(),
-    accessor: Ref(JSONAccessorSchema),
+    accessor: JSONAccessorSchema,
     path: JSONPathSchema,
     predicate: Type.Union([
       UnaryPredicateSchema,
@@ -228,7 +228,7 @@ export const TextAssertionSchema = Type.Object(
 );
 
 export const AssertionSchema = Type.Union(
-  [Ref(JSONAssertionSchema), Ref(XMLAssertionSchema), Ref(TextAssertionSchema)],
+  [JSONAssertionSchema, XMLAssertionSchema, TextAssertionSchema],
   { $id: "Assertion" },
 );
 
@@ -236,13 +236,13 @@ export const AssertionsSchema = Type.Object(
   {
     id: Type.String(),
     type: Type.Literal(NodeType.ASSERTION),
-    assertions: Type.Array(Ref(AssertionSchema)),
+    assertions: Type.Array(AssertionSchema),
   },
   { $id: "Assertions" },
 );
 
 export const NodeDSLSchema = Type.Union(
-  [Ref(EndpointDSLSchema), Ref(WaitSchema), Ref(AssertionsSchema)],
+  [EndpointDSLSchema, WaitSchema, AssertionsSchema],
   { $id: "NodeDSL" },
 );
 
@@ -260,8 +260,8 @@ export const PlanDSLSchema = Type.Object(
     name: Type.String(),
     version: Type.Literal(TEST_PLAN_VERSION),
     frequency: FrequencySchema,
-    nodes: Type.Array(Ref(NodeDSLSchema)),
-    edges: Type.Array(Ref(EdgeSchema)),
+    nodes: Type.Array(NodeDSLSchema),
+    edges: Type.Array(EdgeSchema),
   },
   {
     $id: "TestPlanV1",

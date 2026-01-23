@@ -7,7 +7,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "generate": "npx @hey-api/openapi-ts"
-    
   },
   "keywords": [],
   "author": "",

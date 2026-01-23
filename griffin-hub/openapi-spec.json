@@ -38,17 +38,28 @@
           },
           "version": {
             "type": "string",
-            "enum": ["1.0"]
+            "enum": [
+              "1.0"
+            ]
           },
           "frequency": {
             "type": "object",
-            "required": ["every", "unit"],
+            "required": [
+              "every",
+              "unit"
+            ],
             "properties": {
               "every": {
                 "type": "number"
               },
               "unit": {
-                "$ref": "#/components/schemas/FrequencyUnit"
+                "type": "string",
+                "enum": [
+                  "MINUTE",
+                  "HOUR",
+                  "DAY"
+                ],
+                "title": "FrequencyUnit"
               }
             },
             "title": "Frequency"
@@ -60,13 +71,377 @@
           "nodes": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Node"
+              "anyOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "type",
+                    "method",
+                    "path",
+                    "base",
+                    "response_format"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "ENDPOINT"
+                      ]
+                    },
+                    "method": {
+                      "type": "string",
+                      "enum": [
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "PATCH",
+                        "HEAD",
+                        "OPTIONS",
+                        "CONNECT",
+                        "TRACE"
+                      ],
+                      "title": "HttpMethod"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "base": {
+                      "type": "string"
+                    },
+                    "headers": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "required": [
+                              "$secret"
+                            ],
+                            "properties": {
+                              "$secret": {
+                                "type": "object",
+                                "required": [
+                                  "provider",
+                                  "ref"
+                                ],
+                                "properties": {
+                                  "provider": {
+                                    "type": "string"
+                                  },
+                                  "ref": {
+                                    "type": "string"
+                                  },
+                                  "version": {
+                                    "type": "string"
+                                  },
+                                  "field": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            },
+                            "title": "SecretRef"
+                          },
+                          {
+                            "type": "object",
+                            "required": [
+                              "$literal"
+                            ],
+                            "properties": {
+                              "$literal": {
+                                "type": "string"
+                              }
+                            },
+                            "title": "StringLiteral"
+                          }
+                        ],
+                        "title": "SecretOrString"
+                      }
+                    },
+                    "body": {},
+                    "response_format": {
+                      "type": "string",
+                      "enum": [
+                        "JSON",
+                        "XML",
+                        "TEXT"
+                      ],
+                      "title": "ResponseFormat"
+                    }
+                  },
+                  "title": "Endpoint"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "type",
+                    "duration_ms"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "WAIT"
+                      ]
+                    },
+                    "duration_ms": {
+                      "type": "number"
+                    }
+                  },
+                  "title": "Wait"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "type",
+                    "assertions"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "ASSERTION"
+                      ]
+                    },
+                    "assertions": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "required": [
+                              "nodeId",
+                              "accessor",
+                              "path",
+                              "predicate",
+                              "assertionType"
+                            ],
+                            "properties": {
+                              "nodeId": {
+                                "type": "string"
+                              },
+                              "accessor": {
+                                "type": "string",
+                                "enum": [
+                                  "body",
+                                  "headers",
+                                  "status"
+                                ],
+                                "title": "JSONAccessor"
+                              },
+                              "path": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "predicate": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "IS_NULL",
+                                      "IS_NOT_NULL",
+                                      "IS_TRUE",
+                                      "IS_FALSE",
+                                      "IS_EMPTY",
+                                      "IS_NOT_EMPTY"
+                                    ],
+                                    "title": "UnaryPredicate"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "required": [
+                                      "expected",
+                                      "operator"
+                                    ],
+                                    "properties": {
+                                      "expected": {},
+                                      "operator": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "EQUAL"
+                                            ]
+                                          },
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "NOT_EQUAL"
+                                            ]
+                                          },
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "GREATER_THAN"
+                                            ]
+                                          },
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "LESS_THAN"
+                                            ]
+                                          },
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "GREATER_THAN_OR_EQUAL"
+                                            ]
+                                          },
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "LESS_THAN_OR_EQUAL"
+                                            ]
+                                          },
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "CONTAINS"
+                                            ]
+                                          },
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "NOT_CONTAINS"
+                                            ]
+                                          },
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "STARTS_WITH"
+                                            ]
+                                          },
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "ENDS_WITH"
+                                            ]
+                                          },
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "NOT_STARTS_WITH"
+                                            ]
+                                          },
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "NOT_ENDS_WITH"
+                                            ]
+                                          }
+                                        ],
+                                        "title": "BinaryPredicateOperator"
+                                      }
+                                    },
+                                    "title": "BinaryPredicate"
+                                  }
+                                ]
+                              },
+                              "assertionType": {
+                                "type": "string",
+                                "enum": [
+                                  "JSON"
+                                ]
+                              }
+                            },
+                            "title": "JSONAssertion"
+                          },
+                          {
+                            "type": "object",
+                            "required": [
+                              "nodeId",
+                              "path",
+                              "expected",
+                              "assertionType"
+                            ],
+                            "properties": {
+                              "nodeId": {
+                                "type": "string"
+                              },
+                              "path": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "expected": {},
+                              "assertionType": {
+                                "type": "string",
+                                "enum": [
+                                  "XML"
+                                ]
+                              }
+                            },
+                            "title": "XMLAssertion"
+                          },
+                          {
+                            "type": "object",
+                            "required": [
+                              "nodeId",
+                              "path",
+                              "expected",
+                              "assertionType"
+                            ],
+                            "properties": {
+                              "nodeId": {
+                                "type": "string"
+                              },
+                              "path": {
+                                "type": "string"
+                              },
+                              "expected": {},
+                              "assertionType": {
+                                "type": "string",
+                                "enum": [
+                                  "TEXT"
+                                ]
+                              }
+                            },
+                            "title": "TextAssertion"
+                          }
+                        ],
+                        "title": "Assertion"
+                      }
+                    }
+                  },
+                  "title": "Assertions"
+                }
+              ],
+              "title": "Node"
             }
           },
           "edges": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Edge"
+              "type": "object",
+              "required": [
+                "from",
+                "to"
+              ],
+              "properties": {
+                "from": {
+                  "type": "string"
+                },
+                "to": {
+                  "type": "string"
+                }
+              },
+              "title": "Edge"
             }
           }
         },
@@ -74,183 +449,423 @@
       },
       "Frequency": {
         "type": "object",
-        "required": ["every", "unit"],
+        "required": [
+          "every",
+          "unit"
+        ],
         "properties": {
           "every": {
             "type": "number"
           },
           "unit": {
-            "$ref": "#/components/schemas/FrequencyUnit"
+            "type": "string",
+            "enum": [
+              "MINUTE",
+              "HOUR",
+              "DAY"
+            ],
+            "title": "FrequencyUnit"
           }
         },
         "title": "Frequency"
       },
-      "UnaryPredicate": {
+      "FrequencyUnit": {
         "type": "string",
         "enum": [
-          "IS_NULL",
-          "IS_NOT_NULL",
-          "IS_TRUE",
-          "IS_FALSE",
-          "IS_EMPTY",
-          "IS_NOT_EMPTY"
+          "MINUTE",
+          "HOUR",
+          "DAY"
         ],
-        "title": "UnaryPredicate"
-      },
-      "BinaryPredicate": {
-        "type": "object",
-        "required": ["expected", "operator"],
-        "properties": {
-          "expected": {},
-          "operator": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": ["EQUAL"]
-              },
-              {
-                "type": "string",
-                "enum": ["NOT_EQUAL"]
-              },
-              {
-                "type": "string",
-                "enum": ["GREATER_THAN"]
-              },
-              {
-                "type": "string",
-                "enum": ["LESS_THAN"]
-              },
-              {
-                "type": "string",
-                "enum": ["GREATER_THAN_OR_EQUAL"]
-              },
-              {
-                "type": "string",
-                "enum": ["LESS_THAN_OR_EQUAL"]
-              },
-              {
-                "type": "string",
-                "enum": ["CONTAINS"]
-              },
-              {
-                "type": "string",
-                "enum": ["NOT_CONTAINS"]
-              },
-              {
-                "type": "string",
-                "enum": ["STARTS_WITH"]
-              },
-              {
-                "type": "string",
-                "enum": ["ENDS_WITH"]
-              },
-              {
-                "type": "string",
-                "enum": ["NOT_STARTS_WITH"]
-              },
-              {
-                "type": "string",
-                "enum": ["NOT_ENDS_WITH"]
-              }
-            ],
-            "title": "BinaryPredicateOperator"
-          }
-        },
-        "title": "BinaryPredicate"
-      },
-      "BinaryPredicateOperator": {
-        "anyOf": [
-          {
-            "type": "string",
-            "enum": ["EQUAL"]
-          },
-          {
-            "type": "string",
-            "enum": ["NOT_EQUAL"]
-          },
-          {
-            "type": "string",
-            "enum": ["GREATER_THAN"]
-          },
-          {
-            "type": "string",
-            "enum": ["LESS_THAN"]
-          },
-          {
-            "type": "string",
-            "enum": ["GREATER_THAN_OR_EQUAL"]
-          },
-          {
-            "type": "string",
-            "enum": ["LESS_THAN_OR_EQUAL"]
-          },
-          {
-            "type": "string",
-            "enum": ["CONTAINS"]
-          },
-          {
-            "type": "string",
-            "enum": ["NOT_CONTAINS"]
-          },
-          {
-            "type": "string",
-            "enum": ["STARTS_WITH"]
-          },
-          {
-            "type": "string",
-            "enum": ["ENDS_WITH"]
-          },
-          {
-            "type": "string",
-            "enum": ["NOT_STARTS_WITH"]
-          },
-          {
-            "type": "string",
-            "enum": ["NOT_ENDS_WITH"]
-          }
-        ],
-        "title": "BinaryPredicateOperator"
+        "title": "FrequencyUnit"
       },
       "Node": {
         "title": "Node",
         "oneOf": [
           {
-            "$ref": "#/components/schemas/Endpoint"
+            "type": "object",
+            "required": [
+              "id",
+              "type",
+              "method",
+              "path",
+              "base",
+              "response_format"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "ENDPOINT"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "DELETE",
+                  "PATCH",
+                  "HEAD",
+                  "OPTIONS",
+                  "CONNECT",
+                  "TRACE"
+                ],
+                "title": "HttpMethod"
+              },
+              "path": {
+                "type": "string"
+              },
+              "base": {
+                "type": "string"
+              },
+              "headers": {
+                "type": "object",
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "$secret"
+                      ],
+                      "properties": {
+                        "$secret": {
+                          "type": "object",
+                          "required": [
+                            "provider",
+                            "ref"
+                          ],
+                          "properties": {
+                            "provider": {
+                              "type": "string"
+                            },
+                            "ref": {
+                              "type": "string"
+                            },
+                            "version": {
+                              "type": "string"
+                            },
+                            "field": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "title": "SecretRef"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "$literal"
+                      ],
+                      "properties": {
+                        "$literal": {
+                          "type": "string"
+                        }
+                      },
+                      "title": "StringLiteral"
+                    }
+                  ],
+                  "title": "SecretOrString"
+                }
+              },
+              "body": {},
+              "response_format": {
+                "type": "string",
+                "enum": [
+                  "JSON",
+                  "XML",
+                  "TEXT"
+                ],
+                "title": "ResponseFormat"
+              }
+            },
+            "title": "Endpoint"
           },
           {
-            "$ref": "#/components/schemas/Wait"
+            "type": "object",
+            "required": [
+              "id",
+              "type",
+              "duration_ms"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "WAIT"
+                ]
+              },
+              "duration_ms": {
+                "type": "number"
+              }
+            },
+            "title": "Wait"
           },
           {
-            "$ref": "#/components/schemas/Assertions"
+            "type": "object",
+            "required": [
+              "id",
+              "type",
+              "assertions"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "ASSERTION"
+                ]
+              },
+              "assertions": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "nodeId",
+                        "accessor",
+                        "path",
+                        "predicate",
+                        "assertionType"
+                      ],
+                      "properties": {
+                        "nodeId": {
+                          "type": "string"
+                        },
+                        "accessor": {
+                          "type": "string",
+                          "enum": [
+                            "body",
+                            "headers",
+                            "status"
+                          ],
+                          "title": "JSONAccessor"
+                        },
+                        "path": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "predicate": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "IS_NULL",
+                                "IS_NOT_NULL",
+                                "IS_TRUE",
+                                "IS_FALSE",
+                                "IS_EMPTY",
+                                "IS_NOT_EMPTY"
+                              ],
+                              "title": "UnaryPredicate"
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "expected",
+                                "operator"
+                              ],
+                              "properties": {
+                                "expected": {},
+                                "operator": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "EQUAL"
+                                      ]
+                                    },
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "NOT_EQUAL"
+                                      ]
+                                    },
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "GREATER_THAN"
+                                      ]
+                                    },
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "LESS_THAN"
+                                      ]
+                                    },
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "GREATER_THAN_OR_EQUAL"
+                                      ]
+                                    },
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "LESS_THAN_OR_EQUAL"
+                                      ]
+                                    },
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "CONTAINS"
+                                      ]
+                                    },
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "NOT_CONTAINS"
+                                      ]
+                                    },
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "STARTS_WITH"
+                                      ]
+                                    },
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "ENDS_WITH"
+                                      ]
+                                    },
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "NOT_STARTS_WITH"
+                                      ]
+                                    },
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "NOT_ENDS_WITH"
+                                      ]
+                                    }
+                                  ],
+                                  "title": "BinaryPredicateOperator"
+                                }
+                              },
+                              "title": "BinaryPredicate"
+                            }
+                          ]
+                        },
+                        "assertionType": {
+                          "type": "string",
+                          "enum": [
+                            "JSON"
+                          ]
+                        }
+                      },
+                      "title": "JSONAssertion"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "nodeId",
+                        "path",
+                        "expected",
+                        "assertionType"
+                      ],
+                      "properties": {
+                        "nodeId": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "expected": {},
+                        "assertionType": {
+                          "type": "string",
+                          "enum": [
+                            "XML"
+                          ]
+                        }
+                      },
+                      "title": "XMLAssertion"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "nodeId",
+                        "path",
+                        "expected",
+                        "assertionType"
+                      ],
+                      "properties": {
+                        "nodeId": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "string"
+                        },
+                        "expected": {},
+                        "assertionType": {
+                          "type": "string",
+                          "enum": [
+                            "TEXT"
+                          ]
+                        }
+                      },
+                      "title": "TextAssertion"
+                    }
+                  ],
+                  "title": "Assertion"
+                }
+              }
+            },
+            "title": "Assertions"
           }
         ]
       },
-      "Edge": {
-        "type": "object",
-        "required": ["from", "to"],
-        "properties": {
-          "from": {
-            "type": "string"
-          },
-          "to": {
-            "type": "string"
-          }
-        },
-        "title": "Edge"
-      },
       "Endpoint": {
         "type": "object",
-        "required": ["id", "type", "method", "path", "base", "response_format"],
+        "required": [
+          "id",
+          "type",
+          "method",
+          "path",
+          "base",
+          "response_format"
+        ],
         "properties": {
           "id": {
             "type": "string"
           },
           "type": {
             "type": "string",
-            "enum": ["ENDPOINT"]
+            "enum": [
+              "ENDPOINT"
+            ]
           },
           "method": {
-            "$ref": "#/components/schemas/HttpMethod"
+            "type": "string",
+            "enum": [
+              "GET",
+              "POST",
+              "PUT",
+              "DELETE",
+              "PATCH",
+              "HEAD",
+              "OPTIONS",
+              "CONNECT",
+              "TRACE"
+            ],
+            "title": "HttpMethod"
           },
           "path": {
             "type": "string"
@@ -261,237 +876,140 @@
           "headers": {
             "type": "object",
             "additionalProperties": {
-              "$ref": "#/components/schemas/SecretOrString"
+              "anyOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "$secret"
+                  ],
+                  "properties": {
+                    "$secret": {
+                      "type": "object",
+                      "required": [
+                        "provider",
+                        "ref"
+                      ],
+                      "properties": {
+                        "provider": {
+                          "type": "string"
+                        },
+                        "ref": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "string"
+                        },
+                        "field": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "title": "SecretRef"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "$literal"
+                  ],
+                  "properties": {
+                    "$literal": {
+                      "type": "string"
+                    }
+                  },
+                  "title": "StringLiteral"
+                }
+              ],
+              "title": "SecretOrString"
             }
           },
           "body": {},
           "response_format": {
-            "$ref": "#/components/schemas/ResponseFormat"
+            "type": "string",
+            "enum": [
+              "JSON",
+              "XML",
+              "TEXT"
+            ],
+            "title": "ResponseFormat"
           }
         },
         "title": "Endpoint"
       },
-      "Wait": {
-        "type": "object",
-        "required": ["id", "type", "duration_ms"],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string",
-            "enum": ["WAIT"]
-          },
-          "duration_ms": {
-            "type": "number"
-          }
-        },
-        "title": "Wait"
-      },
-      "Assertions": {
-        "type": "object",
-        "required": ["id", "type", "assertions"],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string",
-            "enum": ["ASSERTION"]
-          },
-          "assertions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Assertion"
-            }
-          }
-        },
-        "title": "Assertions"
-      },
-      "Assertion": {
-        "title": "Assertion",
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/JSONAssertion"
-          },
-          {
-            "$ref": "#/components/schemas/XMLAssertion"
-          },
-          {
-            "$ref": "#/components/schemas/TextAssertion"
-          }
-        ]
-      },
-      "JSONAssertion": {
-        "type": "object",
-        "required": [
-          "nodeId",
-          "accessor",
-          "path",
-          "predicate",
-          "assertionType"
+      "HttpMethod": {
+        "type": "string",
+        "enum": [
+          "GET",
+          "POST",
+          "PUT",
+          "DELETE",
+          "PATCH",
+          "HEAD",
+          "OPTIONS",
+          "CONNECT",
+          "TRACE"
         ],
-        "properties": {
-          "nodeId": {
-            "type": "string"
-          },
-          "accessor": {
-            "$ref": "#/components/schemas/JSONAccessor"
-          },
-          "path": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "predicate": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "IS_NULL",
-                  "IS_NOT_NULL",
-                  "IS_TRUE",
-                  "IS_FALSE",
-                  "IS_EMPTY",
-                  "IS_NOT_EMPTY"
-                ]
-              },
-              {
+        "title": "HttpMethod"
+      },
+      "SecretOrString": {
+        "anyOf": [
+          {
+            "type": "object",
+            "required": [
+              "$secret"
+            ],
+            "properties": {
+              "$secret": {
                 "type": "object",
-                "required": ["expected", "operator"],
+                "required": [
+                  "provider",
+                  "ref"
+                ],
                 "properties": {
-                  "expected": {},
-                  "operator": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "enum": ["EQUAL"]
-                      },
-                      {
-                        "type": "string",
-                        "enum": ["NOT_EQUAL"]
-                      },
-                      {
-                        "type": "string",
-                        "enum": ["GREATER_THAN"]
-                      },
-                      {
-                        "type": "string",
-                        "enum": ["LESS_THAN"]
-                      },
-                      {
-                        "type": "string",
-                        "enum": ["GREATER_THAN_OR_EQUAL"]
-                      },
-                      {
-                        "type": "string",
-                        "enum": ["LESS_THAN_OR_EQUAL"]
-                      },
-                      {
-                        "type": "string",
-                        "enum": ["CONTAINS"]
-                      },
-                      {
-                        "type": "string",
-                        "enum": ["NOT_CONTAINS"]
-                      },
-                      {
-                        "type": "string",
-                        "enum": ["STARTS_WITH"]
-                      },
-                      {
-                        "type": "string",
-                        "enum": ["ENDS_WITH"]
-                      },
-                      {
-                        "type": "string",
-                        "enum": ["NOT_STARTS_WITH"]
-                      },
-                      {
-                        "type": "string",
-                        "enum": ["NOT_ENDS_WITH"]
-                      }
-                    ]
+                  "provider": {
+                    "type": "string"
+                  },
+                  "ref": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "field": {
+                    "type": "string"
                   }
                 }
               }
-            ]
-          },
-          "assertionType": {
-            "type": "string",
-            "enum": ["JSON"]
-          }
-        },
-        "title": "JSONAssertion"
-      },
-      "XMLAssertion": {
-        "type": "object",
-        "required": ["nodeId", "path", "expected", "assertionType"],
-        "properties": {
-          "nodeId": {
-            "type": "string"
-          },
-          "path": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "expected": {},
-          "assertionType": {
-            "type": "string",
-            "enum": ["XML"]
-          }
-        },
-        "title": "XMLAssertion"
-      },
-      "TextAssertion": {
-        "type": "object",
-        "required": ["nodeId", "path", "expected", "assertionType"],
-        "properties": {
-          "nodeId": {
-            "type": "string"
-          },
-          "path": {
-            "type": "string"
-          },
-          "expected": {},
-          "assertionType": {
-            "type": "string",
-            "enum": ["TEXT"]
-          }
-        },
-        "title": "TextAssertion"
-      },
-      "JSONAccessor": {
-        "type": "string",
-        "enum": ["body", "headers", "status"],
-        "title": "JSONAccessor"
-      },
-      "FrequencyUnit": {
-        "type": "string",
-        "enum": ["MINUTE", "HOUR", "DAY"],
-        "title": "FrequencyUnit"
-      },
-      "SecretOrString": {
-        "title": "SecretOrString",
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/SecretRef"
+            },
+            "title": "SecretRef"
           },
           {
-            "$ref": "#/components/schemas/StringLiteral"
+            "type": "object",
+            "required": [
+              "$literal"
+            ],
+            "properties": {
+              "$literal": {
+                "type": "string"
+              }
+            },
+            "title": "StringLiteral"
           }
-        ]
+        ],
+        "title": "SecretOrString"
       },
       "SecretRef": {
         "type": "object",
-        "required": ["$secret"],
+        "required": [
+          "$secret"
+        ],
         "properties": {
           "$secret": {
             "type": "object",
-            "required": ["provider", "ref"],
+            "required": [
+              "provider",
+              "ref"
+            ],
             "properties": {
               "provider": {
                 "type": "string"
@@ -510,35 +1028,866 @@
         },
         "title": "SecretRef"
       },
-      "HttpMethod": {
-        "type": "string",
-        "enum": [
-          "GET",
-          "POST",
-          "PUT",
-          "DELETE",
-          "PATCH",
-          "HEAD",
-          "OPTIONS",
-          "CONNECT",
-          "TRACE"
-        ],
-        "title": "HttpMethod"
-      },
-      "ResponseFormat": {
-        "type": "string",
-        "enum": ["JSON", "XML", "TEXT"],
-        "title": "ResponseFormat"
-      },
       "StringLiteral": {
         "type": "object",
-        "required": ["$literal"],
+        "required": [
+          "$literal"
+        ],
         "properties": {
           "$literal": {
             "type": "string"
           }
         },
         "title": "StringLiteral"
+      },
+      "ResponseFormat": {
+        "type": "string",
+        "enum": [
+          "JSON",
+          "XML",
+          "TEXT"
+        ],
+        "title": "ResponseFormat"
+      },
+      "Wait": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "duration_ms"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "WAIT"
+            ]
+          },
+          "duration_ms": {
+            "type": "number"
+          }
+        },
+        "title": "Wait"
+      },
+      "Assertions": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "assertions"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "ASSERTION"
+            ]
+          },
+          "assertions": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "nodeId",
+                    "accessor",
+                    "path",
+                    "predicate",
+                    "assertionType"
+                  ],
+                  "properties": {
+                    "nodeId": {
+                      "type": "string"
+                    },
+                    "accessor": {
+                      "type": "string",
+                      "enum": [
+                        "body",
+                        "headers",
+                        "status"
+                      ],
+                      "title": "JSONAccessor"
+                    },
+                    "path": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "predicate": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "IS_NULL",
+                            "IS_NOT_NULL",
+                            "IS_TRUE",
+                            "IS_FALSE",
+                            "IS_EMPTY",
+                            "IS_NOT_EMPTY"
+                          ],
+                          "title": "UnaryPredicate"
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "expected",
+                            "operator"
+                          ],
+                          "properties": {
+                            "expected": {},
+                            "operator": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "EQUAL"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "NOT_EQUAL"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "GREATER_THAN"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "LESS_THAN"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "GREATER_THAN_OR_EQUAL"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "LESS_THAN_OR_EQUAL"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "CONTAINS"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "NOT_CONTAINS"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "STARTS_WITH"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ENDS_WITH"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "NOT_STARTS_WITH"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "NOT_ENDS_WITH"
+                                  ]
+                                }
+                              ],
+                              "title": "BinaryPredicateOperator"
+                            }
+                          },
+                          "title": "BinaryPredicate"
+                        }
+                      ]
+                    },
+                    "assertionType": {
+                      "type": "string",
+                      "enum": [
+                        "JSON"
+                      ]
+                    }
+                  },
+                  "title": "JSONAssertion"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "nodeId",
+                    "path",
+                    "expected",
+                    "assertionType"
+                  ],
+                  "properties": {
+                    "nodeId": {
+                      "type": "string"
+                    },
+                    "path": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "expected": {},
+                    "assertionType": {
+                      "type": "string",
+                      "enum": [
+                        "XML"
+                      ]
+                    }
+                  },
+                  "title": "XMLAssertion"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "nodeId",
+                    "path",
+                    "expected",
+                    "assertionType"
+                  ],
+                  "properties": {
+                    "nodeId": {
+                      "type": "string"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "expected": {},
+                    "assertionType": {
+                      "type": "string",
+                      "enum": [
+                        "TEXT"
+                      ]
+                    }
+                  },
+                  "title": "TextAssertion"
+                }
+              ],
+              "title": "Assertion"
+            }
+          }
+        },
+        "title": "Assertions"
+      },
+      "Assertion": {
+        "anyOf": [
+          {
+            "type": "object",
+            "required": [
+              "nodeId",
+              "accessor",
+              "path",
+              "predicate",
+              "assertionType"
+            ],
+            "properties": {
+              "nodeId": {
+                "type": "string"
+              },
+              "accessor": {
+                "type": "string",
+                "enum": [
+                  "body",
+                  "headers",
+                  "status"
+                ],
+                "title": "JSONAccessor"
+              },
+              "path": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "predicate": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "IS_NULL",
+                      "IS_NOT_NULL",
+                      "IS_TRUE",
+                      "IS_FALSE",
+                      "IS_EMPTY",
+                      "IS_NOT_EMPTY"
+                    ],
+                    "title": "UnaryPredicate"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "expected",
+                      "operator"
+                    ],
+                    "properties": {
+                      "expected": {},
+                      "operator": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "EQUAL"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "NOT_EQUAL"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "GREATER_THAN"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "LESS_THAN"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "GREATER_THAN_OR_EQUAL"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "LESS_THAN_OR_EQUAL"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "CONTAINS"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "NOT_CONTAINS"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "STARTS_WITH"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "ENDS_WITH"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "NOT_STARTS_WITH"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "NOT_ENDS_WITH"
+                            ]
+                          }
+                        ],
+                        "title": "BinaryPredicateOperator"
+                      }
+                    },
+                    "title": "BinaryPredicate"
+                  }
+                ]
+              },
+              "assertionType": {
+                "type": "string",
+                "enum": [
+                  "JSON"
+                ]
+              }
+            },
+            "title": "JSONAssertion"
+          },
+          {
+            "type": "object",
+            "required": [
+              "nodeId",
+              "path",
+              "expected",
+              "assertionType"
+            ],
+            "properties": {
+              "nodeId": {
+                "type": "string"
+              },
+              "path": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "expected": {},
+              "assertionType": {
+                "type": "string",
+                "enum": [
+                  "XML"
+                ]
+              }
+            },
+            "title": "XMLAssertion"
+          },
+          {
+            "type": "object",
+            "required": [
+              "nodeId",
+              "path",
+              "expected",
+              "assertionType"
+            ],
+            "properties": {
+              "nodeId": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "expected": {},
+              "assertionType": {
+                "type": "string",
+                "enum": [
+                  "TEXT"
+                ]
+              }
+            },
+            "title": "TextAssertion"
+          }
+        ],
+        "title": "Assertion"
+      },
+      "JSONAssertion": {
+        "type": "object",
+        "required": [
+          "nodeId",
+          "accessor",
+          "path",
+          "predicate",
+          "assertionType"
+        ],
+        "properties": {
+          "nodeId": {
+            "type": "string"
+          },
+          "accessor": {
+            "type": "string",
+            "enum": [
+              "body",
+              "headers",
+              "status"
+            ],
+            "title": "JSONAccessor"
+          },
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "predicate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "IS_NULL",
+                  "IS_NOT_NULL",
+                  "IS_TRUE",
+                  "IS_FALSE",
+                  "IS_EMPTY",
+                  "IS_NOT_EMPTY"
+                ],
+                "title": "UnaryPredicate"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "expected",
+                  "operator"
+                ],
+                "properties": {
+                  "expected": {},
+                  "operator": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "EQUAL"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "NOT_EQUAL"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "GREATER_THAN"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "LESS_THAN"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "GREATER_THAN_OR_EQUAL"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "LESS_THAN_OR_EQUAL"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "CONTAINS"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "NOT_CONTAINS"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "STARTS_WITH"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "ENDS_WITH"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "NOT_STARTS_WITH"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "NOT_ENDS_WITH"
+                        ]
+                      }
+                    ],
+                    "title": "BinaryPredicateOperator"
+                  }
+                },
+                "title": "BinaryPredicate"
+              }
+            ]
+          },
+          "assertionType": {
+            "type": "string",
+            "enum": [
+              "JSON"
+            ]
+          }
+        },
+        "title": "JSONAssertion"
+      },
+      "JSONAccessor": {
+        "type": "string",
+        "enum": [
+          "body",
+          "headers",
+          "status"
+        ],
+        "title": "JSONAccessor"
+      },
+      "UnaryPredicate": {
+        "type": "string",
+        "enum": [
+          "IS_NULL",
+          "IS_NOT_NULL",
+          "IS_TRUE",
+          "IS_FALSE",
+          "IS_EMPTY",
+          "IS_NOT_EMPTY"
+        ],
+        "title": "UnaryPredicate"
+      },
+      "BinaryPredicate": {
+        "type": "object",
+        "required": [
+          "expected",
+          "operator"
+        ],
+        "properties": {
+          "expected": {},
+          "operator": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "EQUAL"
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "NOT_EQUAL"
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "GREATER_THAN"
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "LESS_THAN"
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "GREATER_THAN_OR_EQUAL"
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "LESS_THAN_OR_EQUAL"
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "CONTAINS"
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "NOT_CONTAINS"
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "STARTS_WITH"
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "ENDS_WITH"
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "NOT_STARTS_WITH"
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "NOT_ENDS_WITH"
+                ]
+              }
+            ],
+            "title": "BinaryPredicateOperator"
+          }
+        },
+        "title": "BinaryPredicate"
+      },
+      "BinaryPredicateOperator": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "EQUAL"
+            ]
+          },
+          {
+            "type": "string",
+            "enum": [
+              "NOT_EQUAL"
+            ]
+          },
+          {
+            "type": "string",
+            "enum": [
+              "GREATER_THAN"
+            ]
+          },
+          {
+            "type": "string",
+            "enum": [
+              "LESS_THAN"
+            ]
+          },
+          {
+            "type": "string",
+            "enum": [
+              "GREATER_THAN_OR_EQUAL"
+            ]
+          },
+          {
+            "type": "string",
+            "enum": [
+              "LESS_THAN_OR_EQUAL"
+            ]
+          },
+          {
+            "type": "string",
+            "enum": [
+              "CONTAINS"
+            ]
+          },
+          {
+            "type": "string",
+            "enum": [
+              "NOT_CONTAINS"
+            ]
+          },
+          {
+            "type": "string",
+            "enum": [
+              "STARTS_WITH"
+            ]
+          },
+          {
+            "type": "string",
+            "enum": [
+              "ENDS_WITH"
+            ]
+          },
+          {
+            "type": "string",
+            "enum": [
+              "NOT_STARTS_WITH"
+            ]
+          },
+          {
+            "type": "string",
+            "enum": [
+              "NOT_ENDS_WITH"
+            ]
+          }
+        ],
+        "title": "BinaryPredicateOperator"
+      },
+      "XMLAssertion": {
+        "type": "object",
+        "required": [
+          "nodeId",
+          "path",
+          "expected",
+          "assertionType"
+        ],
+        "properties": {
+          "nodeId": {
+            "type": "string"
+          },
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expected": {},
+          "assertionType": {
+            "type": "string",
+            "enum": [
+              "XML"
+            ]
+          }
+        },
+        "title": "XMLAssertion"
+      },
+      "TextAssertion": {
+        "type": "object",
+        "required": [
+          "nodeId",
+          "path",
+          "expected",
+          "assertionType"
+        ],
+        "properties": {
+          "nodeId": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "expected": {},
+          "assertionType": {
+            "type": "string",
+            "enum": [
+              "TEXT"
+            ]
+          }
+        },
+        "title": "TextAssertion"
+      },
+      "Edge": {
+        "type": "object",
+        "required": [
+          "from",
+          "to"
+        ],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          }
+        },
+        "title": "Edge"
       }
     }
   },
@@ -554,14 +1903,18 @@
     },
     "/agents/register": {
       "post": {
-        "tags": ["agents"],
+        "tags": [
+          "agents"
+        ],
         "description": "Register a new agent with the hub",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["location"],
+                "required": [
+                  "location"
+                ],
                 "properties": {
                   "location": {
                     "type": "string"
@@ -601,7 +1954,10 @@
                     },
                     "status": {
                       "type": "string",
-                      "enum": ["online", "offline"],
+                      "enum": [
+                        "online",
+                        "offline"
+                      ],
                       "title": "AgentStatus"
                     },
                     "lastHeartbeat": {
@@ -628,7 +1984,9 @@
     },
     "/agents/{id}/heartbeat": {
       "post": {
-        "tags": ["agents"],
+        "tags": [
+          "agents"
+        ],
         "description": "Record a heartbeat from an agent",
         "parameters": [
           {
@@ -648,7 +2006,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["success"],
+                  "required": [
+                    "success"
+                  ],
                   "properties": {
                     "success": {
                       "type": "boolean"
@@ -664,7 +2024,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -679,7 +2041,9 @@
     },
     "/agents/{id}": {
       "delete": {
-        "tags": ["agents"],
+        "tags": [
+          "agents"
+        ],
         "description": "Deregister an agent",
         "parameters": [
           {
@@ -699,7 +2063,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["success"],
+                  "required": [
+                    "success"
+                  ],
                   "properties": {
                     "success": {
                       "type": "boolean"
@@ -714,7 +2080,9 @@
     },
     "/agents/": {
       "get": {
-        "tags": ["agents"],
+        "tags": [
+          "agents"
+        ],
         "description": "List all agents with optional filtering",
         "parameters": [
           {
@@ -729,7 +2097,10 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["online", "offline"]
+              "enum": [
+                "online",
+                "offline"
+              ]
             },
             "in": "query",
             "name": "status",
@@ -744,7 +2115,10 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["data", "total"],
+                  "required": [
+                    "data",
+                    "total"
+                  ],
                   "properties": {
                     "data": {
                       "type": "array",
@@ -766,7 +2140,10 @@
                           },
                           "status": {
                             "type": "string",
-                            "enum": ["online", "offline"]
+                            "enum": [
+                              "online",
+                              "offline"
+                            ]
                           },
                           "lastHeartbeat": {
                             "type": "string",
@@ -798,7 +2175,9 @@
     },
     "/agents/locations": {
       "get": {
-        "tags": ["agents"],
+        "tags": [
+          "agents"
+        ],
         "description": "Get all registered locations (with at least one online agent)",
         "responses": {
           "200": {
@@ -807,7 +2186,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["locations"],
+                  "required": [
+                    "locations"
+                  ],
                   "properties": {
                     "locations": {
                       "type": "array",
@@ -825,7 +2206,9 @@
     },
     "/plan/": {
       "post": {
-        "tags": ["plan"],
+        "tags": [
+          "plan"
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -855,17 +2238,27 @@
                   },
                   "version": {
                     "type": "string",
-                    "enum": ["1.0"]
+                    "enum": [
+                      "1.0"
+                    ]
                   },
                   "frequency": {
                     "type": "object",
-                    "required": ["every", "unit"],
+                    "required": [
+                      "every",
+                      "unit"
+                    ],
                     "properties": {
                       "every": {
                         "type": "number"
                       },
                       "unit": {
-                        "$ref": "#/components/schemas/FrequencyUnit"
+                        "type": "string",
+                        "enum": [
+                          "MINUTE",
+                          "HOUR",
+                          "DAY"
+                        ]
                       }
                     }
                   },
@@ -876,13 +2269,359 @@
                   "nodes": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/Node"
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "type",
+                            "method",
+                            "path",
+                            "base",
+                            "response_format"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "ENDPOINT"
+                              ]
+                            },
+                            "method": {
+                              "type": "string",
+                              "enum": [
+                                "GET",
+                                "POST",
+                                "PUT",
+                                "DELETE",
+                                "PATCH",
+                                "HEAD",
+                                "OPTIONS",
+                                "CONNECT",
+                                "TRACE"
+                              ]
+                            },
+                            "path": {
+                              "type": "string"
+                            },
+                            "base": {
+                              "type": "string"
+                            },
+                            "headers": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "required": [
+                                      "$secret"
+                                    ],
+                                    "properties": {
+                                      "$secret": {
+                                        "type": "object",
+                                        "required": [
+                                          "provider",
+                                          "ref"
+                                        ],
+                                        "properties": {
+                                          "provider": {
+                                            "type": "string"
+                                          },
+                                          "ref": {
+                                            "type": "string"
+                                          },
+                                          "version": {
+                                            "type": "string"
+                                          },
+                                          "field": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "object",
+                                    "required": [
+                                      "$literal"
+                                    ],
+                                    "properties": {
+                                      "$literal": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "body": {},
+                            "response_format": {
+                              "type": "string",
+                              "enum": [
+                                "JSON",
+                                "XML",
+                                "TEXT"
+                              ]
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "type",
+                            "duration_ms"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "WAIT"
+                              ]
+                            },
+                            "duration_ms": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "type",
+                            "assertions"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "ASSERTION"
+                              ]
+                            },
+                            "assertions": {
+                              "type": "array",
+                              "items": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "required": [
+                                      "nodeId",
+                                      "accessor",
+                                      "path",
+                                      "predicate",
+                                      "assertionType"
+                                    ],
+                                    "properties": {
+                                      "nodeId": {
+                                        "type": "string"
+                                      },
+                                      "accessor": {
+                                        "type": "string",
+                                        "enum": [
+                                          "body",
+                                          "headers",
+                                          "status"
+                                        ]
+                                      },
+                                      "path": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "predicate": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "IS_NULL",
+                                              "IS_NOT_NULL",
+                                              "IS_TRUE",
+                                              "IS_FALSE",
+                                              "IS_EMPTY",
+                                              "IS_NOT_EMPTY"
+                                            ]
+                                          },
+                                          {
+                                            "type": "object",
+                                            "required": [
+                                              "expected",
+                                              "operator"
+                                            ],
+                                            "properties": {
+                                              "expected": {},
+                                              "operator": {
+                                                "anyOf": [
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "EQUAL"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "NOT_EQUAL"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "GREATER_THAN"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "LESS_THAN"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "GREATER_THAN_OR_EQUAL"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "LESS_THAN_OR_EQUAL"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "CONTAINS"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "NOT_CONTAINS"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "STARTS_WITH"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "ENDS_WITH"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "NOT_STARTS_WITH"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "NOT_ENDS_WITH"
+                                                    ]
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      "assertionType": {
+                                        "type": "string",
+                                        "enum": [
+                                          "JSON"
+                                        ]
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "object",
+                                    "required": [
+                                      "nodeId",
+                                      "path",
+                                      "expected",
+                                      "assertionType"
+                                    ],
+                                    "properties": {
+                                      "nodeId": {
+                                        "type": "string"
+                                      },
+                                      "path": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "expected": {},
+                                      "assertionType": {
+                                        "type": "string",
+                                        "enum": [
+                                          "XML"
+                                        ]
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "object",
+                                    "required": [
+                                      "nodeId",
+                                      "path",
+                                      "expected",
+                                      "assertionType"
+                                    ],
+                                    "properties": {
+                                      "nodeId": {
+                                        "type": "string"
+                                      },
+                                      "path": {
+                                        "type": "string"
+                                      },
+                                      "expected": {},
+                                      "assertionType": {
+                                        "type": "string",
+                                        "enum": [
+                                          "TEXT"
+                                        ]
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      ]
                     }
                   },
                   "edges": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/Edge"
+                      "type": "object",
+                      "required": [
+                        "from",
+                        "to"
+                      ],
+                      "properties": {
+                        "from": {
+                          "type": "string"
+                        },
+                        "to": {
+                          "type": "string"
+                        }
+                      }
                     }
                   }
                 }
@@ -898,7 +2637,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["data"],
+                  "required": [
+                    "data"
+                  ],
                   "properties": {
                     "data": {
                       "$ref": "#/components/schemas/PlanV1"
@@ -914,7 +2655,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -930,7 +2673,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -946,7 +2691,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -962,7 +2709,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -978,7 +2727,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -994,7 +2745,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1010,7 +2763,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1026,7 +2781,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1039,7 +2796,9 @@
         }
       },
       "get": {
-        "tags": ["plan"],
+        "tags": [
+          "plan"
+        ],
         "parameters": [
           {
             "schema": {
@@ -1084,7 +2843,12 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["data", "total", "page", "limit"],
+                  "required": [
+                    "data",
+                    "total",
+                    "page",
+                    "limit"
+                  ],
                   "properties": {
                     "data": {
                       "type": "array",
@@ -1112,7 +2876,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1128,7 +2894,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1144,7 +2912,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1160,7 +2930,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1176,7 +2948,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1192,7 +2966,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1208,7 +2984,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1224,7 +3002,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1239,7 +3019,9 @@
     },
     "/plan/{id}": {
       "put": {
-        "tags": ["plan"],
+        "tags": [
+          "plan"
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1269,17 +3051,27 @@
                   },
                   "version": {
                     "type": "string",
-                    "enum": ["1.0"]
+                    "enum": [
+                      "1.0"
+                    ]
                   },
                   "frequency": {
                     "type": "object",
-                    "required": ["every", "unit"],
+                    "required": [
+                      "every",
+                      "unit"
+                    ],
                     "properties": {
                       "every": {
                         "type": "number"
                       },
                       "unit": {
-                        "$ref": "#/components/schemas/FrequencyUnit"
+                        "type": "string",
+                        "enum": [
+                          "MINUTE",
+                          "HOUR",
+                          "DAY"
+                        ]
                       }
                     }
                   },
@@ -1290,13 +3082,359 @@
                   "nodes": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/Node"
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "type",
+                            "method",
+                            "path",
+                            "base",
+                            "response_format"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "ENDPOINT"
+                              ]
+                            },
+                            "method": {
+                              "type": "string",
+                              "enum": [
+                                "GET",
+                                "POST",
+                                "PUT",
+                                "DELETE",
+                                "PATCH",
+                                "HEAD",
+                                "OPTIONS",
+                                "CONNECT",
+                                "TRACE"
+                              ]
+                            },
+                            "path": {
+                              "type": "string"
+                            },
+                            "base": {
+                              "type": "string"
+                            },
+                            "headers": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "required": [
+                                      "$secret"
+                                    ],
+                                    "properties": {
+                                      "$secret": {
+                                        "type": "object",
+                                        "required": [
+                                          "provider",
+                                          "ref"
+                                        ],
+                                        "properties": {
+                                          "provider": {
+                                            "type": "string"
+                                          },
+                                          "ref": {
+                                            "type": "string"
+                                          },
+                                          "version": {
+                                            "type": "string"
+                                          },
+                                          "field": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "object",
+                                    "required": [
+                                      "$literal"
+                                    ],
+                                    "properties": {
+                                      "$literal": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "body": {},
+                            "response_format": {
+                              "type": "string",
+                              "enum": [
+                                "JSON",
+                                "XML",
+                                "TEXT"
+                              ]
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "type",
+                            "duration_ms"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "WAIT"
+                              ]
+                            },
+                            "duration_ms": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "type",
+                            "assertions"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "ASSERTION"
+                              ]
+                            },
+                            "assertions": {
+                              "type": "array",
+                              "items": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "required": [
+                                      "nodeId",
+                                      "accessor",
+                                      "path",
+                                      "predicate",
+                                      "assertionType"
+                                    ],
+                                    "properties": {
+                                      "nodeId": {
+                                        "type": "string"
+                                      },
+                                      "accessor": {
+                                        "type": "string",
+                                        "enum": [
+                                          "body",
+                                          "headers",
+                                          "status"
+                                        ]
+                                      },
+                                      "path": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "predicate": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "IS_NULL",
+                                              "IS_NOT_NULL",
+                                              "IS_TRUE",
+                                              "IS_FALSE",
+                                              "IS_EMPTY",
+                                              "IS_NOT_EMPTY"
+                                            ]
+                                          },
+                                          {
+                                            "type": "object",
+                                            "required": [
+                                              "expected",
+                                              "operator"
+                                            ],
+                                            "properties": {
+                                              "expected": {},
+                                              "operator": {
+                                                "anyOf": [
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "EQUAL"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "NOT_EQUAL"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "GREATER_THAN"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "LESS_THAN"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "GREATER_THAN_OR_EQUAL"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "LESS_THAN_OR_EQUAL"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "CONTAINS"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "NOT_CONTAINS"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "STARTS_WITH"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "ENDS_WITH"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "NOT_STARTS_WITH"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "NOT_ENDS_WITH"
+                                                    ]
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      "assertionType": {
+                                        "type": "string",
+                                        "enum": [
+                                          "JSON"
+                                        ]
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "object",
+                                    "required": [
+                                      "nodeId",
+                                      "path",
+                                      "expected",
+                                      "assertionType"
+                                    ],
+                                    "properties": {
+                                      "nodeId": {
+                                        "type": "string"
+                                      },
+                                      "path": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "expected": {},
+                                      "assertionType": {
+                                        "type": "string",
+                                        "enum": [
+                                          "XML"
+                                        ]
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "object",
+                                    "required": [
+                                      "nodeId",
+                                      "path",
+                                      "expected",
+                                      "assertionType"
+                                    ],
+                                    "properties": {
+                                      "nodeId": {
+                                        "type": "string"
+                                      },
+                                      "path": {
+                                        "type": "string"
+                                      },
+                                      "expected": {},
+                                      "assertionType": {
+                                        "type": "string",
+                                        "enum": [
+                                          "TEXT"
+                                        ]
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      ]
                     }
                   },
                   "edges": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/Edge"
+                      "type": "object",
+                      "required": [
+                        "from",
+                        "to"
+                      ],
+                      "properties": {
+                        "from": {
+                          "type": "string"
+                        },
+                        "to": {
+                          "type": "string"
+                        }
+                      }
                     }
                   }
                 }
@@ -1322,7 +3460,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["data"],
+                  "required": [
+                    "data"
+                  ],
                   "properties": {
                     "data": {
                       "$ref": "#/components/schemas/PlanV1"
@@ -1338,7 +3478,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1354,7 +3496,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1370,7 +3514,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1386,7 +3532,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1402,7 +3550,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1418,7 +3568,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1434,7 +3586,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1450,7 +3604,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1463,7 +3619,9 @@
         }
       },
       "delete": {
-        "tags": ["plan"],
+        "tags": [
+          "plan"
+        ],
         "parameters": [
           {
             "schema": {
@@ -1484,7 +3642,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1500,7 +3660,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1516,7 +3678,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1532,7 +3696,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1548,7 +3714,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1564,7 +3732,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1580,7 +3750,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1596,7 +3768,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1611,7 +3785,9 @@
     },
     "/plan/by-name": {
       "get": {
-        "tags": ["plan"],
+        "tags": [
+          "plan"
+        ],
         "parameters": [
           {
             "schema": {
@@ -1645,7 +3821,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["data"],
+                  "required": [
+                    "data"
+                  ],
                   "properties": {
                     "data": {
                       "$ref": "#/components/schemas/PlanV1"
@@ -1661,7 +3839,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1677,7 +3857,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1693,7 +3875,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1709,7 +3893,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1725,7 +3911,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1741,7 +3929,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1757,7 +3947,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1773,7 +3965,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1788,7 +3982,9 @@
     },
     "/runs/": {
       "get": {
-        "tags": ["runs"],
+        "tags": [
+          "runs"
+        ],
         "parameters": [
           {
             "schema": {
@@ -1801,7 +3997,12 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["pending", "running", "completed", "failed"],
+              "enum": [
+                "pending",
+                "running",
+                "completed",
+                "failed"
+              ],
               "title": "JobRunStatus"
             },
             "in": "query",
@@ -1835,7 +4036,12 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["data", "total", "page", "limit"],
+                  "required": [
+                    "data",
+                    "total",
+                    "page",
+                    "limit"
+                  ],
                   "properties": {
                     "data": {
                       "type": "array",
@@ -1878,7 +4084,11 @@
                           },
                           "triggeredBy": {
                             "type": "string",
-                            "enum": ["schedule", "manual", "api"],
+                            "enum": [
+                              "schedule",
+                              "manual",
+                              "api"
+                            ],
                             "title": "TriggerType"
                           },
                           "startedAt": {
@@ -1924,7 +4134,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1940,7 +4152,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1956,7 +4170,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1972,7 +4188,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -1988,7 +4206,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2004,7 +4224,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2020,7 +4242,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2036,7 +4260,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2051,7 +4277,9 @@
     },
     "/runs/{id}": {
       "get": {
-        "tags": ["runs"],
+        "tags": [
+          "runs"
+        ],
         "parameters": [
           {
             "schema": {
@@ -2069,7 +4297,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["data"],
+                  "required": [
+                    "data"
+                  ],
                   "properties": {
                     "data": {
                       "type": "object",
@@ -2101,11 +4331,20 @@
                         },
                         "status": {
                           "type": "string",
-                          "enum": ["pending", "running", "completed", "failed"]
+                          "enum": [
+                            "pending",
+                            "running",
+                            "completed",
+                            "failed"
+                          ]
                         },
                         "triggeredBy": {
                           "type": "string",
-                          "enum": ["schedule", "manual", "api"]
+                          "enum": [
+                            "schedule",
+                            "manual",
+                            "api"
+                          ]
                         },
                         "startedAt": {
                           "type": "string",
@@ -2140,7 +4379,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2156,7 +4397,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2172,7 +4415,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2188,7 +4433,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2204,7 +4451,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2220,7 +4469,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2236,7 +4487,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2252,7 +4505,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2265,7 +4520,9 @@
         }
       },
       "patch": {
-        "tags": ["runs"],
+        "tags": [
+          "runs"
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2274,7 +4531,12 @@
                 "properties": {
                   "status": {
                     "type": "string",
-                    "enum": ["pending", "running", "completed", "failed"]
+                    "enum": [
+                      "pending",
+                      "running",
+                      "completed",
+                      "failed"
+                    ]
                   },
                   "completedAt": {
                     "type": "string",
@@ -2314,7 +4576,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["data"],
+                  "required": [
+                    "data"
+                  ],
                   "properties": {
                     "data": {
                       "type": "object",
@@ -2346,11 +4610,20 @@
                         },
                         "status": {
                           "type": "string",
-                          "enum": ["pending", "running", "completed", "failed"]
+                          "enum": [
+                            "pending",
+                            "running",
+                            "completed",
+                            "failed"
+                          ]
                         },
                         "triggeredBy": {
                           "type": "string",
-                          "enum": ["schedule", "manual", "api"]
+                          "enum": [
+                            "schedule",
+                            "manual",
+                            "api"
+                          ]
                         },
                         "startedAt": {
                           "type": "string",
@@ -2385,7 +4658,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2401,7 +4676,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2417,7 +4694,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2433,7 +4712,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2449,7 +4730,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2465,7 +4748,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2481,7 +4766,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2497,7 +4784,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2512,13 +4801,17 @@
     },
     "/runs/trigger/{planId}": {
       "post": {
-        "tags": ["runs"],
+        "tags": [
+          "runs"
+        ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["environment"],
+                "required": [
+                  "environment"
+                ],
                 "properties": {
                   "environment": {
                     "type": "string",
@@ -2547,7 +4840,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["data"],
+                  "required": [
+                    "data"
+                  ],
                   "properties": {
                     "data": {
                       "type": "object",
@@ -2579,11 +4874,20 @@
                         },
                         "status": {
                           "type": "string",
-                          "enum": ["pending", "running", "completed", "failed"]
+                          "enum": [
+                            "pending",
+                            "running",
+                            "completed",
+                            "failed"
+                          ]
                         },
                         "triggeredBy": {
                           "type": "string",
-                          "enum": ["schedule", "manual", "api"]
+                          "enum": [
+                            "schedule",
+                            "manual",
+                            "api"
+                          ]
                         },
                         "startedAt": {
                           "type": "string",
@@ -2618,7 +4922,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2634,7 +4940,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2650,7 +4958,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2666,7 +4976,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2682,7 +4994,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2698,7 +5012,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2714,7 +5030,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"
@@ -2730,7 +5048,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["error"],
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "string"

@@ -1,5 +1,5 @@
 import { Type, type Static } from "typebox";
-import { StringEnum, Ref } from "./shared.js";
+//import { StringEnum, Ref } from "./shared.js";
 import {
   AssertionsSchema,
   FrequencySchema,
@@ -16,25 +16,25 @@ import {
   SecretRefSchema,
   StringLiteralSchema,
 } from "@griffin-app/griffin-ts/schema";
-export {
-  EdgeSchema,
-  WaitSchema,
-  AssertionsSchema,
-  AssertionSchema,
-  JSONAssertionSchema,
-  XMLAssertionSchema,
-  TextAssertionSchema,
-  JSONAccessorSchema,
-  FrequencyUnitSchema,
-  HttpMethodSchema,
-  ResponseFormatSchema,
-  SecretRefSchema,
-  StringLiteralSchema,
-} from "@griffin-app/griffin-ts/schema";
+//export {
+//  EdgeSchema,
+//  WaitSchema,
+//  AssertionsSchema,
+//  AssertionSchema,
+//  JSONAssertionSchema,
+//  XMLAssertionSchema,
+//  TextAssertionSchema,
+//  JSONAccessorSchema,
+//  FrequencyUnitSchema,
+//  HttpMethodSchema,
+//  ResponseFormatSchema,
+//  SecretRefSchema,
+//  StringLiteralSchema,
+//} from "@griffin-app/griffin-ts/schema";
 
 // Union type for values that can be either a literal or a secret reference
 export const SecretOrStringSchema = Type.Union(
-  [Ref(SecretRefSchema), Ref(StringLiteralSchema)],
+  [SecretRefSchema, StringLiteralSchema],
   { $id: "SecretOrString" },
 );
 
@@ -42,20 +42,20 @@ export const EndpointSchema = Type.Object(
   {
     id: Type.String(),
     type: Type.Literal(NodeType.ENDPOINT),
-    method: Ref(HttpMethodSchema),
+    method: HttpMethodSchema,
     path: Type.String(),
     base: Type.String(),
     headers: Type.Optional(
-      Type.Record(Type.String(), Ref(SecretOrStringSchema)),
+      Type.Record(Type.String(), SecretOrStringSchema),
     ),
     body: Type.Optional(Type.Any()), // Body can contain nested SecretRefs
-    response_format: Ref(ResponseFormatSchema),
+    response_format: ResponseFormatSchema,
   },
   { $id: "Endpoint" },
 );
 
 export const NodeSchema = Type.Union(
-  [Ref(EndpointSchema), Ref(WaitSchema), Ref(AssertionsSchema)],
+  [EndpointSchema, WaitSchema, AssertionsSchema],
   { $id: "Node" },
 );
 
@@ -68,8 +68,8 @@ export const PlanV1Schema = Type.Object(
     version: Type.Literal(TEST_PLAN_VERSION),
     frequency: FrequencySchema,
     environment: Type.String({ default: "default" }),
-    nodes: Type.Array(Ref(NodeSchema)),
-    edges: Type.Array(Ref(EdgeSchema)),
+    nodes: Type.Array(NodeSchema),
+    edges: Type.Array(EdgeSchema),
   },
   {
     $id: "PlanV1",

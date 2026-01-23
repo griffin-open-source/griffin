@@ -1,28 +1,9 @@
 import { Type } from "typebox";
 import { FastifyTypeBox } from "../../types.js";
-//import {
-//  EdgeSchema,
-//  WaitSchema,
-//  AssertionsSchema,
-//  JSONAssertionSchema,
-//  FrequencySchema,
-//  AssertionSchema,
-//  FrequencyUnitSchema,
-//  HttpMethodSchema,
-//  JSONAccessor,
-//  JSONAccessorSchema,
-//  ResponseFormatSchema,
-//  TextAssertionSchema,
-//  XMLAssertionSchema,
-//} from "@griffin-app/griffin-ts/schema";
-
-import {
-  PlanV1Schema,
-  NodeSchema,
-  EndpointSchema,
+import { 
+  HttpMethodSchema,
   SecretRefSchema,
-  SecretOrStringSchema,
-  EdgeSchema,
+  StringLiteralSchema,
   WaitSchema,
   AssertionsSchema,
   AssertionSchema,
@@ -31,9 +12,27 @@ import {
   TextAssertionSchema,
   JSONAccessorSchema,
   FrequencyUnitSchema,
-  HttpMethodSchema,
   ResponseFormatSchema,
-  StringLiteralSchema,
+  EdgeSchema,
+} from "@griffin-app/griffin-ts/schema";
+import {
+  PlanV1Schema,
+  NodeSchema,
+  EndpointSchema,
+  SecretOrStringSchema,
+  //SecretRefSchema,
+  //EdgeSchema,
+  //WaitSchema,
+  //AssertionsSchema,
+  //AssertionSchema,
+  //JSONAssertionSchema,
+  //XMLAssertionSchema,
+  //TextAssertionSchema,
+  //JSONAccessorSchema,
+  //FrequencyUnitSchema,
+  //HttpMethodSchema,
+  //ResponseFormatSchema,
+  //StringLiteralSchema,
 } from "../../schemas/plans.js";
 import {
   Ref,
@@ -105,22 +104,18 @@ export const GetPlanByNameEndpoint = {
 
 export default function (fastify: FastifyTypeBox) {
   fastify.addSchema(PlanV1Schema);
-  fastify.addSchema(NodeSchema);
-  fastify.addSchema(EdgeSchema);
-  fastify.addSchema(EndpointSchema);
-  fastify.addSchema(WaitSchema);
-  fastify.addSchema(AssertionsSchema);
-  fastify.addSchema(AssertionSchema);
-  fastify.addSchema(JSONAssertionSchema);
-  fastify.addSchema(XMLAssertionSchema);
-  fastify.addSchema(TextAssertionSchema);
-  fastify.addSchema(JSONAccessorSchema);
-  fastify.addSchema(FrequencyUnitSchema);
-  fastify.addSchema(SecretOrStringSchema);
-  fastify.addSchema(SecretRefSchema);
-  fastify.addSchema(HttpMethodSchema);
-  fastify.addSchema(ResponseFormatSchema);
-  fastify.addSchema(StringLiteralSchema);
+  //fastify.addSchema(NodeSchema);
+  //fastify.addSchema(EdgeSchema);
+  //fastify.addSchema(EndpointSchema);
+  //fastify.addSchema(SecretOrStringSchema);
+  //fastify.addSchema(WaitSchema);
+  //fastify.addSchema(AssertionsSchema);
+  //fastify.addSchema(SecretRefSchema);
+  //fastify.addSchema(HttpMethodSchema);
+  //fastify.addSchema(ResponseFormatSchema);
+  //fastify.addSchema(StringLiteralSchema);
+
+  ///
   //fastify.addSchema(AssertionSchema);
   //fastify.addSchema(BinaryPredicateOperatorSchema);
   //fastify.addSchema(FrequencySchema);

@@ -40,6 +40,7 @@
     "@fastify/swagger": "^9.6.1",
     "@fastify/swagger-ui": "^5.2.4",
     "@fastify/type-provider-typebox": "^6.1.0",
+    "@griffin-app/griffin-plan-executor": "file:../griffin-plan-executor",
     "@griffin-app/griffin-ts": "file:../griffin-ts",
     "axios": "^1.7.0",
     "dotenv": "^17.2.3",
@@ -52,7 +53,7 @@
   },
   "devDependencies": {
     "@flydotio/dockerfile": "^0.7.10",
-    "@griffin-app/griffin-cli": "1.0.3",
+    "@griffin-app/griffin-cli": "file:../griffin-cli",
     "@hey-api/openapi-ts": "^0.90.3",
     "@types/node": "^22.1.0",
     "@types/pg": "^8.16.0",

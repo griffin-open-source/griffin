@@ -615,7 +615,6 @@ async function executeEndpoint(
   } catch (error: unknown) {
     const duration_ms = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : String(error);
-
     // Emit failed HTTP_RESPONSE event
     context.emit({
       type: "HTTP_RESPONSE",

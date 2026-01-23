@@ -1,3 +1,4 @@
+import { StringLiteral } from "@griffin-app/griffin-hub-sdk";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { parse } from "yaml";
@@ -77,6 +78,21 @@ function isVariableRef<A>(value: A): value is A & VariableRef {
   );
 }
 
+function isStringLiteral<A>(value: A): value is A & StringLiteral {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const obj = value as Record<string, unknown>;
+  if (
+    !("$literal" in obj) ||
+    typeof obj.$literal !== "string"
+  ) {
+    return false;
+  }
+
+  return true;
+}
 /**
  * Resolve a single variable reference to its string value.
  *
@@ -108,6 +124,7 @@ function resolveVariable(
   return template.replace(placeholder, value);
 }
 
+
 /**
  * Recursively walk a plan object and resolve all variable references.
  *
@@ -125,6 +142,9 @@ export function resolveVariablesInPlan(
   // Check if this is a variable reference
   if (isVariableRef(obj)) {
     return resolveVariable(obj, variables);
+  }
+  if (isStringLiteral(obj)) {
+    return obj.$literal;
   }
 
   // Recursively process arrays

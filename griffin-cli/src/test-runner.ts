@@ -52,7 +52,6 @@ export async function runTestFile(
         secretRegistry: secretRegistry,
       },
     );
-    console.log(JSON.stringify(result, null, 2));
     return result;
   } catch (error) {
     throw new Error(

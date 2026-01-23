@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Storage, JobQueueBackend } from "../storage/index.js";
-import type { TestPlanV1 } from "@griffin-app/griffin-ts/types";
+import type { PlanV1 } from "../schemas/plans.js";
 import { JobRunStatus, TriggerType, type JobRun } from "../schemas/job-run.js";
 export interface SchedulerConfig {
   /**
@@ -17,7 +17,7 @@ export interface ExecutionJobData {
   environment: string;
   location: string;
   executionGroupId: string;
-  plan: TestPlanV1; // Full plan included for executor/agent self-sufficiency
+  plan: PlanV1; // Full plan included for executor/agent self-sufficiency
   scheduledAt: string; // ISO timestamp
 }
 
@@ -119,11 +119,11 @@ export class SchedulerService {
     }
   }
 
-  private async findDuePlans(): Promise<TestPlanV1[]> {
+  private async findDuePlans(): Promise<PlanV1[]> {
     return await this.storage.plans.findDue();
   }
 
-  private async enqueuePlanExecution(plan: TestPlanV1): Promise<void> {
+  private async enqueuePlanExecution(plan: PlanV1): Promise<void> {
     const now = new Date();
     const queue = this.jobQueue.queue<ExecutionJobData>("plan-executions");
 

@@ -1,19 +1,40 @@
-import {
-  TestPlanV1Schema,
-  NodeSchema,
-  EdgeSchema,
-  FrequencySchema,
-  EndpointSchema,
-  WaitSchema,
-  AssertionSchema,
-  AssertionsSchema,
-  HttpMethodSchema,
-  ResponseFormatSchema,
-  BinaryPredicateOperatorSchema,
-} from "@griffin-app/griffin-ts/schema";
-import { TestPlanV1 } from "@griffin-app/griffin-ts/types";
 import { Type } from "typebox";
 import { FastifyTypeBox } from "../../types.js";
+//import {
+//  EdgeSchema,
+//  WaitSchema,
+//  AssertionsSchema,
+//  JSONAssertionSchema,
+//  FrequencySchema,
+//  AssertionSchema,
+//  FrequencyUnitSchema,
+//  HttpMethodSchema,
+//  JSONAccessor,
+//  JSONAccessorSchema,
+//  ResponseFormatSchema,
+//  TextAssertionSchema,
+//  XMLAssertionSchema,
+//} from "@griffin-app/griffin-ts/schema";
+
+import {
+  PlanV1Schema,
+  NodeSchema,
+  EndpointSchema,
+  SecretRefSchema,
+  SecretOrStringSchema,
+  EdgeSchema,
+  WaitSchema,
+  AssertionsSchema,
+  AssertionSchema,
+  JSONAssertionSchema,
+  XMLAssertionSchema,
+  TextAssertionSchema,
+  JSONAccessorSchema,
+  FrequencyUnitSchema,
+  HttpMethodSchema,
+  ResponseFormatSchema,
+  StringLiteralSchema,
+} from "../../schemas/plans.js";
 import {
   Ref,
   ErrorResponseOpts,
@@ -26,9 +47,9 @@ import { plansTable } from "../../storage/adapters/postgres/schema.js";
 
 export const CreatePlanEndpoint = {
   tags: ["plan"],
-  body: Type.Omit(TestPlanV1Schema, ["id"]),
+  body: Type.Omit(PlanV1Schema, ["id"]),
   response: {
-    201: SuccessResponseSchema(Ref(TestPlanV1Schema)),
+    201: SuccessResponseSchema(Ref(PlanV1Schema)),
     ...ErrorResponseOpts,
   },
 };
@@ -41,7 +62,7 @@ export const ListPlansEndpoint = {
     ...PaginationRequestOpts,
   }),
   response: {
-    200: PaginatedResponseSchema(Ref(TestPlanV1Schema)),
+    200: PaginatedResponseSchema(Ref(PlanV1Schema)),
     ...ErrorResponseOpts,
   },
 };
@@ -51,9 +72,9 @@ export const UpdatePlanEndpoint = {
   params: Type.Object({
     id: Type.String(),
   }),
-  body: Type.Omit(TestPlanV1Schema, ["id"]),
+  body: Type.Omit(PlanV1Schema, ["id"]),
   response: {
-    200: SuccessResponseSchema(Ref(TestPlanV1Schema)),
+    200: SuccessResponseSchema(Ref(PlanV1Schema)),
     ...ErrorResponseOpts,
   },
 };
@@ -77,18 +98,29 @@ export const GetPlanByNameEndpoint = {
     name: Type.String(),
   }),
   response: {
-    200: SuccessResponseSchema(Ref(TestPlanV1Schema)),
+    200: SuccessResponseSchema(Ref(PlanV1Schema)),
     ...ErrorResponseOpts,
   },
 };
 
 export default function (fastify: FastifyTypeBox) {
-  fastify.addSchema(TestPlanV1Schema);
+  fastify.addSchema(PlanV1Schema);
   fastify.addSchema(NodeSchema);
   fastify.addSchema(EdgeSchema);
   fastify.addSchema(EndpointSchema);
   fastify.addSchema(WaitSchema);
   fastify.addSchema(AssertionsSchema);
+  fastify.addSchema(AssertionSchema);
+  fastify.addSchema(JSONAssertionSchema);
+  fastify.addSchema(XMLAssertionSchema);
+  fastify.addSchema(TextAssertionSchema);
+  fastify.addSchema(JSONAccessorSchema);
+  fastify.addSchema(FrequencyUnitSchema);
+  fastify.addSchema(SecretOrStringSchema);
+  fastify.addSchema(SecretRefSchema);
+  fastify.addSchema(HttpMethodSchema);
+  fastify.addSchema(ResponseFormatSchema);
+  fastify.addSchema(StringLiteralSchema);
   //fastify.addSchema(AssertionSchema);
   //fastify.addSchema(BinaryPredicateOperatorSchema);
   //fastify.addSchema(FrequencySchema);

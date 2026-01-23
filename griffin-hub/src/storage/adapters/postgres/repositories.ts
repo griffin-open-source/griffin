@@ -5,7 +5,7 @@
 import type { SQL } from "drizzle-orm";
 import { and, asc, count, desc, eq, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
-import type { TestPlanV1 } from "@griffin-app/griffin-ts/types";
+import type { PlanV1 } from "../../../schemas/plans.js";
 import type { JobRun } from "../../../schemas/job-run.js";
 import type { Agent, AgentStatus } from "../../../schemas/agent.js";
 import type {
@@ -98,7 +98,7 @@ export class PostgresPlansRepository implements PlansRepository {
     return this.db.$count(plansTable, where);
   }
 
-  async findDue(): Promise<TestPlanV1[]> {
+  async findDue(): Promise<PlanV1[]> {
     // Complex query: find plans that are due based on their frequency
     // A plan is due if:
     // 1. It has a frequency defined AND

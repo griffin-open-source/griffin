@@ -5,7 +5,7 @@
 
 import type { SQL } from "drizzle-orm";
 import * as schema from "./adapters/postgres/schema.js";
-import type { TestPlanV1 } from "@griffin-app/griffin-ts/types";
+import type { PlanV1 } from "../schemas/plans.js";
 import type { JobRun } from "../schemas/job-run.js";
 import type { Agent } from "../schemas/agent.js";
 
@@ -46,7 +46,7 @@ export interface PlansRepository {
    * Find plans that are due for execution based on their frequency.
    * Returns plans that have never run or whose next run time has passed.
    */
-  findDue(): Promise<TestPlanV1[]>;
+  findDue(): Promise<PlanV1[]>;
 }
 
 /**

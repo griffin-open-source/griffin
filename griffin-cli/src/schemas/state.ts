@@ -8,18 +8,16 @@ import { Type, type Static } from "typebox";
  * This file only stores configuration (project, environments, runner connection).
  */
 
-export const EnvironmentConfigSchema = Type.Object({
-
-});
+export const EnvironmentConfigSchema = Type.Object({});
 
 export type EnvironmentConfig = Static<typeof EnvironmentConfigSchema>;
 
-export const RunnerConfigSchema = Type.Object({
+export const HubConfigSchema = Type.Object({
   baseUrl: Type.String(),
-  apiToken: Type.Optional(Type.String()),
+  clientId: Type.String(),
 });
 
-export type RunnerConfig = Static<typeof RunnerConfigSchema>;
+export type HubConfig = Static<typeof HubConfigSchema>;
 
 export const DiscoveryConfigSchema = Type.Object({
   pattern: Type.Optional(Type.String()),
@@ -37,8 +35,8 @@ export const StateFileSchema = Type.Object({
   environments: Type.Record(Type.String(), EnvironmentConfigSchema),
   defaultEnvironment: Type.Optional(Type.String()),
 
-  // Runner connection (for remote execution)
-  runner: Type.Optional(RunnerConfigSchema),
+  // Hub connection (for remote execution)
+  hub: Type.Optional(HubConfigSchema),
 
   // Discovery settings
   discovery: Type.Optional(DiscoveryConfigSchema),

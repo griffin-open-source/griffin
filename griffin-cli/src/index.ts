@@ -1,5 +1,6 @@
 // Export core types and utilities
-export type { StateFile, RunnerConfig } from "./schemas/state.js";
+export type { StateFile, HubConfig } from "./schemas/state.js";
+export type { CredentialsFile, HubCredentials } from "./schemas/credentials.js";
 export type {
   DiscoveredPlan,
   DiscoveryResult,
@@ -12,8 +13,14 @@ export type { ApplyResult, ApplyAction, ApplyError } from "./core/apply.js";
 export {
   createEmptyState,
   StateFileSchema,
-  RunnerConfigSchema,
+  HubConfigSchema,
 } from "./schemas/state.js";
+
+export {
+  createEmptyCredentials,
+  CredentialsFileSchema,
+  HubCredentialsSchema,
+} from "./schemas/credentials.js";
 
 export {
   getStateDirPath,
@@ -29,13 +36,24 @@ export {
   getEnvironment,
 } from "./core/state.js";
 
+export {
+  getCredentialsDirPath,
+  getCredentialsFilePath,
+  credentialsExist,
+  loadCredentials,
+  saveCredentials,
+  saveHubCredentials,
+  getHubCredentials,
+  removeHubCredentials,
+} from "./core/credentials.js";
+
 export { discoverPlans, formatDiscoveryErrors } from "./core/discovery.js";
 
 export { computeDiff, formatDiff, formatDiffJson } from "./core/diff.js";
 
 export { applyDiff, formatApplyResult } from "./core/apply.js";
 
-export { createSdk } from "./core/sdk.js";
+export { createSdk, createSdkWithCredentials } from "./core/sdk.js";
 
 export { detectProjectId } from "./core/project.js";
 
@@ -54,3 +72,5 @@ export { executeRuns } from "./commands/hub/runs.js";
 export { executePlan } from "./commands/hub/plan.js";
 export { executeApply } from "./commands/hub/apply.js";
 export { executeRun } from "./commands/hub/run.js";
+export { executeLogin } from "./commands/hub/login.js";
+export { executeLogout } from "./commands/hub/logout.js";

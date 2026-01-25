@@ -9,7 +9,7 @@ export async function executeEnvList(): Promise<void> {
     const state = await loadState();
 
     const environments = Object.keys(state.environments);
-    
+
     if (environments.length === 0) {
       terminal.warn("No environments configured.");
       terminal.blank();
@@ -19,11 +19,13 @@ export async function executeEnvList(): Promise<void> {
 
     terminal.info("Available environments:");
     terminal.blank();
-    
+
     for (const envName of environments) {
       const isDefault = state.defaultEnvironment === envName;
-      const marker = isDefault ? terminal.colors.green("●") : terminal.colors.dim("○");
-      const envDisplay = isDefault 
+      const marker = isDefault
+        ? terminal.colors.green("●")
+        : terminal.colors.dim("○");
+      const envDisplay = isDefault
         ? terminal.colors.cyan(envName) + terminal.colors.dim(" (default)")
         : envName;
       terminal.log(`  ${marker} ${envDisplay}`);

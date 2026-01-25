@@ -3,8 +3,11 @@ import type { PlanV1 } from "@griffin-app/griffin-hub-sdk";
 import { discoverPlans, formatDiscoveryErrors } from "../../core/discovery.js";
 import { computeDiff, formatDiff } from "../../core/diff.js";
 import { applyDiff, formatApplyResult } from "../../core/apply.js";
-import { createSdk } from "../../core/sdk.js";
+import { createSdkWithCredentials } from "../../core/sdk.js";
 import { terminal } from "../../utils/terminal.js";
+import { withSDKErrorHandling } from "../../utils/sdk-error.js";
+import { loadVariables } from "../../core/variables.js";
+import { resolvePlan } from "../../resolve.js";
 
 export interface ApplyOptions {
   autoApprove?: boolean;
@@ -25,23 +28,18 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
     const envName = await resolveEnvironment(options.env);
 
     // Check if runner is configured
-    if (!state.runner?.baseUrl) {
+    if (!state.hub?.baseUrl) {
       terminal.error("Hub connection not configured.");
       terminal.dim("Connect with:");
       terminal.dim("  griffin hub connect --url <url> --token <token>");
       terminal.exit(1);
     }
 
-    terminal.info(
-      `Applying to ${terminal.colors.cyan(envName)} environment`,
-    );
+    terminal.info(`Applying to ${terminal.colors.cyan(envName)} environment`);
     terminal.blank();
 
-    // Create SDK clients
-    const sdk = createSdk({
-      baseUrl: state.runner?.baseUrl || "",
-      apiToken: state.runner?.apiToken || "",
-    });
+    // Create SDK clients with credentials
+    const sdk = await createSdkWithCredentials(state.hub!.baseUrl);
 
     // Discover local plans
     const discoveryPattern =
@@ -66,24 +64,30 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
     spinner.succeed(`Found ${plans.length} local plan(s)`);
 
     // Fetch remote plans for this project + environment
-    const fetchSpinner = terminal
-      .spinner("Fetching remote plans...")
-      .start();
-    const response = await sdk.getPlan({
-      query: {
-        projectId: state.projectId,
-        environment: envName,
-      },
-    });
+    const fetchSpinner = terminal.spinner("Fetching remote plans...").start();
+    const response = await withSDKErrorHandling(
+      () =>
+        sdk.getPlan({
+          query: {
+            projectId: state.projectId,
+            environment: envName,
+          },
+        }),
+      "Failed to fetch remote plans",
+    );
     const remotePlans = response?.data?.data!;
     fetchSpinner.succeed(`Found ${remotePlans.length} remote plan(s)`);
 
-    // Compute diff (include deletions if --prune)
-    const diff = computeDiff(
-      plans.map((p) => p.plan),
-      remotePlans,
-      { includeDeletions: options.prune || false },
+    // Load variables and resolve local plans before computing diff
+    const variables = await loadVariables(envName);
+    const resolvedPlans = plans.map((p) =>
+      resolvePlan(p.plan, state.projectId, envName, variables),
     );
+
+    // Compute diff (include deletions if --prune)
+    const diff = computeDiff(resolvedPlans, remotePlans, {
+      includeDeletions: options.prune || false,
+    });
 
     // Show plan
     terminal.blank();
@@ -120,7 +124,7 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
 
     // Apply changes with environment injection
     const applySpinner = terminal.spinner("Applying changes...").start();
-    const result = await applyDiff(diff, sdk, state.projectId, envName, {
+    const result = await applyDiff(diff, sdk, {
       dryRun: options.dryRun,
     });
 

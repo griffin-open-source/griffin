@@ -84,10 +84,7 @@ function isStringLiteral<A>(value: A): value is A & StringLiteral {
   }
 
   const obj = value as Record<string, unknown>;
-  if (
-    !("$literal" in obj) ||
-    typeof obj.$literal !== "string"
-  ) {
+  if (!("$literal" in obj) || typeof obj.$literal !== "string") {
     return false;
   }
 
@@ -123,7 +120,6 @@ function resolveVariable(
   const placeholder = `\${${key}}`;
   return template.replace(placeholder, value);
 }
-
 
 /**
  * Recursively walk a plan object and resolve all variable references.

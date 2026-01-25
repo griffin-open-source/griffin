@@ -4,9 +4,12 @@ import { comparePlans, type PlanChanges } from "./plan-diff.js";
 
 export type DiffActionType = "create" | "update" | "delete" | "noop";
 
+// Type for resolved plans (DSL plans with variables resolved)
+export type ResolvedPlan = Omit<PlanV1, "id">;
+
 export interface DiffAction {
   type: DiffActionType;
-  plan: PlanDSL | null; // Local plan (null for delete actions)
+  plan: ResolvedPlan | null; // Local plan (null for delete actions)
   remotePlan: PlanV1 | null; // Hub plan (null for create actions)
   reason: string;
   changes?: PlanChanges; // Granular changes for 'update' actions
@@ -28,7 +31,8 @@ export interface DiffOptions {
 
 /**
  * Compute diff between local plans and remote plans (hub is source of truth).
- * Plans are matched by name. The CLI injects environment at apply time.
+ * Local plans should be resolved (variables replaced with actual values) before calling this.
+ * Plans are matched by name.
  *
  * Rules:
  * - CREATE: Plan exists locally but not on hub
@@ -37,7 +41,7 @@ export interface DiffOptions {
  * - NOOP: Plan exists in both with same content
  */
 export function computeDiff(
-  localPlans: PlanDSL[],
+  localPlans: ResolvedPlan[],
   remotePlans: PlanV1[],
   options: DiffOptions,
 ): DiffResult {
@@ -68,7 +72,7 @@ export function computeDiff(
       });
     } else {
       // Plan exists in both - compute granular changes
-      const changes = comparePlans(local, remote);
+      const changes = comparePlans(local as PlanV1, remote);
 
       if (changes.hasChanges) {
         // Plan on hub but differs -> UPDATE

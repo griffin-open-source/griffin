@@ -33,13 +33,18 @@ export async function executeValidate(): Promise<void> {
     }
 
     // Report success
-    spinner.succeed(`Found ${terminal.colors.bold(plans.length.toString())} valid plan(s)`);
+    spinner.succeed(
+      `Found ${terminal.colors.bold(plans.length.toString())} valid plan(s)`,
+    );
     terminal.blank();
 
     for (const { plan, filePath, exportName } of plans) {
       const shortPath = filePath.replace(process.cwd(), ".");
-      const exportInfo = exportName === "default" ? "" : terminal.colors.dim(` (${exportName})`);
-      terminal.log(`  ${terminal.colors.green("●")} ${terminal.colors.cyan(plan.name)}${exportInfo}`);
+      const exportInfo =
+        exportName === "default" ? "" : terminal.colors.dim(` (${exportName})`);
+      terminal.log(
+        `  ${terminal.colors.green("●")} ${terminal.colors.cyan(plan.name)}${exportInfo}`,
+      );
       terminal.dim(`    ${shortPath}`);
       terminal.dim(
         `    Nodes: ${plan.nodes.length}, Edges: ${plan.edges.length}`,

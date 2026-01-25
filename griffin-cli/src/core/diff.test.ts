@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { computeDiff } from "./diff.js";
+import { computeDiff, type ResolvedPlan } from "./diff.js";
 import type { PlanV1 } from "@griffin-app/griffin-hub-sdk";
-import type { PlanDSL } from "@griffin-app/griffin-ts/types";
 
 // Helper to create a minimal test plan
 function createPlan(name: string, overrides?: Partial<PlanV1>): PlanV1 {
@@ -18,13 +17,30 @@ function createPlan(name: string, overrides?: Partial<PlanV1>): PlanV1 {
   };
 }
 
+// Helper to create a resolved plan (without id)
+function createResolvedPlan(
+  name: string,
+  overrides?: Partial<ResolvedPlan>,
+): ResolvedPlan {
+  return {
+    name,
+    project: "test-project",
+    environment: "test",
+    version: "1.0",
+    frequency: { every: 5, unit: "MINUTE" },
+    nodes: [],
+    edges: [],
+    ...overrides,
+  };
+}
+
 describe("computeDiff", () => {
   describe("CREATE actions", () => {
     it("should create action when plan exists locally but not remotely", () => {
-      const local = [createPlan("health-check")];
+      const local = [createResolvedPlan("health-check")];
       const remote: PlanV1[] = [];
 
-      const result = computeDiff(local as PlanDSL[], remote, {
+      const result = computeDiff(local, remote, {
         includeDeletions: false,
       });
 
@@ -41,7 +57,7 @@ describe("computeDiff", () => {
   describe("UPDATE actions", () => {
     it("should create update action when plan content differs", () => {
       const local = [
-        createPlan("health-check", {
+        createResolvedPlan("health-check", {
           frequency: { every: 10, unit: "MINUTE" },
         }),
       ];
@@ -51,7 +67,7 @@ describe("computeDiff", () => {
         }),
       ];
 
-      const result = computeDiff(local as PlanDSL[], remote, {
+      const result = computeDiff(local, remote, {
         includeDeletions: false,
       });
 
@@ -67,11 +83,12 @@ describe("computeDiff", () => {
 
   describe("NOOP actions", () => {
     it("should create noop action when plan content matches", () => {
-      const plan = createPlan("health-check");
-      const local = [plan];
-      const remote = [{ ...plan }];
+      const resolvedPlan = createResolvedPlan("health-check");
+      const remotePlan = createPlan("health-check");
+      const local = [resolvedPlan];
+      const remote = [remotePlan];
 
-      const result = computeDiff(local as PlanDSL[], remote, {
+      const result = computeDiff(local, remote, {
         includeDeletions: false,
       });
 
@@ -86,7 +103,7 @@ describe("computeDiff", () => {
 
   describe("DELETE actions", () => {
     it("should not create delete action when includeDeletions is false", () => {
-      const local: PlanDSL[] = [];
+      const local: ResolvedPlan[] = [];
       const remote = [createPlan("old-plan")];
 
       const result = computeDiff(local, remote, { includeDeletions: false });
@@ -96,7 +113,7 @@ describe("computeDiff", () => {
     });
 
     it("should create delete action when includeDeletions is true", () => {
-      const local: PlanDSL[] = [];
+      const local: ResolvedPlan[] = [];
       const remote = [createPlan("old-plan")];
 
       const result = computeDiff(local, remote, { includeDeletions: true });
@@ -112,11 +129,11 @@ describe("computeDiff", () => {
   describe("Mixed scenarios", () => {
     it("should handle multiple plans with different actions", () => {
       const local = [
-        createPlan("new-plan"),
-        createPlan("updated-plan", {
+        createResolvedPlan("new-plan"),
+        createResolvedPlan("updated-plan", {
           frequency: { every: 10, unit: "MINUTE" },
         }),
-        createPlan("unchanged-plan"),
+        createResolvedPlan("unchanged-plan"),
       ];
       const remote = [
         createPlan("updated-plan", {
@@ -126,7 +143,7 @@ describe("computeDiff", () => {
         createPlan("deleted-plan"),
       ];
 
-      const result = computeDiff(local as PlanDSL[], remote, {
+      const result = computeDiff(local, remote, {
         includeDeletions: true,
       });
 
@@ -140,10 +157,11 @@ describe("computeDiff", () => {
 
   describe("Matching by name", () => {
     it("should match plans by name, not by ID", () => {
-      const local = [createPlan("health-check", { id: "local-id-123" })];
+      // Local plans don't have IDs after resolution
+      const local = [createResolvedPlan("health-check")];
       const remote = [createPlan("health-check", { id: "remote-id-456" })];
 
-      const result = computeDiff(local as PlanDSL[], remote, {
+      const result = computeDiff(local, remote, {
         includeDeletions: false,
       });
 

@@ -16,6 +16,8 @@ import { executeRuns } from "./commands/hub/runs.js";
 import { executePlan } from "./commands/hub/plan.js";
 import { executeApply } from "./commands/hub/apply.js";
 import { executeRun } from "./commands/hub/run.js";
+import { executeLogin } from "./commands/hub/login.js";
+import { executeLogout } from "./commands/hub/logout.js";
 
 const program = new Command();
 
@@ -127,6 +129,19 @@ hub
   .option("--force", "Run even if local plan differs from hub")
   .action(async (env, options) => {
     await executeRun({ ...options, env });
+  });
+hub
+  .command("login")
+  .description("Login to the hub")
+  .action(async () => {
+    await executeLogin();
+  });
+
+hub
+  .command("logout")
+  .description("Remove stored credentials")
+  .action(async (options) => {
+    await executeLogout(options);
   });
 
 // Parse arguments

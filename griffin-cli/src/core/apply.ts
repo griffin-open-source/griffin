@@ -4,7 +4,7 @@ import type { PlanV1 } from "@griffin-app/griffin-hub-sdk";
 import { loadVariables } from "./variables.js";
 import { resolvePlan } from "../resolve.js";
 import { terminal } from "../utils/terminal.js";
-
+import { withSDKErrorHandling } from "../utils/sdk-error.js";
 export interface ApplyResult {
   success: boolean;
   applied: ApplyAction[];
@@ -30,8 +30,6 @@ export interface ApplyError {
 export async function applyDiff(
   diff: DiffResult,
   sdk: GriffinHubSdk,
-  projectId: string,
-  environment: string,
   options?: {
     dryRun?: boolean;
   },
@@ -58,10 +56,10 @@ export async function applyDiff(
 
       switch (action.type) {
         case "create":
-          await applyCreate(action, sdk, projectId, environment, applied);
+          await applyCreate(action, sdk, applied);
           break;
         case "update":
-          await applyUpdate(action, sdk, projectId, environment, applied);
+          await applyUpdate(action, sdk, applied);
           break;
         case "delete":
           await applyDelete(action, sdk, applied);
@@ -96,14 +94,12 @@ export async function applyDiff(
 async function applyCreate(
   action: DiffAction,
   sdk: GriffinHubSdk,
-  projectId: string,
-  environment: string,
   applied: ApplyAction[],
 ): Promise<void> {
-  const plan = action.plan!;
+  const resolvedPlan = action.plan!;
 
-  const variables = await loadVariables(environment);
-  const resolvedPlan = resolvePlan(plan, projectId, environment, variables);
+  //const variables = await loadVariables(environment);
+  //const resolvedPlan = resolvePlan(plan, projectId, environment, variables);
 
   const { data: createdPlan } = await sdk.postPlan({
     body: resolvedPlan,
@@ -124,30 +120,28 @@ async function applyCreate(
 async function applyUpdate(
   action: DiffAction,
   sdk: GriffinHubSdk,
-  projectId: string,
-  environment: string,
   applied: ApplyAction[],
 ): Promise<void> {
-  const plan = action.plan!;
-  const remotePlan = action.remotePlan!;
-  const variables = await loadVariables(environment);
-  const resolvedPlan = resolvePlan(plan, projectId, environment, variables);
+  const resolvedPlan = action.plan!;
+  //const remotePlan = action.remotePlan!;
+  //const variables = await loadVariables(environment);
+  //const resolvedPlan = resolvePlan(plan, projectId, environment, variables);
 
   // Use the remote plan's ID for the update
   await sdk.putPlanById({
     path: {
-      id: remotePlan.id,
+      id: action.remotePlan!.id,
     },
     body: resolvedPlan,
   });
 
   applied.push({
     type: "update",
-    planName: plan.name,
+    planName: action.remotePlan!.name,
     success: true,
   });
 
-  terminal.success(`Updated: ${terminal.colors.cyan(plan.name)}`);
+  terminal.success(`Updated: ${terminal.colors.cyan(action.remotePlan!.name)}`);
 }
 
 /**
@@ -160,11 +154,15 @@ async function applyDelete(
 ): Promise<void> {
   const remotePlan = action.remotePlan!;
 
-  await sdk.deletePlanById({
-    path: {
-      id: remotePlan.id,
-    },
-  });
+  await withSDKErrorHandling(
+    () =>
+      sdk.deletePlanById({
+        path: {
+          id: remotePlan.id,
+        },
+      }),
+    `Failed to delete plan "${remotePlan.name}"`,
+  );
 
   applied.push({
     type: "delete",

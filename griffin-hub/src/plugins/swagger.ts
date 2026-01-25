@@ -34,9 +34,14 @@ export default fp(async (fastify) => {
       ],
       components: {
         securitySchemes: {
-          // Add security schemes here if needed in the future
+          bearerAuth: {
+            type: "http",
+            scheme: "bearer",
+            bearerFormat: "JWT",
+          },
         },
       },
+      security: [{ bearerAuth: [] }],
     },
     refResolver: {
       buildLocalReference(json, baseUri, fragment, i) {

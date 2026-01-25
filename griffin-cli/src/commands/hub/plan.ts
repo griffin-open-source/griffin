@@ -1,8 +1,11 @@
 import { loadState, resolveEnvironment } from "../../core/state.js";
 import { discoverPlans, formatDiscoveryErrors } from "../../core/discovery.js";
-import { createSdk } from "../../core/sdk.js";
+import { createSdkWithCredentials } from "../../core/sdk.js";
 import { computeDiff, formatDiff, formatDiffJson } from "../../core/diff.js";
 import { terminal } from "../../utils/terminal.js";
+import { withSDKErrorHandling } from "../../utils/sdk-error.js";
+import { loadVariables } from "../../core/variables.js";
+import { resolvePlan } from "../../resolve.js";
 
 export interface PlanOptions {
   json?: boolean;
@@ -20,7 +23,7 @@ export async function executePlan(options: PlanOptions): Promise<void> {
     // Resolve environment
     const envName = await resolveEnvironment(options.env);
 
-    if (!state.runner?.baseUrl) {
+    if (!state.hub?.baseUrl) {
       terminal.error("Hub connection not configured.");
       terminal.dim("Connect with:");
       terminal.dim("  griffin hub connect --url <url> --token <token>");
@@ -49,31 +52,34 @@ export async function executePlan(options: PlanOptions): Promise<void> {
 
     spinner.succeed(`Found ${plans.length} local plan(s)`);
 
-    // Create SDK clients
-    const sdk = createSdk({
-      baseUrl: state.runner?.baseUrl || "",
-      apiToken: state.runner?.apiToken || "",
-    });
+    // Create SDK clients with credentials
+    const sdk = await createSdkWithCredentials(state.hub!.baseUrl);
 
     // Fetch remote plans for this project + environment
-    const fetchSpinner = terminal
-      .spinner("Fetching remote plans...")
-      .start();
-    const response = await sdk.getPlan({
-      query: {
-        projectId: state.projectId,
-        environment: envName,
-      },
-    });
+    const fetchSpinner = terminal.spinner("Fetching remote plans...").start();
+    const response = await withSDKErrorHandling(
+      () =>
+        sdk.getPlan({
+          query: {
+            projectId: state.projectId,
+            environment: envName,
+          },
+        }),
+      "Failed to fetch remote plans",
+    );
     const remotePlans = response?.data?.data!;
     fetchSpinner.succeed(`Found ${remotePlans.length} remote plan(s)`);
 
-    // Compute diff (no deletions shown by default)
-    const diff = computeDiff(
-      plans.map((p) => p.plan),
-      remotePlans,
-      { includeDeletions: false },
+    // Load variables and resolve local plans before computing diff
+    const variables = await loadVariables(envName);
+    const resolvedPlans = plans.map((p) =>
+      resolvePlan(p.plan, state.projectId, envName, variables),
     );
+
+    // Compute diff (no deletions shown by default)
+    const diff = computeDiff(resolvedPlans, remotePlans, {
+      includeDeletions: false,
+    });
 
     terminal.blank();
 

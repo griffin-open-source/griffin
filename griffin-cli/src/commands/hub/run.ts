@@ -1,9 +1,12 @@
 import { loadState, resolveEnvironment } from "../../core/state.js";
 import type { PlanV1 } from "@griffin-app/griffin-hub-sdk";
-import { createSdk } from "../../core/sdk.js";
+import { createSdkWithCredentials } from "../../core/sdk.js";
 import { discoverPlans, formatDiscoveryErrors } from "../../core/discovery.js";
 import { computeDiff } from "../../core/diff.js";
 import { terminal } from "../../utils/terminal.js";
+import { withSDKErrorHandling } from "../../utils/sdk-error.js";
+import { loadVariables } from "../../core/variables.js";
+import { resolvePlan } from "../../resolve.js";
 
 export interface RunOptions {
   plan: string;
@@ -23,18 +26,15 @@ export async function executeRun(options: RunOptions): Promise<void> {
     // Resolve environment
     const envName = await resolveEnvironment(options.env);
 
-    if (!state.runner?.baseUrl) {
+    if (!state.hub?.baseUrl) {
       terminal.error("Hub connection not configured.");
       terminal.dim("Connect with:");
       terminal.dim("  griffin hub connect --url <url> --token <token>");
       terminal.exit(1);
     }
 
-    // Create SDK clients
-    const sdk = createSdk({
-      baseUrl: state.runner?.baseUrl || "",
-      apiToken: state.runner?.apiToken || "",
-    });
+    // Create SDK clients with credentials
+    const sdk = await createSdkWithCredentials(state.hub!.baseUrl);
 
     // Discover local plans
     const discoveryPattern =
@@ -71,12 +71,16 @@ export async function executeRun(options: RunOptions): Promise<void> {
 
     // Fetch remote plans for this project + environment
     const fetchSpinner = terminal.spinner("Checking hub...").start();
-    const response = await sdk.getPlan({
-      query: {
-        projectId: state.projectId,
-        environment: envName,
-      },
-    });
+    const response = await withSDKErrorHandling(
+      () =>
+        sdk.getPlan({
+          query: {
+            projectId: state.projectId,
+            environment: envName,
+          },
+        }),
+      "Failed to fetch plans from hub",
+    );
     const remotePlans = response?.data?.data!;
 
     // Find remote plan by name
@@ -88,8 +92,17 @@ export async function executeRun(options: RunOptions): Promise<void> {
     }
     fetchSpinner.succeed("Plan found on hub");
 
+    // Load variables and resolve local plan before computing diff
+    const variables = await loadVariables(envName);
+    const resolvedLocalPlan = resolvePlan(
+      localPlan!.plan,
+      state.projectId,
+      envName,
+      variables,
+    );
+
     // Compute diff to check if local plan differs from remote
-    const diff = computeDiff([localPlan!.plan], [remotePlan!] as PlanV1[], {
+    const diff = computeDiff([resolvedLocalPlan], [remotePlan!] as PlanV1[], {
       includeDeletions: false,
     });
 
@@ -100,14 +113,20 @@ export async function executeRun(options: RunOptions): Promise<void> {
     if (hasDiff && !options.force) {
       terminal.error(`Local plan "${options.plan}" differs from hub`);
       terminal.blank();
-      terminal.warn("The plan on the hub is different from your local version.");
-      terminal.dim("Run 'griffin hub apply' to sync, or use --force to run anyway.");
+      terminal.warn(
+        "The plan on the hub is different from your local version.",
+      );
+      terminal.dim(
+        "Run 'griffin hub apply' to sync, or use --force to run anyway.",
+      );
       terminal.exit(1);
     }
 
     // Trigger the run
     terminal.blank();
-    terminal.info(`Triggering run for plan: ${terminal.colors.cyan(options.plan)}`);
+    terminal.info(
+      `Triggering run for plan: ${terminal.colors.cyan(options.plan)}`,
+    );
     terminal.log(`Target environment: ${terminal.colors.cyan(envName)}`);
 
     if (hasDiff && options.force) {
@@ -115,26 +134,34 @@ export async function executeRun(options: RunOptions): Promise<void> {
     }
 
     const triggerSpinner = terminal.spinner("Triggering run...").start();
-    const runResponse = await sdk.postRunsTriggerByPlanId({
-      path: {
-        planId: remotePlan!.id,
-      },
-      body: {
-        environment: envName,
-      },
-    });
+    const runResponse = await withSDKErrorHandling(
+      () =>
+        sdk.postRunsTriggerByPlanId({
+          path: {
+            planId: remotePlan!.id,
+          },
+          body: {
+            environment: envName,
+          },
+        }),
+      "Failed to trigger run",
+    );
     const run = runResponse?.data?.data!;
     triggerSpinner.succeed("Run triggered");
-    
+
     terminal.blank();
     terminal.log(`Run ID: ${terminal.colors.dim(run.id)}`);
     terminal.log(`Status: ${terminal.colors.cyan(run.status)}`);
-    terminal.log(`Started: ${terminal.colors.dim(new Date(run.startedAt).toLocaleString())}`);
+    terminal.log(
+      `Started: ${terminal.colors.dim(new Date(run.startedAt).toLocaleString())}`,
+    );
 
     // Wait for completion if requested
     if (options.wait) {
       terminal.blank();
-      const waitSpinner = terminal.spinner("Waiting for run to complete...").start();
+      const waitSpinner = terminal
+        .spinner("Waiting for run to complete...")
+        .start();
 
       const runId = run.id;
       let completed = false;
@@ -142,11 +169,15 @@ export async function executeRun(options: RunOptions): Promise<void> {
       while (!completed) {
         await new Promise((resolve) => setTimeout(resolve, 2000)); // Poll every 2 seconds
 
-        const runStatusResponse = await sdk.getRunsById({
-          path: {
-            id: runId,
-          },
-        });
+        const runStatusResponse = await withSDKErrorHandling(
+          () =>
+            sdk.getRunsById({
+              path: {
+                id: runId,
+              },
+            }),
+          "Failed to fetch run status",
+        );
         const run = runStatusResponse?.data?.data!;
 
         if (run.status === "completed" || run.status === "failed") {
@@ -160,11 +191,15 @@ export async function executeRun(options: RunOptions): Promise<void> {
 
           terminal.blank();
           if (run.duration_ms) {
-            terminal.log(`Duration: ${terminal.colors.dim((run.duration_ms / 1000).toFixed(2) + "s")}`);
+            terminal.log(
+              `Duration: ${terminal.colors.dim((run.duration_ms / 1000).toFixed(2) + "s")}`,
+            );
           }
 
           if (run.success !== undefined) {
-            const successText = run.success ? terminal.colors.green("Yes") : terminal.colors.red("No");
+            const successText = run.success
+              ? terminal.colors.green("Yes")
+              : terminal.colors.red("No");
             terminal.log(`Success: ${successText}`);
           }
 

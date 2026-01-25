@@ -34,7 +34,9 @@ export async function executeInit(options: InitOptions): Promise<void> {
 
   // Initialize state file
   await initState(projectId);
-  terminal.success(`Created state file: ${terminal.colors.dim(getStateFilePath())}`);
+  terminal.success(
+    `Created state file: ${terminal.colors.dim(getStateFilePath())}`,
+  );
 
   // Create default environments
   await addEnvironment("dev", {});

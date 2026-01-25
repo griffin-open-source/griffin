@@ -95,10 +95,7 @@ export class Terminal {
   /**
    * Prompt user to select from a list
    */
-  async select<T extends string>(
-    message: string,
-    choices: T[],
-  ): Promise<T> {
+  async select<T extends string>(message: string, choices: T[]): Promise<T> {
     const response = await enquirer.prompt<{ selected: T }>({
       type: "select",
       name: "selected",
@@ -124,10 +121,7 @@ export class Terminal {
   /**
    * Create a formatted table
    */
-  table(options?: {
-    head?: string[];
-    colWidths?: number[];
-  }): Table.Table {
+  table(options?: { head?: string[]; colWidths?: number[] }): Table.Table {
     return new Table({
       head: options?.head,
       style: { head: ["cyan"] },
@@ -137,10 +131,7 @@ export class Terminal {
   /**
    * Print a formatted table
    */
-  printTable(
-    data: Array<Record<string, any>>,
-    columns?: string[],
-  ): void {
+  printTable(data: Array<Record<string, any>>, columns?: string[]): void {
     if (data.length === 0) {
       this.dim("(no data)");
       return;

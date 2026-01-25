@@ -1,6 +1,7 @@
 import { loadState } from "../../core/state.js";
-import { createSdk } from "../../core/sdk.js";
+import { createSdkWithCredentials } from "../../core/sdk.js";
 import { terminal } from "../../utils/terminal.js";
+import { withSDKErrorHandling } from "../../utils/sdk-error.js";
 
 export interface RunsOptions {
   plan?: string;
@@ -15,32 +16,33 @@ export async function executeRuns(options: RunsOptions): Promise<void> {
     // Load state
     const state = await loadState();
 
-    if (!state.runner?.baseUrl) {
+    if (!state.hub?.baseUrl) {
       terminal.error("Hub connection not configured.");
       terminal.dim("Connect with:");
       terminal.dim("  griffin hub connect --url <url> --token <token>");
       terminal.exit(1);
     }
 
-    // Create SDK clients
-    const sdk = createSdk({
-      baseUrl: state.runner!.baseUrl,
-      apiToken: state.runner!.apiToken || undefined,
-    });
+    // Create SDK clients with credentials
+    const sdk = await createSdkWithCredentials(state.hub!.baseUrl);
 
-    terminal.info(`Hub: ${terminal.colors.cyan(state.runner!.baseUrl)}`);
+    terminal.info(`Hub: ${terminal.colors.cyan(state.hub!.baseUrl)}`);
     terminal.blank();
 
     // Get recent runs
     const limit = options.limit || 10;
     const spinner = terminal.spinner("Fetching runs...").start();
-    const response = await sdk.getRuns({
-      query: {
-        planId: options.plan,
-        limit: limit,
-        offset: 0,
-      },
-    });
+    const response = await withSDKErrorHandling(
+      () =>
+        sdk.getRuns({
+          query: {
+            planId: options.plan,
+            limit: limit,
+            offset: 0,
+          },
+        }),
+      "Failed to fetch runs",
+    );
     const runsData = response?.data!;
 
     if (!runsData || runsData.total === 0) {
@@ -70,14 +72,11 @@ export async function executeRuns(options: RunsOptions): Promise<void> {
           : "-";
         const started = new Date(run.startedAt).toLocaleString();
 
-        table.push([
-          statusIcon,
-          run.planId || "-",
-          duration,
-          started,
-        ]);
+        table.push([statusIcon, run.planId || "-", duration, started]);
       } catch (error) {
-        terminal.error(`Error processing run ${run.id}: ${(error as Error).message}`);
+        terminal.error(
+          `Error processing run ${run.id}: ${(error as Error).message}`,
+        );
       }
     }
 

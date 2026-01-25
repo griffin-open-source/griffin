@@ -27,7 +27,7 @@ describe("applyDiff", () => {
 
     const mockPlanApi = {} as GriffinHubSdk;
 
-    const result = await applyDiff(diff, mockPlanApi, "project-id", "test");
+    const result = await applyDiff(diff, mockPlanApi);
 
     expect(result.success).toBe(true);
     expect(result.applied).toHaveLength(0);
@@ -40,7 +40,7 @@ describe("applyDiff", () => {
       actions: [
         {
           type: "noop",
-          plan: plan as PlanDSL,
+          plan: plan,
           remotePlan: plan,
           reason: "unchanged",
         },
@@ -50,7 +50,7 @@ describe("applyDiff", () => {
 
     const mockPlanApi = {} as GriffinHubSdk;
 
-    const result = await applyDiff(diff, mockPlanApi, "project-id", "test");
+    const result = await applyDiff(diff, mockPlanApi);
 
     expect(result.success).toBe(true);
     expect(result.applied).toHaveLength(0);
@@ -62,7 +62,7 @@ describe("applyDiff", () => {
       actions: [
         {
           type: "create",
-          plan: plan as PlanDSL,
+          plan: plan,
           remotePlan: null,
           reason: "new",
         },
@@ -71,12 +71,12 @@ describe("applyDiff", () => {
     };
 
     const mockPlanApi = {
-      planPost: vi.fn().mockResolvedValue({
+      postPlan: vi.fn().mockResolvedValue({
         data: { data: { ...plan, id: "created-id" } },
       }),
     } as unknown as GriffinHubSdk;
 
-    const result = await applyDiff(diff, mockPlanApi, "project-id", "staging");
+    const result = await applyDiff(diff, mockPlanApi);
 
     expect(result.success).toBe(true);
     expect(result.applied).toHaveLength(1);
@@ -87,9 +87,11 @@ describe("applyDiff", () => {
     // Verify the API was called with injected project and environment
     expect(mockPlanApi.postPlan).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: "new-plan",
-        project: "project-id",
-        environment: "staging",
+        body: expect.objectContaining({
+          name: "new-plan",
+          project: "test-project",
+          environment: "test",
+        }),
       }),
     );
   });
@@ -101,7 +103,7 @@ describe("applyDiff", () => {
       actions: [
         {
           type: "update",
-          plan: localPlan as PlanDSL,
+          plan: localPlan,
           remotePlan: remotePlan,
           reason: "changed",
         },
@@ -115,12 +117,7 @@ describe("applyDiff", () => {
       }),
     } as unknown as GriffinHubSdk;
 
-    const result = await applyDiff(
-      diff,
-      mockPlanApi,
-      "project-id",
-      "production",
-    );
+    const result = await applyDiff(diff, mockPlanApi);
 
     expect(result.success).toBe(true);
     expect(result.applied).toHaveLength(1);
@@ -130,11 +127,15 @@ describe("applyDiff", () => {
 
     // Verify the API was called with the remote plan's ID
     expect(mockPlanApi.putPlanById).toHaveBeenCalledWith(
-      "remote-id",
       expect.objectContaining({
-        name: "existing-plan",
-        project: "project-id",
-        environment: "production",
+        body: expect.objectContaining({
+          name: "existing-plan",
+          project: "test-project",
+          environment: "test",
+        }),
+        path: {
+          id: "remote-id",
+        },
       }),
     );
   });
@@ -150,7 +151,7 @@ describe("applyDiff", () => {
       deletePlanById: vi.fn().mockResolvedValue({}),
     } as unknown as GriffinHubSdk;
 
-    const result = await applyDiff(diff, mockPlanApi, "project-id", "test");
+    const result = await applyDiff(diff, mockPlanApi);
 
     expect(result.success).toBe(true);
     expect(result.applied).toHaveLength(1);
@@ -159,7 +160,11 @@ describe("applyDiff", () => {
     expect(result.applied[0].success).toBe(true);
 
     // Verify the API was called with the remote plan's ID
-    expect(mockPlanApi.deletePlanById).toHaveBeenCalledWith(remotePlan.id);
+    expect(mockPlanApi.deletePlanById).toHaveBeenCalledWith({
+      path: {
+        id: remotePlan.id,
+      },
+    });
   });
 
   it("should handle errors gracefully", async () => {
@@ -168,7 +173,7 @@ describe("applyDiff", () => {
       actions: [
         {
           type: "create",
-          plan: plan as PlanDSL,
+          plan: plan,
           remotePlan: null,
           reason: "new",
         },
@@ -180,7 +185,7 @@ describe("applyDiff", () => {
       postPlan: vi.fn().mockRejectedValue(new Error("API Error")),
     } as unknown as GriffinHubSdk;
 
-    const result = await applyDiff(diff, mockPlanApi, "project-id", "test");
+    const result = await applyDiff(diff, mockPlanApi);
 
     expect(result.success).toBe(false);
     expect(result.errors).toHaveLength(1);
@@ -195,7 +200,7 @@ describe("applyDiff", () => {
       actions: [
         {
           type: "create",
-          plan: plan as PlanDSL,
+          plan: plan,
           remotePlan: null,
           reason: "new",
         },
@@ -204,10 +209,10 @@ describe("applyDiff", () => {
     };
 
     const mockPlanApi = {
-      planPost: vi.fn(),
+      postPlan: vi.fn(),
     } as unknown as GriffinHubSdk;
 
-    const result = await applyDiff(diff, mockPlanApi, "project-id", "test", {
+    const result = await applyDiff(diff, mockPlanApi, {
       dryRun: true,
     });
 

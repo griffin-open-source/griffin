@@ -1,4 +1,6 @@
+import { randomBytes } from "crypto";
 import { loadState, saveState } from "../../core/state.js";
+import { saveHubCredentials } from "../../core/credentials.js";
 import { terminal } from "../../utils/terminal.js";
 
 export interface ConnectOptions {
@@ -13,10 +15,15 @@ export async function executeConnect(options: ConnectOptions): Promise<void> {
   try {
     const state = await loadState();
 
-    // Update runner config
-    state.runner = {
+    // Save token to user-level credentials file if provided
+    if (options.token) {
+      await saveHubCredentials(options.token);
+    }
+
+    // Update hub config in project state (without token)
+    state.hub = {
       baseUrl: options.url,
-      apiToken: options.token,
+      clientId: randomBytes(16).toString("hex"),
     };
 
     await saveState(state);
@@ -24,7 +31,9 @@ export async function executeConnect(options: ConnectOptions): Promise<void> {
     terminal.success("Hub connection configured");
     terminal.log(`  URL: ${terminal.colors.cyan(options.url)}`);
     if (options.token) {
-      terminal.log(`  API Token: ${terminal.colors.dim("***")}`);
+      terminal.log(
+        `  API Token: ${terminal.colors.dim("***")} (saved to user credentials)`,
+      );
     }
     terminal.blank();
   } catch (error: any) {

@@ -109,7 +109,11 @@ export class GriffinHubSdk extends HeyApiClient {
       GetResponses,
       unknown,
       ThrowOnError
-    >({ url: "/", ...options });
+    >({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/",
+      ...options,
+    });
   }
 
   /**
@@ -124,6 +128,7 @@ export class GriffinHubSdk extends HeyApiClient {
       ThrowOnError
     >({
       responseType: "json",
+      security: [{ scheme: "bearer", type: "http" }],
       url: "/agents/register",
       ...options,
       headers: {
@@ -145,6 +150,7 @@ export class GriffinHubSdk extends HeyApiClient {
       ThrowOnError
     >({
       responseType: "json",
+      security: [{ scheme: "bearer", type: "http" }],
       url: "/agents/{id}/heartbeat",
       ...options,
     });
@@ -162,6 +168,7 @@ export class GriffinHubSdk extends HeyApiClient {
       ThrowOnError
     >({
       responseType: "json",
+      security: [{ scheme: "bearer", type: "http" }],
       url: "/agents/{id}",
       ...options,
     });
@@ -179,6 +186,7 @@ export class GriffinHubSdk extends HeyApiClient {
       ThrowOnError
     >({
       responseType: "json",
+      security: [{ scheme: "bearer", type: "http" }],
       url: "/agents/",
       ...options,
     });
@@ -196,6 +204,7 @@ export class GriffinHubSdk extends HeyApiClient {
       ThrowOnError
     >({
       responseType: "json",
+      security: [{ scheme: "bearer", type: "http" }],
       url: "/agents/locations",
       ...options,
     });
@@ -210,6 +219,7 @@ export class GriffinHubSdk extends HeyApiClient {
       ThrowOnError
     >({
       responseType: "json",
+      security: [{ scheme: "bearer", type: "http" }],
       url: "/plan/",
       ...options,
     });
@@ -224,6 +234,7 @@ export class GriffinHubSdk extends HeyApiClient {
       ThrowOnError
     >({
       responseType: "json",
+      security: [{ scheme: "bearer", type: "http" }],
       url: "/plan/",
       ...options,
       headers: {
@@ -240,7 +251,11 @@ export class GriffinHubSdk extends HeyApiClient {
       DeletePlanByIdResponses,
       DeletePlanByIdErrors,
       ThrowOnError
-    >({ url: "/plan/{id}", ...options });
+    >({
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/plan/{id}",
+      ...options,
+    });
   }
 
   public putPlanById<ThrowOnError extends boolean = false>(
@@ -252,6 +267,7 @@ export class GriffinHubSdk extends HeyApiClient {
       ThrowOnError
     >({
       responseType: "json",
+      security: [{ scheme: "bearer", type: "http" }],
       url: "/plan/{id}",
       ...options,
       headers: {
@@ -270,6 +286,7 @@ export class GriffinHubSdk extends HeyApiClient {
       ThrowOnError
     >({
       responseType: "json",
+      security: [{ scheme: "bearer", type: "http" }],
       url: "/plan/by-name",
       ...options,
     });
@@ -284,6 +301,7 @@ export class GriffinHubSdk extends HeyApiClient {
       ThrowOnError
     >({
       responseType: "json",
+      security: [{ scheme: "bearer", type: "http" }],
       url: "/runs/",
       ...options,
     });
@@ -298,6 +316,7 @@ export class GriffinHubSdk extends HeyApiClient {
       ThrowOnError
     >({
       responseType: "json",
+      security: [{ scheme: "bearer", type: "http" }],
       url: "/runs/{id}",
       ...options,
     });
@@ -312,6 +331,7 @@ export class GriffinHubSdk extends HeyApiClient {
       ThrowOnError
     >({
       responseType: "json",
+      security: [{ scheme: "bearer", type: "http" }],
       url: "/runs/{id}",
       ...options,
       headers: {
@@ -330,6 +350,7 @@ export class GriffinHubSdk extends HeyApiClient {
       ThrowOnError
     >({
       responseType: "json",
+      security: [{ scheme: "bearer", type: "http" }],
       url: "/runs/trigger/{planId}",
       ...options,
       headers: {

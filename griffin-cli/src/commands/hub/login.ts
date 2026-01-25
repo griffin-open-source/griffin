@@ -68,8 +68,6 @@ export async function executeLogin(): Promise<void> {
     data?.device_code!,
     (data?.interval ?? 5) * 1000,
   );
-  console.log(sessionToken);
-
   const { data: jwtData } = await authClient.token({
     fetchOptions: {
       headers: {

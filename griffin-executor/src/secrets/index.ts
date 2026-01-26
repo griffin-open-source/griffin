@@ -16,6 +16,7 @@ export {
   type SecretResolveOptions,
   SecretResolutionError,
   isSecretRef,
+  isStringLiteral,
 } from "./types.js";
 
 // Registry

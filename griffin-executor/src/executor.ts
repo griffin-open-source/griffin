@@ -26,7 +26,9 @@ import { randomUUID } from "crypto";
 import {
   resolveSecretsInPlan,
   planHasSecrets,
+  collectSecretsFromPlan,
   SecretResolutionError,
+  SecretProviderRegistry,
 } from "./secrets/index.js";
 import { utcNow } from "./utils/dates.js";
 
@@ -346,10 +348,13 @@ export async function executePlanV1(
   );
 
   try {
-    // Resolve secrets if the plan contains any
+    // Resolve secrets and unwrap literals if the plan contains any
     let resolvedPlan = plan;
     if (planHasSecrets(plan)) {
-      if (!options.secretRegistry) {
+      const collected = collectSecretsFromPlan(plan);
+
+      // Check if we have actual secrets (not just literals)
+      if (collected.refs.length > 0 && !options.secretRegistry) {
         throw new SecretResolutionError(
           "Plan contains secret references but no secret registry was provided",
           { provider: "unknown", ref: "unknown" },
@@ -363,7 +368,9 @@ export async function executePlanV1(
       });
 
       try {
-        resolvedPlan = await resolveSecretsInPlan(plan, options.secretRegistry);
+        // Use an empty registry for literals-only plans
+        const registry = options.secretRegistry || new SecretProviderRegistry();
+        resolvedPlan = await resolveSecretsInPlan(plan, registry);
 
         executionContext.emit({
           type: "NODE_END",
@@ -560,7 +567,7 @@ async function executeEndpoint(
   const attempt = 1;
 
   // After secret resolution, headers are guaranteed to be plain strings
-  // Cast is safe because resolveSecretsInPlan substitutes all SecretRefs
+  // Cast is safe because resolveSecretsInPlan substitutes all SecretRefs and unwraps StringLiterals
   const resolvedHeaders = endpoint.headers as
     | Record<string, string>
     | undefined;

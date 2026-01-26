@@ -1,5 +1,6 @@
 import type { SecretRef } from "./schema.js";
 
+
 export interface SecretOptions {
   /** Pin to a specific version (provider-dependent) */
   version?: string;

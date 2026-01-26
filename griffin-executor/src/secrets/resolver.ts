@@ -10,10 +10,10 @@ import {
 //import { NodeType}
 import type { SecretProviderRegistry } from "./registry.js";
 import type { SecretRef, SecretRefData } from "./types.js";
-import { isSecretRef } from "./types.js";
+import { isSecretRef, isStringLiteral } from "./types.js";
 
 /**
- * Collected secret references from a plan.
+ * Collected secret references and literals from a plan.
  */
 interface CollectedSecrets {
   /** All unique secret references found */
@@ -23,13 +23,18 @@ interface CollectedSecrets {
     path: (string | number)[];
     secretRef: SecretRefData;
   }>;
+  /** Paths where string literals were found (for unwrapping) */
+  literalPaths: Array<{
+    path: (string | number)[];
+    value: string;
+  }>;
 }
 
 /**
- * Recursively collect all secret references from a value.
+ * Recursively collect all secret references and string literals from a value.
  * @param value - The value to scan
  * @param currentPath - Current path in the object tree
- * @param collected - Accumulator for found secrets
+ * @param collected - Accumulator for found secrets and literals
  */
 function collectSecretsFromValue(
   value: unknown,
@@ -49,6 +54,14 @@ function collectSecretsFromValue(
     return;
   }
 
+  if (isStringLiteral(value)) {
+    collected.literalPaths.push({
+      path: [...currentPath],
+      value: value.$literal,
+    });
+    return;
+  }
+
   if (Array.isArray(value)) {
     for (let i = 0; i < value.length; i++) {
       collectSecretsFromValue(value[i], [...currentPath, i], collected);
@@ -64,13 +77,14 @@ function collectSecretsFromValue(
 }
 
 /**
- * Collect all secret references from a test plan.
- * Scans endpoint headers and bodies for $secret markers.
+ * Collect all secret references and string literals from a test plan.
+ * Scans endpoint headers and bodies for $secret markers and $literal wrappers.
  */
 export function collectSecretsFromPlan(plan: PlanV1): CollectedSecrets {
   const collected: CollectedSecrets = {
     refs: [],
     paths: [],
+    literalPaths: [],
   };
 
   for (let nodeIndex = 0; nodeIndex < plan.nodes.length; nodeIndex++) {
@@ -157,33 +171,36 @@ function deepClone<T>(value: T): T {
 }
 
 /**
- * Resolve all secrets in a plan and return a new plan with substituted values.
+ * Resolve all secrets and unwrap string literals in a plan and return a new plan with substituted values.
  * The original plan is not modified.
  *
- * @param plan - The test plan containing secret references
+ * @param plan - The test plan containing secret references and string literals
  * @param registry - The secret provider registry
- * @returns A new plan with all secrets resolved to their values
+ * @returns A new plan with all secrets resolved to their values and literals unwrapped
  * @throws SecretResolutionError if any secret cannot be resolved (fail-fast)
  */
 export async function resolveSecretsInPlan(
   plan: PlanV1,
   registry: SecretProviderRegistry,
 ): Promise<PlanV1> {
-  // Collect all secret references
+  // Collect all secret references and string literals
   const collected = collectSecretsFromPlan(plan);
 
-  if (collected.refs.length === 0) {
-    // No secrets to resolve
+  if (collected.refs.length === 0 && collected.literalPaths.length === 0) {
+    // No secrets or literals to resolve
     return plan;
   }
 
   // Resolve all secrets (fail-fast on any error)
-  const resolved = await registry.resolveMany(collected.refs);
+  const resolved =
+    collected.refs.length > 0
+      ? await registry.resolveMany(collected.refs)
+      : new Map();
 
   // Clone the plan for modification
   const resolvedPlan = deepClone(plan);
 
-  // Substitute resolved values at each path
+  // Substitute resolved secret values at each path
   for (const { path, secretRef } of collected.paths) {
     const key = registry.makeKey(secretRef);
     const value = resolved.get(key);
@@ -198,12 +215,17 @@ export async function resolveSecretsInPlan(
     setAtPath(resolvedPlan, path, value);
   }
 
+  // Unwrap string literals at each path
+  for (const { path, value } of collected.literalPaths) {
+    setAtPath(resolvedPlan, path, value);
+  }
+
   return resolvedPlan;
 }
 
 /**
- * Check if a plan contains any secret references.
- * Useful for short-circuiting resolution when no secrets are present.
+ * Check if a plan contains any secret references or string literals that need resolution.
+ * Useful for short-circuiting resolution when no secrets or literals are present.
  */
 export function planHasSecrets(plan: PlanV1): boolean {
   for (const node of plan.nodes) {
@@ -214,14 +236,14 @@ export function planHasSecrets(plan: PlanV1): boolean {
     // Check headers
     if (node.headers) {
       for (const headerValue of Object.values(node.headers)) {
-        if (isSecretRef(headerValue)) {
+        if (isSecretRef(headerValue) || isStringLiteral(headerValue)) {
           return true;
         }
       }
     }
 
     // Check body (recursive check)
-    if (node.body !== undefined && containsSecretRef(node.body)) {
+    if (node.body !== undefined && containsSecretOrLiteral(node.body)) {
       return true;
     }
   }
@@ -230,23 +252,23 @@ export function planHasSecrets(plan: PlanV1): boolean {
 }
 
 /**
- * Recursively check if a value contains any secret references.
+ * Recursively check if a value contains any secret references or string literals.
  */
-function containsSecretRef(value: unknown): boolean {
+function containsSecretOrLiteral(value: unknown): boolean {
   if (value === null || value === undefined) {
     return false;
   }
 
-  if (isSecretRef(value)) {
+  if (isSecretRef(value) || isStringLiteral(value)) {
     return true;
   }
 
   if (Array.isArray(value)) {
-    return value.some(containsSecretRef);
+    return value.some(containsSecretOrLiteral);
   }
 
   if (typeof value === "object") {
-    return Object.values(value).some(containsSecretRef);
+    return Object.values(value).some(containsSecretOrLiteral);
   }
 
   return false;

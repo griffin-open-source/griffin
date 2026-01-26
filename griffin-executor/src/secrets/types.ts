@@ -1,6 +1,4 @@
-/**
- * Secret provider types for griffin plan executor.
- */
+import { StringLiteral } from "@griffin-app/griffin-hub-sdk";
 
 /**
  * Data structure for a secret reference as it appears in a plan.
@@ -102,4 +100,16 @@ export function isSecretRef(value: unknown): value is SecretRef {
     typeof secretData.provider === "string" &&
     typeof secretData.ref === "string"
   );
+}
+
+/**
+ * Type guard to check if a value is a string literal.
+ */
+export function isStringLiteral(value: unknown): value is StringLiteral {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const obj = value as Record<string, unknown>;
+  return "$literal" in obj && typeof obj.$literal === "string";
 }

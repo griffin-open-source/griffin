@@ -55,18 +55,6 @@ jobs:
           npm ci
           npm run build
       
-      - name: Build griffin-agent
-        run: |
-          cd griffin-agent
-          npm ci
-          npm run build
-      
-      - name: Build sample-apis
-        run: |
-          cd sample-apis
-          npm ci
-          npm run build
-      
       # Run tests
       - name: Test griffin-executor
         run: |

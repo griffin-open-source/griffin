@@ -1,7 +1,7 @@
 import {
   GET,
   createGraphBuilder,
-  Endpoint,
+  HttpRequest,
   Json,
   START,
   END,
@@ -16,7 +16,7 @@ const plan = createGraphBuilder({
 })
   .addNode(
     "list_plans",
-    Endpoint({
+    HttpRequest({
       method: GET,
       base: variable("griffin-hub"),
       response_format: Json,
@@ -26,7 +26,7 @@ const plan = createGraphBuilder({
   )
   .addNode(
     "list_runs",
-    Endpoint({
+    HttpRequest({
       method: GET,
       base: variable("griffin-hub"),
       response_format: Json,

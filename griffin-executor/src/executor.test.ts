@@ -28,7 +28,7 @@ describe("executePlanV1", () => {
     };
   });
 
-  describe("Single Endpoint Execution", () => {
+  describe("Single HttpRequest Execution", () => {
     it("should execute a simple GET request successfully", async () => {
       const plan: PlanV1 = {
         id: "test-plan-1",
@@ -40,7 +40,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "get-users",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/users",
             base: "https://api.example.com",
@@ -92,7 +92,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "create-user",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "POST",
             base: "https://api.example.com",
             path: "/users",
@@ -147,7 +147,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "get-data",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/data",
             base: "https://api.example.com",
@@ -192,7 +192,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "get-users",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             base: "https://api.example.com",
             path: "/users",
@@ -238,7 +238,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "update-user",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "PUT",
             path: "/users/1",
             base: "https://api.example.com",
@@ -287,7 +287,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "delete-user",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "DELETE",
             path: "/users/1",
             base: "https://api.example.com",
@@ -332,7 +332,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "patch-user",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "PATCH",
             path: "/users/1",
             base: "https://api.example.com",
@@ -379,7 +379,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "first",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/first",
             base: "https://api.example.com",
@@ -387,7 +387,7 @@ describe("executePlanV1", () => {
           },
           {
             id: "second",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/second",
             base: "https://api.example.com",
@@ -449,7 +449,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "step1",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/step1",
             base: "https://api.example.com",
@@ -457,7 +457,7 @@ describe("executePlanV1", () => {
           },
           {
             id: "step2",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/step2",
             base: "https://api.example.com",
@@ -465,7 +465,7 @@ describe("executePlanV1", () => {
           },
           {
             id: "step3",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/step3",
             base: "https://api.example.com",
@@ -473,7 +473,7 @@ describe("executePlanV1", () => {
           },
           {
             id: "step4",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/step4",
             base: "https://api.example.com",
@@ -578,13 +578,13 @@ describe("executePlanV1", () => {
         id: "test-plan-11",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
-        name: "Endpoint-Wait-Endpoint Test",
+        name: "HttpRequest-Wait-HttpRequest Test",
         version: "1.0",
         environment: "default",
         nodes: [
           {
             id: "first-request",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/first",
             base: "https://api.example.com",
@@ -597,7 +597,7 @@ describe("executePlanV1", () => {
           },
           {
             id: "second-request",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/second",
             base: "https://api.example.com",
@@ -655,7 +655,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "get-data",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/data",
             base: "https://api.example.com",
@@ -713,7 +713,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "failing-request",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/fail",
             base: "https://api.example.com",
@@ -755,7 +755,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "node1",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/path",
             base: "https://api.example.com",
@@ -763,7 +763,7 @@ describe("executePlanV1", () => {
           },
           {
             id: "node2",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/path",
             base: "https://api.example.com",
@@ -804,7 +804,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "success-node",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/success",
             base: "https://api.example.com",
@@ -812,7 +812,7 @@ describe("executePlanV1", () => {
           },
           {
             id: "fail-node",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/fail",
             base: "https://api.example.com",
@@ -862,7 +862,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "get-user-id",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/user",
             base: "https://api.example.com",
@@ -870,7 +870,7 @@ describe("executePlanV1", () => {
           },
           {
             id: "get-profile",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/profile",
             base: "https://api.example.com",
@@ -929,7 +929,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "failing-endpoint",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/fail",
             base: "https://api.example.com",
@@ -969,7 +969,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "endpoint",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/data",
             base: "https://api.example.com",
@@ -1016,7 +1016,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "node1",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/1",
             base: "https://api.example.com",
@@ -1029,7 +1029,7 @@ describe("executePlanV1", () => {
           },
           {
             id: "node2",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/2",
             base: "https://api.example.com",
@@ -1113,7 +1113,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "only-node",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/single",
             base: "https://api.example.com",
@@ -1158,7 +1158,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "complex",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/complex",
             base: "https://api.example.com",
@@ -1227,7 +1227,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "node-1",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/test",
             base: "https://api.example.com",
@@ -1292,7 +1292,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "endpoint-1",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/first",
             base: "https://api.example.com",
@@ -1305,7 +1305,7 @@ describe("executePlanV1", () => {
           },
           {
             id: "endpoint-2",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/second",
             base: "https://api.example.com",
@@ -1356,7 +1356,7 @@ describe("executePlanV1", () => {
       // Check node types
       expect(nodeStartEvents[0]).toMatchObject({
         nodeId: "endpoint-1",
-        nodeType: "ENDPOINT",
+        nodeType: "HTTP_REQUEST",
       });
       expect(nodeStartEvents[1]).toMatchObject({
         nodeId: "wait-1",
@@ -1364,7 +1364,7 @@ describe("executePlanV1", () => {
       });
       expect(nodeStartEvents[2]).toMatchObject({
         nodeId: "endpoint-2",
-        nodeType: "ENDPOINT",
+        nodeType: "HTTP_REQUEST",
       });
     });
 
@@ -1379,7 +1379,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "http-node",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "POST",
             path: "/create",
             base: "https://api.example.com",
@@ -1496,7 +1496,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "failing-node",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/fail",
             base: "https://api.example.com",
@@ -1539,7 +1539,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "node-1",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/test",
             base: "https://api.example.com",
@@ -1595,7 +1595,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "node-1",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/test",
             base: "https://api.example.com",
@@ -1642,7 +1642,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "node-1",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/test",
             base: "https://api.example.com",
@@ -1693,7 +1693,7 @@ describe("executePlanV1", () => {
         nodes: [
           {
             id: "failing-node",
-            type: "ENDPOINT",
+            type: "HTTP_REQUEST",
             method: "GET",
             path: "/fail",
             base: "https://api.example.com",

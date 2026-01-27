@@ -27,7 +27,7 @@ export interface VariableRef {
  * @example
  * ```typescript
  * // Simple variable reference
- * builder.addNode("check", Endpoint({
+ * builder.addNode("check", HttpRequest({
  *   method: GET,
  *   path: "/health",
  *   base: variable("api-service"),

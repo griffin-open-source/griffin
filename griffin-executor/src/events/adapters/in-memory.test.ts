@@ -13,19 +13,20 @@ describe("InMemoryAdapter", () => {
     type: ExecutionEvent["type"],
     executionId: string,
     seq: number,
-  ): ExecutionEvent => ({
-    type,
-    eventId: `event-${seq}`,
-    seq,
-    timestamp: Date.now(),
-    planId: "plan-1",
-    executionId,
-    organizationId: "org-1",
-    planName: "Test Plan",
-    planVersion: "1.0.0",
-    nodeCount: 1,
-    edgeCount: 1,
-  } as ExecutionEvent);
+  ): ExecutionEvent =>
+    ({
+      type,
+      eventId: `event-${seq}`,
+      seq,
+      timestamp: Date.now(),
+      planId: "plan-1",
+      executionId,
+      organizationId: "org-1",
+      planName: "Test Plan",
+      planVersion: "1.0.0",
+      nodeCount: 1,
+      edgeCount: 1,
+    }) as ExecutionEvent;
 
   describe("publish", () => {
     it("should store events", async () => {
@@ -122,7 +123,9 @@ describe("InMemoryAdapter", () => {
       });
 
       await expect(
-        adapterWithFailures.publish([createMockEvent("PLAN_START", "exec-1", 0)]),
+        adapterWithFailures.publish([
+          createMockEvent("PLAN_START", "exec-1", 0),
+        ]),
       ).rejects.toThrow("Simulated publish failure");
     });
 

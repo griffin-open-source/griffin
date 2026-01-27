@@ -8,13 +8,16 @@
 ])
 ```
 
-## Accessors
+## Accessors (Subjects)
 
 | Accessor   | Description          | Example                                 |
 | ---------- | -------------------- | --------------------------------------- |
-| `.body`    | Response body (JSON) | `state["node"].body["data"]["id"]`      |
+| `.body`    | Response body        | `state["node"].body["data"]["id"]`      |
 | `.headers` | Response headers     | `state["node"].headers["content-type"]` |
 | `.status`  | HTTP status code     | `state["node"].status`                  |
+| `.latency` | Request latency (ms) | `state["node"].latency`                 |
+
+**Note:** For body assertions, the response type is automatically detected and defaults to JSON. Path traversal uses JSONPath for JSON responses.
 
 ## Array Access
 
@@ -73,6 +76,14 @@ Negations reverse the operator:
 Assert(state["node"].status).equals(200);
 Assert(state["node"].status).lessThan(400); // Any success
 Assert(state["node"].status).not.equals(500); // Not server error
+```
+
+### Latency Checks
+
+```typescript
+Assert(state["node"].latency).lessThan(500); // Response time under 500ms
+Assert(state["node"].latency).lessThanOrEqual(1000); // Max 1 second
+Assert(state["node"].latency).greaterThan(0); // Sanity check
 ```
 
 ### Existence Checks
@@ -151,6 +162,7 @@ TypeScript provides autocomplete and errors:
 | Task              | Code                                                     |
 | ----------------- | -------------------------------------------------------- |
 | Status is 200     | `Assert(state["n"].status).equals(200)`                  |
+| Latency < 500ms   | `Assert(state["n"].latency).lessThan(500)`               |
 | Body field exists | `Assert(state["n"].body["x"]).not.isNull()`              |
 | String contains   | `Assert(state["n"].body["msg"]).contains("ok")`          |
 | Number in range   | `Assert(state["n"].body["age"]).greaterThanOrEqual(18)`  |

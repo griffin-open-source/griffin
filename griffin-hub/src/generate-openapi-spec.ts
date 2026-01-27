@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import Fastify from "fastify";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import app from "./app.js";
+import { PlanV1Schema } from "./schemas/plans.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

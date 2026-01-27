@@ -1,20 +1,19 @@
 import {
+  Assertion,
+  BinaryPredicate,
+  UnaryPredicate,
   Assertions,
   Node,
   PlanV1,
-  Endpoint,
-  JsonAssertion,
   Wait,
-  Assertion,
-  UnaryPredicate,
-  BinaryPredicate,
+  HttpRequest,
 } from "@griffin-app/griffin-hub-sdk";
 
 import type {
   ExecutionOptions,
   ExecutionResult,
   NodeResult,
-  EndpointResult,
+  HttpRequestResult,
   WaitResult,
   JSONValue,
   NodeResponseData,
@@ -26,9 +25,7 @@ import { randomUUID } from "crypto";
 import {
   resolveSecretsInPlan,
   planHasSecrets,
-  collectSecretsFromPlan,
   SecretResolutionError,
-  SecretProviderRegistry,
 } from "./secrets/index.js";
 import { utcNow } from "./utils/dates.js";
 
@@ -130,7 +127,7 @@ function buildNode(
   ) => Promise<ExecutionState>;
 } {
   switch (node.type) {
-    case "ENDPOINT": {
+    case "HTTP_REQUEST": {
       return {
         name: node.id,
         execute: async (
@@ -158,7 +155,7 @@ function buildNode(
             originalStream(chunk);
           };
 
-          const result = await executeEndpoint(
+          const result = await executeHttpRequest(
             node.id,
             node,
             options,
@@ -171,6 +168,7 @@ function buildNode(
               body: result.response,
               headers: result.headers || {},
               status: result.status || 0,
+              duration_ms: result.duration_ms || 0,
             };
           }
 
@@ -348,13 +346,10 @@ export async function executePlanV1(
   );
 
   try {
-    // Resolve secrets and unwrap literals if the plan contains any
+    // Resolve secrets if the plan contains any
     let resolvedPlan = plan;
     if (planHasSecrets(plan)) {
-      const collected = collectSecretsFromPlan(plan);
-
-      // Check if we have actual secrets (not just literals)
-      if (collected.refs.length > 0 && !options.secretRegistry) {
+      if (!options.secretRegistry) {
         throw new SecretResolutionError(
           "Plan contains secret references but no secret registry was provided",
           { provider: "unknown", ref: "unknown" },
@@ -364,18 +359,16 @@ export async function executePlanV1(
       executionContext.emit({
         type: "NODE_START",
         nodeId: "__SECRETS__",
-        nodeType: "ENDPOINT",
+        nodeType: "HTTP_REQUEST",
       });
 
       try {
-        // Use an empty registry for literals-only plans
-        const registry = options.secretRegistry || new SecretProviderRegistry();
-        resolvedPlan = await resolveSecretsInPlan(plan, registry);
+        resolvedPlan = await resolveSecretsInPlan(plan, options.secretRegistry);
 
         executionContext.emit({
           type: "NODE_END",
           nodeId: "__SECRETS__",
-          nodeType: "ENDPOINT",
+          nodeType: "HTTP_REQUEST",
           success: true,
           duration_ms: Date.now() - startTime,
         });
@@ -383,7 +376,7 @@ export async function executePlanV1(
         executionContext.emit({
           type: "NODE_END",
           nodeId: "__SECRETS__",
-          nodeType: "ENDPOINT",
+          nodeType: "HTTP_REQUEST",
           success: false,
           duration_ms: Date.now() - startTime,
           error: error instanceof Error ? error.message : String(error),
@@ -542,12 +535,12 @@ export async function executePlanV1(
   }
 }
 
-async function executeEndpoint(
+async function executeHttpRequest(
   nodeId: string,
-  endpoint: Endpoint,
+  endpoint: HttpRequest,
   options: ExecutionOptions,
   context: ExecutionContext,
-): Promise<EndpointResult> {
+): Promise<HttpRequestResult> {
   const startTime = Date.now();
 
   // Only JSON response format is currently supported
@@ -567,7 +560,7 @@ async function executeEndpoint(
   const attempt = 1;
 
   // After secret resolution, headers are guaranteed to be plain strings
-  // Cast is safe because resolveSecretsInPlan substitutes all SecretRefs and unwraps StringLiterals
+  // Cast is safe because resolveSecretsInPlan substitutes all SecretRefs
   const resolvedHeaders = endpoint.headers as
     | Record<string, string>
     | undefined;
@@ -663,93 +656,178 @@ async function executeWait(
 /**
  * Extract value from response data using JSONPath
  */
-function extractValue(
-  responses: Record<string, NodeResponseData>,
-  nodeId: string,
-  accessor: "body" | "headers" | "status",
-  path: string[],
-): unknown {
-  const nodeData = responses[nodeId];
-  if (!nodeData) {
-    throw new Error(`No response data found for node: ${nodeId}`);
+function extractJsonValue(json: JSONValue, path: string[]): unknown {
+  // TODO: Implement JSONPath extraction
+  // If no path, return the top-level object
+  if (!path || path.length === 0) {
+    return json;
   }
 
-  let value: unknown;
-  switch (accessor) {
-    case "body":
-      value = nodeData.body;
-      break;
-    case "headers":
-      value = nodeData.headers;
-      break;
-    case "status":
-      value = nodeData.status;
-      break;
-  }
+  let current: unknown = json;
 
-  // Navigate JSONPath
   for (const segment of path) {
-    if (value === null || value === undefined) {
-      return undefined;
-    }
-    if (
-      typeof value === "object" &&
-      segment in (value as Record<string, unknown>)
-    ) {
-      value = (value as Record<string, unknown>)[segment];
+    if (typeof current === "object" && current !== null) {
+      if (Array.isArray(current)) {
+        // Try to interpret the segment as an array index
+        const idx = Number(segment);
+        if (!isNaN(idx) && idx >= 0 && idx < current.length) {
+          current = current[idx];
+        } else {
+          // If not a valid index, return undefined
+          return undefined;
+        }
+      } else {
+        // Plain object: access property by key
+        if (Object.prototype.hasOwnProperty.call(current, segment)) {
+          current = (current as Record<string, unknown>)[segment];
+        } else {
+          return undefined;
+        }
+      }
     } else {
+      // Cannot traverse further - path goes too deep
       return undefined;
     }
   }
+  return current;
+}
 
-  return value;
+function evaluateStatusAssertion(
+  assertion: { subject: "status"; predicate: BinaryPredicate; nodeId: string },
+  responses: Record<string, NodeResponseData>,
+) {
+  const { nodeId, predicate } = assertion;
+  const value = responses[nodeId].status;
+  return evaluateBinaryPredicate(value, predicate, `${nodeId}.status`);
+}
+
+function evaluateHeadersAssertion(
+  assertion: {
+    subject: "headers";
+    predicate: UnaryPredicate | BinaryPredicate;
+    nodeId: string;
+    headerName: string;
+  },
+  responses: Record<string, NodeResponseData>,
+) {
+  const { nodeId, headerName, predicate } = assertion;
+  const value = responses[nodeId].headers[headerName];
+  switch (predicate.type) {
+    case "unary":
+      return evaluateUnaryPredicate(
+        value,
+        predicate.operator,
+        `${nodeId}.headers.${headerName}`,
+      );
+    case "binary":
+      return evaluateBinaryPredicate(
+        value,
+        predicate,
+        `${nodeId}.headers.${headerName}`,
+      );
+  }
+}
+function evaluateLatencyAssertion(
+  assertion: { subject: "latency"; predicate: BinaryPredicate; nodeId: string },
+  responses: Record<string, NodeResponseData>,
+) {
+  const { nodeId, predicate } = assertion;
+  const value = responses[nodeId].duration_ms;
+  return evaluateBinaryPredicate(value, predicate, `${nodeId}.duration_ms`);
+}
+function evaluateBodyAssertion(
+  assertion: {
+    subject: "body";
+    predicate: UnaryPredicate | BinaryPredicate;
+    nodeId: string;
+    responseType: "JSON" | "XML";
+    path: string[];
+  },
+  responses: Record<string, NodeResponseData>,
+) {
+  const { nodeId, responseType, path, predicate } = assertion;
+  let value: unknown;
+  switch (responseType) {
+    case "JSON":
+      value = extractJsonValue(responses[nodeId].body, path);
+      break;
+    case "XML":
+      // TODO: Implement XML extraction
+      throw new Error(`XML assertions are not supported yet`);
+      break;
+    default:
+      throw new Error(`Unsupported response type: ${responseType}`);
+  }
+  switch (predicate.type) {
+    case "unary":
+      return evaluateUnaryPredicate(
+        value,
+        predicate.operator,
+        `${nodeId}.body.${path.join(".")}`,
+      );
+    case "binary":
+      return evaluateBinaryPredicate(
+        value,
+        predicate,
+        `${nodeId}.body.${path.join(".")}`,
+      );
+  }
 }
 
 function evaluateAssertion(
   assertion: Assertion,
   responses: Record<string, NodeResponseData>,
 ): { passed: boolean; message: string } {
-  switch (assertion.assertionType) {
-    case "JSON":
-      return evaluateJSONAssertion(assertion, responses);
-    case "XML":
-      throw new Error(`XML assertions are not supported yet`);
-    case "TEXT":
-      throw new Error(`Text assertions are not supported yet`);
+  switch (assertion.subject) {
+    case "status":
+      return evaluateStatusAssertion(assertion, responses);
+    case "headers":
+      return evaluateHeadersAssertion(assertion, responses);
+    case "latency":
+      return evaluateLatencyAssertion(assertion, responses);
+    case "body":
+      return evaluateBodyAssertion(assertion, responses);
   }
 }
 
 /**
  * Evaluate a single assertion
  */
-function evaluateJSONAssertion(
-  assertion: JsonAssertion,
-  responses: Record<string, NodeResponseData>,
-): { passed: boolean; message: string } {
-  const { nodeId, accessor, path, predicate } = assertion;
-
-  const value = extractValue(responses, nodeId, accessor, path);
-  const pathStr = path.length > 0 ? path.join(".") : accessor;
-
-  // Check if predicate is unary or binary
-  if (typeof predicate === "string" || typeof predicate === "number") {
-    // Unary predicate (enum value)
-    return evaluateUnaryPredicate(value, predicate, nodeId, accessor, pathStr);
-  } else {
-    // Binary predicate (object with operator and expected)
-    return evaluateBinaryPredicate(value, predicate, nodeId, accessor, pathStr);
-  }
-}
+//function evaluateJSONAssertion(
+//  assertion: JsonAssertion,
+//  responses: Record<string, NodeResponseData>,
+//): { passed: boolean; message: string } {
+//  const { nodeId, accessor, path, predicate } = assertion;
+//
+//  const value = extractValue(responses, nodeId, accessor, path);
+//  const pathStr = path.length > 0 ? path.join(".") : accessor;
+//
+//  // Check if predicate is unary or binary
+//  if (typeof predicate === "string" || typeof predicate === "number") {
+//    // Unary predicate (enum value)
+//    return evaluateUnaryPredicate(value, predicate, `${nodeId}.${accessor}.${pathStr}`);
+//  } else {
+//    // Binary predicate (object with operator and expected)
+//    return evaluateBinaryPredicate(value, predicate, nodeId, accessor, pathStr);
+//  }
+//}
 
 /**
  * Evaluate unary predicates
  */
 function evaluateUnaryPredicate(
   value: unknown,
-  predicate: UnaryPredicate,
-  nodeId: string,
-  accessor: string,
-  pathStr: string,
+  predicate:
+    | "IS_NULL"
+    | "IS_NOT_NULL"
+    | "IS_TRUE"
+    | "IS_FALSE"
+    | "IS_EMPTY"
+    | "IS_NOT_EMPTY",
+  prefix: string,
+  //nodeId: string,
+  //accessor: string,
+  //pathStr: string,
 ): { passed: boolean; message: string } {
   switch (predicate) {
     case "IS_NULL":
@@ -757,8 +835,8 @@ function evaluateUnaryPredicate(
         passed: value === null,
         message:
           value === null
-            ? `${nodeId}.${accessor}.${pathStr} is null`
-            : `Expected ${nodeId}.${accessor}.${pathStr} to be null, got ${JSON.stringify(value)}`,
+            ? `${prefix} is null`
+            : `Expected ${prefix} to be null, got ${JSON.stringify(value)}`,
       };
 
     case "IS_NOT_NULL":
@@ -766,8 +844,8 @@ function evaluateUnaryPredicate(
         passed: value !== null && value !== undefined,
         message:
           value !== null && value !== undefined
-            ? `${nodeId}.${accessor}.${pathStr} is not null`
-            : `Expected ${nodeId}.${accessor}.${pathStr} to not be null`,
+            ? `${prefix} is not null`
+            : `Expected ${prefix} to not be null`,
       };
 
     case "IS_TRUE":
@@ -775,8 +853,8 @@ function evaluateUnaryPredicate(
         passed: value === true,
         message:
           value === true
-            ? `${nodeId}.${accessor}.${pathStr} is true`
-            : `Expected ${nodeId}.${accessor}.${pathStr} to be true, got ${JSON.stringify(value)}`,
+            ? `${prefix} is true`
+            : `Expected ${prefix} to be true, got ${JSON.stringify(value)}`,
       };
 
     case "IS_FALSE":
@@ -784,8 +862,8 @@ function evaluateUnaryPredicate(
         passed: value === false,
         message:
           value === false
-            ? `${nodeId}.${accessor}.${pathStr} is false`
-            : `Expected ${nodeId}.${accessor}.${pathStr} to be false, got ${JSON.stringify(value)}`,
+            ? `${prefix} is false`
+            : `Expected ${prefix} to be false, got ${JSON.stringify(value)}`,
       };
 
     case "IS_EMPTY": {
@@ -798,8 +876,8 @@ function evaluateUnaryPredicate(
       return {
         passed: isEmpty,
         message: isEmpty
-          ? `${nodeId}.${accessor}.${pathStr} is empty`
-          : `Expected ${nodeId}.${accessor}.${pathStr} to be empty, got ${JSON.stringify(value)}`,
+          ? `${prefix} is empty`
+          : `Expected ${prefix} to be empty, got ${JSON.stringify(value)}`,
       };
     }
 
@@ -815,8 +893,8 @@ function evaluateUnaryPredicate(
       return {
         passed: isNotEmpty,
         message: isNotEmpty
-          ? `${nodeId}.${accessor}.${pathStr} is not empty`
-          : `Expected ${nodeId}.${accessor}.${pathStr} to not be empty`,
+          ? `${prefix} is not empty`
+          : `Expected ${prefix} to not be empty`,
       };
     }
 
@@ -831,9 +909,10 @@ function evaluateUnaryPredicate(
 function evaluateBinaryPredicate(
   value: unknown,
   predicate: BinaryPredicate,
-  nodeId: string,
-  accessor: string,
-  pathStr: string,
+  //nodeId: string,
+  //accessor: string,
+  //pathStr: string,
+  prefix: string,
 ): { passed: boolean; message: string } {
   const { operator, expected } = predicate;
 
@@ -843,8 +922,8 @@ function evaluateBinaryPredicate(
       return {
         passed: isEqual,
         message: isEqual
-          ? `${nodeId}.${accessor}.${pathStr} equals ${JSON.stringify(expected)}`
-          : `Expected ${nodeId}.${accessor}.${pathStr} to equal ${JSON.stringify(expected)}, got ${JSON.stringify(value)}`,
+          ? `${prefix} equals ${JSON.stringify(expected)}`
+          : `Expected ${prefix} to equal ${JSON.stringify(expected)}, got ${JSON.stringify(value)}`,
       };
     }
 
@@ -853,8 +932,8 @@ function evaluateBinaryPredicate(
       return {
         passed: isNotEqual,
         message: isNotEqual
-          ? `${nodeId}.${accessor}.${pathStr} does not equal ${JSON.stringify(expected)}`
-          : `Expected ${nodeId}.${accessor}.${pathStr} to not equal ${JSON.stringify(expected)}`,
+          ? `${prefix} does not equal ${JSON.stringify(expected)}`
+          : `Expected ${prefix} to not equal ${JSON.stringify(expected)}`,
       };
     }
 
@@ -863,8 +942,8 @@ function evaluateBinaryPredicate(
       return {
         passed: isGT,
         message: isGT
-          ? `${nodeId}.${accessor}.${pathStr} (${value}) > ${expected}`
-          : `Expected ${nodeId}.${accessor}.${pathStr} to be greater than ${expected}, got ${JSON.stringify(value)}`,
+          ? `${prefix} (${value}) > ${expected}`
+          : `Expected ${prefix} to be greater than ${expected}, got ${JSON.stringify(value)}`,
       };
     }
 
@@ -873,8 +952,8 @@ function evaluateBinaryPredicate(
       return {
         passed: isLT,
         message: isLT
-          ? `${nodeId}.${accessor}.${pathStr} (${value}) < ${expected}`
-          : `Expected ${nodeId}.${accessor}.${pathStr} to be less than ${expected}, got ${JSON.stringify(value)}`,
+          ? `${prefix} (${value}) < ${expected}`
+          : `Expected ${prefix} to be less than ${expected}, got ${JSON.stringify(value)}`,
       };
     }
 
@@ -883,8 +962,8 @@ function evaluateBinaryPredicate(
       return {
         passed: isGTE,
         message: isGTE
-          ? `${nodeId}.${accessor}.${pathStr} (${value}) >= ${expected}`
-          : `Expected ${nodeId}.${accessor}.${pathStr} to be >= ${expected}, got ${JSON.stringify(value)}`,
+          ? `${prefix} (${value}) >= ${expected}`
+          : `Expected ${prefix} to be >= ${expected}, got ${JSON.stringify(value)}`,
       };
     }
 
@@ -893,8 +972,8 @@ function evaluateBinaryPredicate(
       return {
         passed: isLTE,
         message: isLTE
-          ? `${nodeId}.${accessor}.${pathStr} (${value}) <= ${expected}`
-          : `Expected ${nodeId}.${accessor}.${pathStr} to be <= ${expected}, got ${JSON.stringify(value)}`,
+          ? `${prefix} (${value}) <= ${expected}`
+          : `Expected ${prefix} to be <= ${expected}, got ${JSON.stringify(value)}`,
       };
     }
 
@@ -904,8 +983,8 @@ function evaluateBinaryPredicate(
       return {
         passed: contains,
         message: contains
-          ? `${nodeId}.${accessor}.${pathStr} contains "${expected}"`
-          : `Expected ${nodeId}.${accessor}.${pathStr} to contain "${expected}", got "${value}"`,
+          ? `${prefix} contains "${expected}"`
+          : `Expected ${prefix} to contain "${expected}", got "${value}"`,
       };
     }
 
@@ -915,8 +994,8 @@ function evaluateBinaryPredicate(
       return {
         passed: notContains,
         message: notContains
-          ? `${nodeId}.${accessor}.${pathStr} does not contain "${expected}"`
-          : `Expected ${nodeId}.${accessor}.${pathStr} to not contain "${expected}", got "${value}"`,
+          ? `${prefix} does not contain "${expected}"`
+          : `Expected ${prefix} to not contain "${expected}", got "${value}"`,
       };
     }
 
@@ -926,8 +1005,8 @@ function evaluateBinaryPredicate(
       return {
         passed: startsWith,
         message: startsWith
-          ? `${nodeId}.${accessor}.${pathStr} starts with "${expected}"`
-          : `Expected ${nodeId}.${accessor}.${pathStr} to start with "${expected}", got "${value}"`,
+          ? `${prefix} starts with "${expected}"`
+          : `Expected ${prefix} to start with "${expected}", got "${value}"`,
       };
     }
 
@@ -937,8 +1016,8 @@ function evaluateBinaryPredicate(
       return {
         passed: notStartsWith,
         message: notStartsWith
-          ? `${nodeId}.${accessor}.${pathStr} does not start with "${expected}"`
-          : `Expected ${nodeId}.${accessor}.${pathStr} to not start with "${expected}", got "${value}"`,
+          ? `${prefix} does not start with "${expected}"`
+          : `Expected ${prefix} to not start with "${expected}", got "${value}"`,
       };
     }
 
@@ -948,8 +1027,8 @@ function evaluateBinaryPredicate(
       return {
         passed: endsWith,
         message: endsWith
-          ? `${nodeId}.${accessor}.${pathStr} ends with "${expected}"`
-          : `Expected ${nodeId}.${accessor}.${pathStr} to end with "${expected}", got "${value}"`,
+          ? `${prefix} ends with "${expected}"`
+          : `Expected ${prefix} to end with "${expected}", got "${value}"`,
       };
     }
 
@@ -959,8 +1038,8 @@ function evaluateBinaryPredicate(
       return {
         passed: notEndsWith,
         message: notEndsWith
-          ? `${nodeId}.${accessor}.${pathStr} does not end with "${expected}"`
-          : `Expected ${nodeId}.${accessor}.${pathStr} to not end with "${expected}", got "${value}"`,
+          ? `${prefix} does not end with "${expected}"`
+          : `Expected ${prefix} to not end with "${expected}", got "${value}"`,
       };
     }
 

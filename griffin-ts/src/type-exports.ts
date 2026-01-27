@@ -5,14 +5,11 @@
 
 export type {
   String,
-  EndpointDSL,
+  HttpRequestDSL,
   Frequency,
   Wait,
   VariableRef,
   BinaryPredicate,
-  JSONAssertion,
-  XMLAssertion,
-  TextAssertion,
   Assertion,
   Assertions,
   NodeDSL,

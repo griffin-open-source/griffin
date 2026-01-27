@@ -3,12 +3,12 @@ import type {
   PlanDSL,
   NodeDSL,
   Edge,
-  EndpointDSL,
+  HttpRequestDSL,
 } from "@griffin-app/griffin-ts/types";
 import {
   PlanV1,
   Node,
-  Endpoint,
+  HttpRequest,
   Wait,
   Assertions,
 } from "@griffin-app/griffin-hub-sdk";
@@ -30,7 +30,7 @@ export interface FieldChange {
 export interface NodeChange {
   type: "add" | "remove" | "modify";
   nodeId: string;
-  nodeType: "ASSERTION" | "ENDPOINT" | "WAIT";
+  nodeType: "ASSERTION" | "HTTP_REQUEST" | "WAIT";
   summary: string; // e.g., "GET /health" or "wait 5000ms"
   fieldChanges: FieldChange[]; // Empty for add/remove, populated for modify
 }
@@ -142,7 +142,7 @@ function compareNodes(localNodes: Node[], remoteNodes: Node[]): NodeChange[] {
  */
 function getNodeSummary(node: Node): string {
   switch (node.type) {
-    case "ENDPOINT":
+    case "HTTP_REQUEST":
       return `${node.method} ${formatValue(node.path)}`;
     case "WAIT":
       return `wait ${node.duration_ms}ms`;
@@ -186,8 +186,8 @@ function compareNodeFields(local: Node, remote: Node): FieldChange[] {
   }
 
   switch (local.type) {
-    case NodeType.ENDPOINT:
-      compareEndpointFields(local, remote as Endpoint, changes);
+    case NodeType.HTTP_REQUEST:
+      compareHttpRequestFields(local, remote as HttpRequest, changes);
       break;
     case NodeType.WAIT:
       compareWaitFields(local, remote as Wait, changes);
@@ -205,11 +205,11 @@ function compareNodeFields(local: Node, remote: Node): FieldChange[] {
 }
 
 /**
- * Compare fields specific to Endpoint nodes
+ * Compare fields specific to HttpRequest nodes
  */
-function compareEndpointFields(
-  local: Endpoint,
-  remote: Endpoint,
+function compareHttpRequestFields(
+  local: HttpRequest,
+  remote: HttpRequest,
   changes: FieldChange[],
 ): void {
   const fields = [

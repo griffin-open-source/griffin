@@ -9,9 +9,6 @@ import {
   HttpMethodSchema,
   ResponseFormatSchema,
   TEST_PLAN_VERSION,
-  JSONAssertionSchema,
-  XMLAssertionSchema,
-  TextAssertionSchema,
   AssertionSchema,
   SecretRefSchema,
   StringLiteralSchema,
@@ -23,10 +20,10 @@ export const SecretOrStringSchema = Type.Union(
   { $id: "SecretOrString" },
 );
 
-export const EndpointSchema = Type.Object(
+export const HttpRequestSchema = Type.Object(
   {
     id: Type.String(),
-    type: Type.Literal(NodeType.ENDPOINT),
+    type: Type.Literal(NodeType.HTTP_REQUEST),
     method: HttpMethodSchema,
     path: Type.String(),
     base: Type.String(),
@@ -34,11 +31,11 @@ export const EndpointSchema = Type.Object(
     body: Type.Optional(Type.Any()), // Body can contain nested SecretRefs
     response_format: ResponseFormatSchema,
   },
-  { $id: "Endpoint" },
+  { $id: "HttpRequest" },
 );
 
 export const NodeSchema = Type.Union(
-  [EndpointSchema, WaitSchema, AssertionsSchema],
+  [HttpRequestSchema, WaitSchema, AssertionsSchema],
   { $id: "Node" },
 );
 
@@ -59,9 +56,6 @@ export const PlanV1Schema = Type.Object(
   },
 );
 
-export type JSONAssertion = Static<typeof JSONAssertionSchema>;
-export type XMLAssertion = Static<typeof XMLAssertionSchema>;
-export type TextAssertion = Static<typeof TextAssertionSchema>;
 export type Assertion = Static<typeof AssertionSchema>;
 export type Assertions = Static<typeof AssertionsSchema>;
 export type Node = Static<typeof NodeSchema>;
@@ -69,4 +63,4 @@ export type PlanV1 = Static<typeof PlanV1Schema>;
 
 export type Frequency = Static<typeof FrequencySchema>;
 export type Wait = Static<typeof WaitSchema>;
-export type Endpoint = Static<typeof EndpointSchema>;
+export type HttpRequest = Static<typeof HttpRequestSchema>;

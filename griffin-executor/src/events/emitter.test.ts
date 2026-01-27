@@ -53,7 +53,7 @@ describe("LocalEventEmitter", () => {
       executionId: "exec-1",
       organizationId: "test-org",
       nodeId: "node-1",
-      nodeType: "ENDPOINT",
+      nodeType: "HTTP_REQUEST",
     };
 
     emitter.emit(testEvent);
@@ -77,7 +77,7 @@ describe("LocalEventEmitter", () => {
       executionId: "exec-1",
       organizationId: "test-org",
       nodeId: "node-1",
-      nodeType: "ENDPOINT",
+      nodeType: "HTTP_REQUEST",
       success: true,
       duration_ms: 100,
     };
@@ -159,7 +159,7 @@ describe("DurableEventEmitter", () => {
       executionId: "exec-1",
       organizationId: "test-org",
       nodeId: "node-1",
-      nodeType: "ENDPOINT",
+      nodeType: "HTTP_REQUEST",
     };
 
     const event2: ExecutionEvent = {

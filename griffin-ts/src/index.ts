@@ -22,9 +22,9 @@ export type {
 // DSL Node Factories
 // ============================================================================
 
-export { Endpoint, Wait, Assertion } from "./builder.js";
+export { HttpRequest, Wait, Assertion } from "./builder.js";
 export type {
-  EndpointConfig,
+  HttpRequestConfig,
   WaitDuration as WaitDurationType,
 } from "./builder.js";
 
@@ -53,19 +53,20 @@ export { Json, Xml, Text } from "./response-formats.js";
 // Assertion DSL
 // ============================================================================
 
-export {
-  Assert,
-  AssertBuilder,
-  UnaryPredicate,
-  BinaryPredicateOperator,
-  createStateProxy,
-} from "./assertions.js";
+export { Assert, AssertBuilder, createStateProxy } from "./assertions.js";
 
 export type {
-  SerializedAssertion,
-  PathDescriptor,
-  BinaryPredicate,
+  BodyDescriptor,
+  HeaderDescriptor,
+  StatusDescriptor,
+  LatencyDescriptor,
+  AssertionDescriptor,
   StateProxy,
   NodeResultProxy,
-  NestedProxy,
+  BodyProxy,
+  HeaderValueProxy,
+  HeadersProxy,
+  StatusProxy,
+  LatencyProxy,
+  AssertableProxy,
 } from "./assertions.js";

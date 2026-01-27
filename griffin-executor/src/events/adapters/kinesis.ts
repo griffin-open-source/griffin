@@ -7,8 +7,11 @@
 
 import type { DurableEventBusAdapter } from "../emitter.js";
 import type { ExecutionEvent } from "../types.js";
-import { Kinesis, KinesisClient, PutRecordsCommand } from "@aws-sdk/client-kinesis";
-
+import {
+  Kinesis,
+  KinesisClient,
+  PutRecordsCommand,
+} from "@aws-sdk/client-kinesis";
 
 export interface KinesisAdapterOptions {
   /**
@@ -37,7 +40,6 @@ export interface KinesisAdapterOptions {
    * Default: 1000
    */
   retryDelayMs?: number;
-
 }
 
 /**
@@ -76,7 +78,10 @@ export class KinesisAdapter implements DurableEventBusAdapter {
     });
     const response = await this.client.send(publishBatchCommand);
     if (response.FailedRecordCount && response.FailedRecordCount > 0) {
-      console.error("Failed to publish events to Kinesis:", response.FailedRecordCount);
+      console.error(
+        "Failed to publish events to Kinesis:",
+        response.FailedRecordCount,
+      );
     }
   }
 

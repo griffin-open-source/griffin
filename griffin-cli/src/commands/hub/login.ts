@@ -4,10 +4,11 @@ import {
   deviceAuthorizationClient,
   jwtClient,
 } from "better-auth/client/plugins";
-import { loadState, saveState } from "../../core/state.js";
+import { getProjectId, loadState, saveState } from "../../core/state.js";
 import { saveHubCredentials } from "../../core/credentials.js";
 import { terminal } from "../../utils/terminal.js";
 import { randomBytes } from "crypto";
+import { createEmptyState, StateFile } from "../../schemas/state.js";
 const baseURL = "http://localhost:4000/api/auth";
 const hubBaseUrl = "http://localhost:3000";
 //const baseURL = "https://cloud.griffin.app"
@@ -48,14 +49,19 @@ async function pollForToken(
   }
 }
 
+
 export async function executeLogin(): Promise<void> {
-  const state = await loadState();
-  let clientId = state.hub?.clientId;
+  let state: StateFile | undefined;
+  let clientId: string | undefined;
+  try {
+    state = await loadState();
+    clientId = state.hub?.clientId;
+  } catch (error) {
+  }
   if (!clientId) {
     clientId = randomBytes(16).toString("hex");
   }
 
-  //const clientId = state.hub?.clientId;
   const { data } = await authClient.device.code({
     client_id: clientId,
   });
@@ -81,6 +87,10 @@ export async function executeLogin(): Promise<void> {
     await saveHubCredentials(jwtData.token);
     terminal.success("Login successful");
     terminal.log(`  Token saved to user credentials`);
+  }
+  if (!state) {
+    const projectId = await getProjectId();
+    state = createEmptyState(projectId);
   }
 
   // Save hub config to project state (without token)

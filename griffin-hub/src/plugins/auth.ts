@@ -1,35 +1,33 @@
 import fp from "fastify-plugin";
-import { FastifyPluginAsync, FastifyRequest, FastifyReply } from "fastify";
+import fastify, {
+  FastifyPluginAsync,
+  FastifyRequest,
+  FastifyReply,
+} from "fastify";
 import bearerAuth from "@fastify/bearer-auth";
 import { decodeJwt, jwtVerify } from "jose";
 import { createRemoteJWKSet } from "jose";
 import path from "node:path";
 
 export async function validateToken(token: string): Promise<any> {
-  try {
-    // use path.join to join the issuer and the jwks path
-    const { iss, aud } = decodeJwt(token);
-    if (!iss || !aud) {
-      throw new Error("Invalid token");
-    }
-    const jwksPath = path.join(iss, "/api/auth/jwks");
-    const JWKS = createRemoteJWKSet(new URL(jwksPath));
-    const { payload } = await jwtVerify(token, JWKS, {
-      issuer: iss,
-      audience: aud,
-    });
-    return payload;
-  } catch (error) {
-    console.error("Token validation failed:", error);
-    throw error;
+  // use path.join to join the issuer and the jwks path
+  const { iss, aud } = decodeJwt(token);
+  if (!iss || !aud) {
+    throw new Error("Invalid token");
   }
+  const jwksPath = path.join(iss, "/api/auth/jwks");
+  const JWKS = createRemoteJWKSet(new URL(jwksPath));
+  const { payload } = await jwtVerify(token, JWKS, {
+    issuer: iss,
+    audience: aud,
+  });
+  return payload;
 }
 
 /**
  * Fastify plugin that provides authentication based on the configured mode.
  *
  * Supports three modes:
- * - none: No authentication (request.auth.authenticated = false)
  * - api-key: Bearer token validated against configured API keys
  * - oidc: JWT validated against OIDC provider's JWKS endpoint
  *
@@ -55,11 +53,6 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
     "onRequest",
     async (request: FastifyRequest, reply: FastifyReply) => {
       const routeAuth = request.routeOptions.config?.auth;
-
-      if (config.auth.mode === "none") {
-        request.auth = { mode: "none", authenticated: false };
-        return;
-      }
 
       if (!routeAuth?.required) {
         request.auth = { mode: config.auth.mode, authenticated: false };
@@ -103,7 +96,6 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
             }
             const token = authorization.substring(7);
             const payload = await validateToken(token);
-            console.log("PAYLOAD", payload);
 
             request.auth = {
               mode: "oidc",
@@ -113,7 +105,7 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
               roles: payload.roles || [],
             };
           } catch (err) {
-            console.log("ERROR", err);
+            fastify.log.error(err, "Token validation failed");
             return reply.code(401).send({
               error: "Unauthorized",
               message: "Invalid or expired token",

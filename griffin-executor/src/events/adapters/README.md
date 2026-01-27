@@ -9,14 +9,19 @@ This directory contains adapters for publishing execution events to various dura
 Publishes events to AWS Kinesis streams. Uses executionId as the partition key to maintain ordering within an execution.
 
 **Installation:**
+
 ```bash
 npm install @aws-sdk/client-kinesis
 ```
 
 **Usage:**
+
 ```typescript
 import { KinesisClient } from "@aws-sdk/client-kinesis";
-import { DurableEventEmitter, KinesisAdapter } from "@griffin-app/griffin-executor";
+import {
+  DurableEventEmitter,
+  KinesisAdapter,
+} from "@griffin-app/griffin-executor";
 
 // Create Kinesis client
 const kinesisClient = new KinesisClient({ region: "us-east-1" });
@@ -46,6 +51,7 @@ emitter.destroy();
 ```
 
 **Features:**
+
 - Automatic batching up to 500 records (Kinesis limit)
 - Retry logic with configurable attempts and delays
 - Partition by executionId for ordering guarantees
@@ -56,8 +62,12 @@ emitter.destroy();
 Simple in-memory storage for testing and local development.
 
 **Usage:**
+
 ```typescript
-import { DurableEventEmitter, InMemoryAdapter } from "@griffin-app/griffin-executor";
+import {
+  DurableEventEmitter,
+  InMemoryAdapter,
+} from "@griffin-app/griffin-executor";
 
 const adapter = new InMemoryAdapter({
   latencyMs: 10, // Optional: simulate network latency
@@ -85,6 +95,7 @@ emitter.destroy();
 ```
 
 **Features:**
+
 - Store events in memory for inspection
 - Query by type or executionId
 - Simulate latency and failures
@@ -95,13 +106,16 @@ emitter.destroy();
 To create a new adapter, implement the `DurableEventBusAdapter` interface:
 
 ```typescript
-import type { DurableEventBusAdapter, ExecutionEvent } from "@griffin-app/griffin-executor";
+import type {
+  DurableEventBusAdapter,
+  ExecutionEvent,
+} from "@griffin-app/griffin-executor";
 
 export class MyCustomAdapter implements DurableEventBusAdapter {
   async publish(events: ExecutionEvent[]): Promise<void> {
     // Serialize events
-    const serialized = events.map(e => JSON.stringify(e));
-    
+    const serialized = events.map((e) => JSON.stringify(e));
+
     // Publish to your event bus
     await myEventBus.send(serialized);
   }
@@ -109,6 +123,7 @@ export class MyCustomAdapter implements DurableEventBusAdapter {
 ```
 
 **Best Practices:**
+
 - Handle serialization internally
 - Implement retry logic for transient failures
 - Consider partitioning strategies for ordering
@@ -117,10 +132,10 @@ export class MyCustomAdapter implements DurableEventBusAdapter {
 
 ## Adapter Comparison
 
-| Adapter | Use Case | Ordering | Durability | Dependencies |
-|---------|----------|----------|------------|--------------|
-| InMemoryAdapter | Testing, local dev | None | None (in-memory) | None |
-| KinesisAdapter | Production AWS | Per executionId | High | @aws-sdk/client-kinesis |
+| Adapter         | Use Case           | Ordering        | Durability       | Dependencies            |
+| --------------- | ------------------ | --------------- | ---------------- | ----------------------- |
+| InMemoryAdapter | Testing, local dev | None            | None (in-memory) | None                    |
+| KinesisAdapter  | Production AWS     | Per executionId | High             | @aws-sdk/client-kinesis |
 
 ## Coming Soon
 

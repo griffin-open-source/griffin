@@ -92,10 +92,9 @@ export const ConfigSchema = Type.Object({
 
   // Auth configuration
   auth: Type.Object({
-    mode: Type.Union(
-      [Type.Literal("none"), Type.Literal("api-key"), Type.Literal("oidc")],
-      { default: "none" },
-    ),
+    mode: Type.Union([Type.Literal("api-key"), Type.Literal("oidc")], {
+      default: "api-key",
+    }),
 
     // API key mode config
     apiKeys: Type.Optional(Type.Array(Type.String())),
@@ -160,8 +159,7 @@ export function loadConfigFromEnv(): Config {
   let jobQueueConfig: Config["jobQueue"];
 
   if (jobQueueBackend === "postgres") {
-    const jobQueueConnectionString =
-      process.env.JOBQUEUE_CONNECTION_STRING || process.env.DATABASE_URL;
+    const jobQueueConnectionString = process.env.DATABASE_URL;
     if (!jobQueueConnectionString) {
       throw new Error(
         "JOBQUEUE_CONNECTION_STRING or DATABASE_URL is required for postgres job queue backend",
@@ -238,15 +236,12 @@ export function loadConfigFromEnv(): Config {
   }
 
   // Parse auth configuration
-  const authMode = (process.env.AUTH_MODE || "none") as
-    | "none"
-    | "api-key"
-    | "oidc";
+  const authMode = process.env.AUTH_MODE as "api-key" | "oidc";
 
   // Validate auth mode
-  if (!["none", "api-key", "oidc"].includes(authMode)) {
+  if (!["api-key", "oidc"].includes(authMode)) {
     throw new Error(
-      `Invalid AUTH_MODE: ${authMode}. Must be one of: none, api-key, oidc`,
+      `Invalid AUTH_MODE: ${authMode}. Must be one of: api-key, oidc`,
     );
   }
 

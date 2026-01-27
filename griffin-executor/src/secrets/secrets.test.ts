@@ -151,7 +151,7 @@ describe("Plan Secret Resolution", () => {
     nodes: [
       {
         id: "endpoint-1",
-        type: "ENDPOINT",
+        type: "HTTP_REQUEST",
         method: "GET",
         path: "/api/test",
         base: "https://api.example.com",
@@ -309,8 +309,8 @@ describe("Plan Secret Resolution", () => {
       const resolved = await resolveSecretsInPlan(plan, registry);
 
       const endpoint = resolved.nodes[0];
-      if (endpoint.type !== "ENDPOINT") {
-        throw new Error("Endpoint not found");
+      if (endpoint.type !== "HTTP_REQUEST") {
+        throw new Error("HttpRequest not found");
       }
       expect(endpoint.headers?.Authorization).toBe("Bearer secret-token");
       expect(endpoint.headers?.["Content-Type"]).toBe("application/json");
@@ -332,8 +332,8 @@ describe("Plan Secret Resolution", () => {
       const resolved = await resolveSecretsInPlan(plan, registry);
 
       const endpoint = resolved.nodes[0];
-      if (endpoint.type !== "ENDPOINT") {
-        throw new Error("Endpoint not found");
+      if (endpoint.type !== "HTTP_REQUEST") {
+        throw new Error("HttpRequest not found");
       }
       expect((endpoint.body as { token: string }).token).toBe("resolved-token");
       expect((endpoint.body as { data: string }).data).toBe("plain-value");
@@ -355,8 +355,8 @@ describe("Plan Secret Resolution", () => {
 
       // Original should still have secret ref
       const originalEndpoint = plan.nodes[0];
-      if (originalEndpoint.type !== "ENDPOINT") {
-        throw new Error("Endpoint not found");
+      if (originalEndpoint.type !== "HTTP_REQUEST") {
+        throw new Error("HttpRequest not found");
       }
       expect(originalEndpoint.headers?.Authorization).toEqual(
         createSecretRef("env:API_KEY"),
@@ -364,8 +364,8 @@ describe("Plan Secret Resolution", () => {
 
       // Resolved should have string
       const resolvedEndpoint = resolved.nodes[0];
-      if (resolvedEndpoint.type !== "ENDPOINT") {
-        throw new Error("Endpoint not found");
+      if (resolvedEndpoint.type !== "HTTP_REQUEST") {
+        throw new Error("HttpRequest not found");
       }
       expect(resolvedEndpoint.headers?.Authorization).toBe("secret");
     });
@@ -407,8 +407,8 @@ describe("Plan Secret Resolution", () => {
       const resolved = await resolveSecretsInPlan(plan, registry);
 
       const endpoint = resolved.nodes[0];
-      if (endpoint.type !== "ENDPOINT") {
-        throw new Error("Endpoint not found");
+      if (endpoint.type !== "HTTP_REQUEST") {
+        throw new Error("HttpRequest not found");
       }
       expect(endpoint.headers?.["Content-Type"]).toBe("application/json");
       expect(endpoint.headers?.Accept).toBe("application/xml");
@@ -425,8 +425,8 @@ describe("Plan Secret Resolution", () => {
       const resolved = await resolveSecretsInPlan(plan, registry);
 
       const endpoint = resolved.nodes[0];
-      if (endpoint.type !== "ENDPOINT") {
-        throw new Error("Endpoint not found");
+      if (endpoint.type !== "HTTP_REQUEST") {
+        throw new Error("HttpRequest not found");
       }
       expect((endpoint.body as { type: string }).type).toBe("test-type");
       expect((endpoint.body as { data: string }).data).toBe("plain-value");
@@ -448,8 +448,8 @@ describe("Plan Secret Resolution", () => {
       const resolved = await resolveSecretsInPlan(plan, registry);
 
       const endpoint = resolved.nodes[0];
-      if (endpoint.type !== "ENDPOINT") {
-        throw new Error("Endpoint not found");
+      if (endpoint.type !== "HTTP_REQUEST") {
+        throw new Error("HttpRequest not found");
       }
       expect(endpoint.headers?.Authorization).toBe("Bearer secret-token");
       expect(endpoint.headers?.["Content-Type"]).toBe("application/json");
@@ -466,8 +466,8 @@ describe("Plan Secret Resolution", () => {
 
       // Original should still have literal wrapper
       const originalEndpoint = plan.nodes[0];
-      if (originalEndpoint.type !== "ENDPOINT") {
-        throw new Error("Endpoint not found");
+      if (originalEndpoint.type !== "HTTP_REQUEST") {
+        throw new Error("HttpRequest not found");
       }
       expect(originalEndpoint.headers?.["Content-Type"]).toEqual(
         createStringLiteral("application/json"),
@@ -475,8 +475,8 @@ describe("Plan Secret Resolution", () => {
 
       // Resolved should have unwrapped string
       const resolvedEndpoint = resolved.nodes[0];
-      if (resolvedEndpoint.type !== "ENDPOINT") {
-        throw new Error("Endpoint not found");
+      if (resolvedEndpoint.type !== "HTTP_REQUEST") {
+        throw new Error("HttpRequest not found");
       }
       expect(resolvedEndpoint.headers?.["Content-Type"]).toBe(
         "application/json",

@@ -1,5 +1,5 @@
 import { Type, type Static } from "typebox";
-import { StringEnum } from "./shared.js";
+import { Ref, StringEnum } from "./shared.js";
 
 export const TEST_PLAN_VERSION = "1.0";
 
@@ -11,20 +11,29 @@ export const SecretRefDataSchema = Type.Object({
   field: Type.Optional(Type.String()),
 });
 
-export const SecretRefSchema = Type.Object({
-  $secret: SecretRefDataSchema,
-}, { $id: "SecretRef" });
+export const SecretRefSchema = Type.Object(
+  {
+    $secret: SecretRefDataSchema,
+  },
+  { $id: "SecretRef" },
+);
 
-export const VariableRefSchema = Type.Object({
-  $variable: Type.Object({
-    key: Type.String(),
-    template: Type.Optional(Type.String()),
-  }),
-}, { $id: "VariableRef" });
+export const VariableRefSchema = Type.Object(
+  {
+    $variable: Type.Object({
+      key: Type.String(),
+      template: Type.Optional(Type.String()),
+    }),
+  },
+  { $id: "VariableRef" },
+);
 
-export const StringLiteralSchema = Type.Object({
-  $literal: Type.String(),
-}, { $id: "StringLiteral" });
+export const StringLiteralSchema = Type.Object(
+  {
+    $literal: Type.String(),
+  },
+  { $id: "StringLiteral" },
+);
 // Union type for values that can be either a literal or a secret reference
 export const StringSchema = Type.Union([
   StringLiteralSchema,
@@ -41,7 +50,7 @@ export enum FrequencyUnit {
 export enum ResponseFormat {
   JSON = "JSON",
   XML = "XML",
-  TEXT = "TEXT",
+  //TEXT = "TEXT",
 }
 
 export enum HttpMethod {
@@ -56,11 +65,11 @@ export enum HttpMethod {
   TRACE = "TRACE",
 }
 export enum NodeType {
-  ENDPOINT = "ENDPOINT",
+  HTTP_REQUEST = "HTTP_REQUEST",
   WAIT = "WAIT",
   ASSERTION = "ASSERTION",
 }
-export enum UnaryPredicate {
+export enum UnaryPredicateOperator {
   IS_NULL = "IS_NULL",
   IS_NOT_NULL = "IS_NOT_NULL",
   IS_TRUE = "IS_TRUE",
@@ -89,7 +98,7 @@ export enum JSONAccessor {
 }
 
 export const ResponseFormatSchema = StringEnum(
-  [ResponseFormat.JSON, ResponseFormat.XML, ResponseFormat.TEXT],
+  [ResponseFormat.JSON, ResponseFormat.XML],
   { $id: "ResponseFormat" },
 );
 
@@ -108,10 +117,10 @@ export const HttpMethodSchema = StringEnum(
   { $id: "HttpMethod" },
 );
 
-export const EndpointDSLSchema = Type.Object(
+export const HttpRequestDSLSchema = Type.Object(
   {
     id: Type.String(),
-    type: Type.Literal(NodeType.ENDPOINT),
+    type: Type.Literal(NodeType.HTTP_REQUEST),
     method: HttpMethodSchema,
     path: StringSchema,
     base: StringSchema,
@@ -119,9 +128,8 @@ export const EndpointDSLSchema = Type.Object(
     body: Type.Optional(Type.Any()), // Body can contain nested SecretRefs
     response_format: ResponseFormatSchema,
   },
-  { $id: "Endpoint" },
+  { $id: "HttpRequest" },
 );
-
 
 export const FrequencyUnitSchema = StringEnum(
   [FrequencyUnit.MINUTE, FrequencyUnit.HOUR, FrequencyUnit.DAY],
@@ -134,7 +142,6 @@ export const FrequencySchema = Type.Object(
   },
   { $id: "Frequency" },
 );
-
 
 export const WaitSchema = Type.Object(
   {
@@ -150,32 +157,40 @@ export const JSONPathSchema = Type.Array(Type.String());
 export const XMLPathSchema = Type.Array(Type.String());
 export const TextPathSchema = Type.String(); // Is there a regex to validate regex ????
 
-export const UnaryPredicateSchema = StringEnum(
+export const UnaryPredicateOperatorSchema = StringEnum(
   [
-    UnaryPredicate.IS_NULL,
-    UnaryPredicate.IS_NOT_NULL,
-    UnaryPredicate.IS_TRUE,
-    UnaryPredicate.IS_FALSE,
-    UnaryPredicate.IS_EMPTY,
-    UnaryPredicate.IS_NOT_EMPTY,
+    UnaryPredicateOperator.IS_NULL,
+    UnaryPredicateOperator.IS_NOT_NULL,
+    UnaryPredicateOperator.IS_TRUE,
+    UnaryPredicateOperator.IS_FALSE,
+    UnaryPredicateOperator.IS_EMPTY,
+    UnaryPredicateOperator.IS_NOT_EMPTY,
   ],
+  { $id: "UnaryPredicateOperator" },
+);
+
+export const UnaryPredicateSchema = Type.Object(
+  {
+    operator: Ref(UnaryPredicateOperatorSchema),
+    type: Type.Literal("unary"),
+  },
   { $id: "UnaryPredicate" },
 );
 
-export const BinaryPredicateOperatorSchema = Type.Union(
+export const BinaryPredicateOperatorSchema = StringEnum(
   [
-    Type.Literal(BinaryPredicateOperator.EQUAL),
-    Type.Literal(BinaryPredicateOperator.NOT_EQUAL),
-    Type.Literal(BinaryPredicateOperator.GREATER_THAN),
-    Type.Literal(BinaryPredicateOperator.LESS_THAN),
-    Type.Literal(BinaryPredicateOperator.GREATER_THAN_OR_EQUAL),
-    Type.Literal(BinaryPredicateOperator.LESS_THAN_OR_EQUAL),
-    Type.Literal(BinaryPredicateOperator.CONTAINS),
-    Type.Literal(BinaryPredicateOperator.NOT_CONTAINS),
-    Type.Literal(BinaryPredicateOperator.STARTS_WITH),
-    Type.Literal(BinaryPredicateOperator.ENDS_WITH),
-    Type.Literal(BinaryPredicateOperator.NOT_STARTS_WITH),
-    Type.Literal(BinaryPredicateOperator.NOT_ENDS_WITH),
+    BinaryPredicateOperator.EQUAL,
+    BinaryPredicateOperator.NOT_EQUAL,
+    BinaryPredicateOperator.GREATER_THAN,
+    BinaryPredicateOperator.LESS_THAN,
+    BinaryPredicateOperator.GREATER_THAN_OR_EQUAL,
+    BinaryPredicateOperator.LESS_THAN_OR_EQUAL,
+    BinaryPredicateOperator.CONTAINS,
+    BinaryPredicateOperator.NOT_CONTAINS,
+    BinaryPredicateOperator.STARTS_WITH,
+    BinaryPredicateOperator.ENDS_WITH,
+    BinaryPredicateOperator.NOT_STARTS_WITH,
+    BinaryPredicateOperator.NOT_ENDS_WITH,
   ],
   { $id: "BinaryPredicateOperator" },
 );
@@ -183,52 +198,94 @@ export const BinaryPredicateOperatorSchema = Type.Union(
 export const BinaryPredicateSchema = Type.Object(
   {
     expected: Type.Any(),
-    operator: BinaryPredicateOperatorSchema,
+    operator: Ref(BinaryPredicateOperatorSchema),
+    type: Type.Literal("binary"),
   },
   { $id: "BinaryPredicate" },
 );
 
-export const JSONAccessorSchema = StringEnum(
-  [JSONAccessor.BODY, JSONAccessor.HEADERS, JSONAccessor.STATUS],
-  { $id: "JSONAccessor" },
-);
+export enum AssertionSubject {
+  BODY = "body",
+  HEADERS = "headers",
+  STATUS = "status",
+  LATENCY = "latency",
+}
+export const AssertionSubjectSchema = StringEnum([
+  AssertionSubject.BODY,
+  AssertionSubject.HEADERS,
+  AssertionSubject.STATUS,
+  AssertionSubject.LATENCY,
+]);
 
-export const JSONAssertionSchema = Type.Object(
-  {
-    nodeId: Type.String(),
-    accessor: JSONAccessorSchema,
-    path: JSONPathSchema,
-    predicate: Type.Union([
-      UnaryPredicateSchema,
-      BinaryPredicateSchema,
-    ]),
-    assertionType: Type.Literal(ResponseFormat.JSON),
-  },
-  { $id: "JSONAssertion" },
-);
+// Base fields shared by all assertions
+const AssertionBaseFields = {
+  nodeId: Type.String(),
+  //predicate: Type.Union([UnaryPredicateSchema, BinaryPredicateSchema]),
+};
 
-export const XMLAssertionSchema = Type.Object(
-  {
-    nodeId: Type.String(),
-    path: XMLPathSchema,
-    expected: Type.Any(),
-    assertionType: Type.Literal(ResponseFormat.XML),
-  },
-  { $id: "XMLAssertion" },
-);
+// Non-body assertions: no path or responseType
+const StatusAssertionSchema = Type.Object({
+  ...AssertionBaseFields,
+  subject: Type.Literal(AssertionSubject.STATUS),
+  predicate: Ref(BinaryPredicateSchema),
+});
 
-export const TextAssertionSchema = Type.Object(
-  {
-    nodeId: Type.String(),
-    path: TextPathSchema,
-    expected: Type.Any(),
-    assertionType: Type.Literal(ResponseFormat.TEXT),
-  },
-  { $id: "TextAssertion" },
-);
+const HeadersAssertionSchema = Type.Object({
+  ...AssertionBaseFields,
+  subject: Type.Literal(AssertionSubject.HEADERS),
+  headerName: Type.String(),
+  predicate: Type.Union([
+    Ref(UnaryPredicateSchema),
+    Ref(BinaryPredicateSchema),
+  ]),
+});
 
+const LatencyAssertionSchema = Type.Object({
+  ...AssertionBaseFields,
+  subject: Type.Literal(AssertionSubject.LATENCY),
+  predicate: Ref(BinaryPredicateSchema),
+});
+
+// Body assertions: path + responseType must be present and match
+const BodyJsonAssertionSchema = Type.Object({
+  ...AssertionBaseFields,
+  subject: Type.Literal(AssertionSubject.BODY),
+  responseType: Type.Literal(ResponseFormat.JSON),
+  path: JSONPathSchema,
+  predicate: Type.Union([
+    Ref(UnaryPredicateSchema),
+    Ref(BinaryPredicateSchema),
+  ]),
+});
+
+const BodyXmlAssertionSchema = Type.Object({
+  ...AssertionBaseFields,
+  subject: Type.Literal(AssertionSubject.BODY),
+  responseType: Type.Literal(ResponseFormat.XML),
+  path: XMLPathSchema,
+  predicate: Type.Union([
+    Ref(UnaryPredicateSchema),
+    Ref(BinaryPredicateSchema),
+  ]),
+});
+
+//const BodyTextAssertionSchema = Type.Object({
+//  ...AssertionBaseFields,
+//  subject: Type.Literal(AssertionSubject.BODY),
+//  responseType: Type.Literal(ResponseFormat.TEXT),
+//  path: TextPathSchema,
+//});
+
+// Discriminated union of all assertion types
 export const AssertionSchema = Type.Union(
-  [JSONAssertionSchema, XMLAssertionSchema, TextAssertionSchema],
+  [
+    StatusAssertionSchema,
+    HeadersAssertionSchema,
+    LatencyAssertionSchema,
+    BodyJsonAssertionSchema,
+    BodyXmlAssertionSchema,
+    //BodyTextAssertionSchema,
+  ],
   { $id: "Assertion" },
 );
 
@@ -242,7 +299,7 @@ export const AssertionsSchema = Type.Object(
 );
 
 export const NodeDSLSchema = Type.Union(
-  [EndpointDSLSchema, WaitSchema, AssertionsSchema],
+  [HttpRequestDSLSchema, WaitSchema, AssertionsSchema],
   { $id: "NodeDSL" },
 );
 
@@ -264,7 +321,7 @@ export const PlanDSLSchema = Type.Object(
     edges: Type.Array(EdgeSchema),
   },
   {
-    $id: "TestPlanV1",
+    $id: "PlanDSL",
   },
 );
 
@@ -272,16 +329,13 @@ export type PlanDSL = Static<typeof PlanDSLSchema>;
 export type VariableRef = Static<typeof VariableRefSchema>;
 export type NodeDSL = Static<typeof NodeDSLSchema>;
 export type Edge = Static<typeof EdgeSchema>;
-export type EndpointDSL = Static<typeof EndpointDSLSchema>;
+export type HttpRequestDSL = Static<typeof HttpRequestDSLSchema>;
 
 export type Assertions = Static<typeof AssertionsSchema>;
 export type Assertion = Static<typeof AssertionSchema>;
 
-export type TextAssertion = Static<typeof TextAssertionSchema>;
-export type JSONAssertion = Static<typeof JSONAssertionSchema>;
-export type XMLAssertion = Static<typeof XMLAssertionSchema>;
-
 export type BinaryPredicate = Static<typeof BinaryPredicateSchema>;
+export type UnaryPredicate = Static<typeof UnaryPredicateSchema>;
 
 export type SecretRef = Static<typeof SecretRefSchema>;
 export type SecretRefData = Static<typeof SecretRefDataSchema>;

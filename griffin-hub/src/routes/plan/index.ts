@@ -1,38 +1,7 @@
 import { Type } from "typebox";
 import { FastifyTypeBox } from "../../types.js";
 import {
-  HttpMethodSchema,
-  SecretRefSchema,
-  StringLiteralSchema,
-  WaitSchema,
-  AssertionsSchema,
-  AssertionSchema,
-  JSONAssertionSchema,
-  XMLAssertionSchema,
-  TextAssertionSchema,
-  JSONAccessorSchema,
-  FrequencyUnitSchema,
-  ResponseFormatSchema,
-  EdgeSchema,
-} from "@griffin-app/griffin-ts/schema";
-import {
   PlanV1Schema,
-  NodeSchema,
-  EndpointSchema,
-  SecretOrStringSchema,
-  //SecretRefSchema,
-  //EdgeSchema,
-  //WaitSchema,
-  //AssertionsSchema,
-  //AssertionSchema,
-  //JSONAssertionSchema,
-  //XMLAssertionSchema,
-  //TextAssertionSchema,
-  //JSONAccessorSchema,
-  //FrequencyUnitSchema,
-  //HttpMethodSchema,
-  //ResponseFormatSchema,
-  //StringLiteralSchema,
 } from "../../schemas/plans.js";
 import {
   Ref,
@@ -43,6 +12,8 @@ import {
 } from "../../schemas/shared.js";
 import { eq, and } from "drizzle-orm";
 import { plansTable } from "../../storage/adapters/postgres/schema.js";
+import { AssertionSchema, BinaryPredicateOperatorSchema, BinaryPredicateSchema, UnaryPredicateSchema } from "@griffin-app/griffin-ts/schema";
+import { UnaryPredicateOperatorSchema } from "../../../../griffin-ts/dist/schema.js";
 
 export const CreatePlanEndpoint = {
   tags: ["plan"],
@@ -104,6 +75,10 @@ export const GetPlanByNameEndpoint = {
 
 export default function (fastify: FastifyTypeBox) {
   fastify.addSchema(PlanV1Schema);
+  fastify.addSchema(BinaryPredicateSchema);
+  fastify.addSchema(BinaryPredicateOperatorSchema);
+  fastify.addSchema(UnaryPredicateSchema);
+  fastify.addSchema(UnaryPredicateOperatorSchema);
 
   fastify.post(
     "/",

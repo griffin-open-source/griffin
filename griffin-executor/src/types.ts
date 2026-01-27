@@ -19,6 +19,7 @@ export interface NodeResponseData {
   body: JSONValue;
   headers: Record<string, string>;
   status: number;
+  duration_ms: number;
 }
 
 export interface HttpRequest {
@@ -98,7 +99,7 @@ export interface ExecutionResult {
   totalDuration_ms: number;
 }
 
-export interface EndpointResult {
+export interface HttpRequestResult {
   success: boolean;
   response?: JSONValue;
   headers?: Record<string, string>;

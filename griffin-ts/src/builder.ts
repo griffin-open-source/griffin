@@ -1,20 +1,18 @@
 import {
+  Assertion,
   PlanDSL,
   NodeDSL,
   Edge,
   Frequency,
   HttpMethod,
   ResponseFormat,
-  EndpointDSL,
+  HttpRequestDSL,
   NodeType,
   Wait,
   Assertions,
   TEST_PLAN_VERSION,
-  JSONAssertion,
 } from "./schema.js";
 import { type START as StartType, type END as EndType } from "./constants.js";
-
-
 
 /**
  * A node definition without the id field.
@@ -39,12 +37,12 @@ export interface TestBuilder<
    * Adds a node to the test graph.
    *
    * @param name - Unique identifier for this node in the graph
-   * @param node - Node definition (Endpoint, WaitNode, Assertion)
+   * @param node - Node definition (HttpRequest, WaitNode, Assertion)
    * @returns Updated builder with the node registered in NodeName
    *
    * @example
    * ```typescript
-   * builder.addNode("health", Endpoint({ method: GET, path: "/health", response_format: JSON }))
+   * builder.addNode("health", HttpRequest({ method: GET, path: "/health", response_format: JSON }))
    * ```
    */
   addNode<Name extends string>(
@@ -195,7 +193,7 @@ class TestBuilderImpl<
  *   frequency: Frequency.every(5).minute(),
  *   locations: ["us-east-1", "eu-west-1"]
  * })
- *   .addNode("health", Endpoint({ method: GET, path: "/health", response_format: JSON }))
+ *   .addNode("health", HttpRequest({ method: GET, path: "/health", response_format: JSON }))
  *   .addEdge(START, "health")
  *   .addEdge("health", END)
  *   .build();
@@ -214,10 +212,10 @@ export function createGraphBuilder(config: {
 // ============================================================================
 
 /**
- * Configuration for an Endpoint node
+ * Configuration for an HttpRequest node
  * Accepts DSL-friendly literal types which are converted to schema enums internally
  */
-export interface EndpointConfig {
+export interface HttpRequestConfig {
   method:
     | "GET"
     | "POST"
@@ -228,24 +226,24 @@ export interface EndpointConfig {
     | "OPTIONS"
     | "CONNECT"
     | "TRACE";
-  path: string | EndpointDSL["path"];
-  base: string | EndpointDSL["base"];
+  path: string | HttpRequestDSL["path"];
+  base: string | HttpRequestDSL["base"];
   response_format: "JSON" | "XML" | "TEXT";
   headers?: Record<string, any>;
   body?: any;
 }
 
 /**
- * Creates an Endpoint node for making HTTP requests.
+ * Creates an HttpRequest node for making HTTP requests.
  *
- * @param config - Endpoint configuration (method, path, base, headers, etc.)
- * @returns An Endpoint node (without id) ready to be added to a TestBuilder
+ * @param config - HttpRequest configuration (method, path, base, headers, etc.)
+ * @returns An HttpRequest node (without id) ready to be added to a TestBuilder
  *
  * @example
  * ```typescript
  * import { variable } from './variable';
  *
- * builder.addNode("health", Endpoint({
+ * builder.addNode("health", HttpRequest({
  *   method: GET,
  *   path: "/health",
  *   base: variable("api-gateway"),
@@ -253,12 +251,16 @@ export interface EndpointConfig {
  * }));
  * ```
  */
-export function Endpoint(config: EndpointConfig): Omit<EndpointDSL, "id"> {
+export function HttpRequest(
+  config: HttpRequestConfig,
+): Omit<HttpRequestDSL, "id"> {
   return {
-    type: NodeType.ENDPOINT,
+    type: NodeType.HTTP_REQUEST,
     method: config.method as HttpMethod,
-    path: typeof config.path === "string" ? { $literal: config.path } : config.path,
-    base: typeof config.base === "string" ? { $literal: config.base } : config.base,
+    path:
+      typeof config.path === "string" ? { $literal: config.path } : config.path,
+    base:
+      typeof config.base === "string" ? { $literal: config.base } : config.base,
     response_format: config.response_format as ResponseFormat,
     headers: config.headers,
     body: config.body,
@@ -325,7 +327,7 @@ export function Wait(duration: WaitDuration): Omit<Wait, "id"> {
  * ]));
  * ```
  */
-export function Assertion(assertions: JSONAssertion[]): Omit<Assertions, "id"> {
+export function Assertion(assertions: Assertion[]): Omit<Assertions, "id"> {
   return {
     type: NodeType.ASSERTION,
     assertions: assertions,

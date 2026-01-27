@@ -68,6 +68,8 @@ griffin env list                    # list available environments
 # Hub operations
 griffin hub connect --url https://hub.example.com --token <token>
 griffin hub status
+griffin hub login                   # authenticate with OIDC device flow
+griffin hub logout                  # clear OIDC credentials
 griffin hub plan                    # show planned changes for default environment
 griffin hub plan production         # show planned changes for production
 griffin hub apply                   # apply changes for default environment
@@ -185,6 +187,7 @@ builder
 ### Hub Configuration
 Environment-based config via Typebox schema. Key variables:
 - `DATABASE_URL`: PostgreSQL connection string (required)
+- `JOBQUEUE_BACKEND`: postgres | sqs (default: postgres)
 - `SCHEDULER_ENABLED`: Enable scheduler (default: true)
 - `SCHEDULER_TICK_INTERVAL`: Scheduler polling interval in ms (default: 30000)
 - `WORKER_EMPTY_DELAY`: Executor initial empty queue delay in ms (default: 1000)
@@ -196,8 +199,8 @@ Environment-based config via Typebox schema. Key variables:
 
 ### Agent Configuration
 - `AGENT_LOCATION`: Location identifier (required)
-- `HUB_URL`: Hub API endpoint
-- `QUEUE_BACKEND`: postgres | sqs | redis
+- `HUB_URL`: Hub API endpoint (required)
+- `QUEUE_BACKEND`: postgres | sqs | redis (default: postgres)
 - `QUEUE_CONNECTION_STRING`: Backend-specific connection
 - `HEARTBEAT_ENABLED`, `HEARTBEAT_INTERVAL_SECONDS`: Heartbeat settings
 

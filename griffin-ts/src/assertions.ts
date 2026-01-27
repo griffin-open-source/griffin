@@ -7,100 +7,149 @@
  * - Support for unary and binary predicates with negation
  */
 
-import { JSONAccessor } from "./schema.js";
+import {
+  type Assertion,
+  AssertionSubject,
+  BinaryPredicateOperator,
+  ResponseFormat,
+  UnaryPredicate,
+  UnaryPredicateOperator,
+} from "./schema.js";
+
+//type Assertion = Assertion;
 
 // ============================================================================
 // Types
 // ============================================================================
 
 /**
- * Identifies which node and which part of its result we're asserting on
+ * Descriptor for body assertions - supports nested JSONPath access
  */
-export interface PathDescriptor {
+export interface BodyDescriptor {
   nodeId: string;
-  accessor: JSONAccessor;
+  subject: AssertionSubject.BODY;
   path: string[]; // JSONPath segments (e.g., ["data", "id"])
+  responseType: ResponseFormat;
 }
 
 /**
- * Unary predicates that check a property without comparing to a value
+ * Descriptor for header assertions - single header name, no nesting
  */
-export enum UnaryPredicate {
-  IS_NULL = "IS_NULL",
-  IS_NOT_NULL = "IS_NOT_NULL",
-  IS_TRUE = "IS_TRUE",
-  IS_FALSE = "IS_FALSE",
-  IS_EMPTY = "IS_EMPTY",
-  IS_NOT_EMPTY = "IS_NOT_EMPTY",
+export interface HeaderDescriptor {
+  nodeId: string;
+  subject: AssertionSubject.HEADERS;
+  headerName: string;
 }
 
 /**
- * Binary predicate operators that compare against an expected value
+ * Descriptor for status assertions - no path needed
  */
-export enum BinaryPredicateOperator {
-  EQUAL = "EQUAL",
-  NOT_EQUAL = "NOT_EQUAL",
-  GREATER_THAN = "GREATER_THAN",
-  LESS_THAN = "LESS_THAN",
-  GREATER_THAN_OR_EQUAL = "GREATER_THAN_OR_EQUAL",
-  LESS_THAN_OR_EQUAL = "LESS_THAN_OR_EQUAL",
-  CONTAINS = "CONTAINS",
-  NOT_CONTAINS = "NOT_CONTAINS",
-  STARTS_WITH = "STARTS_WITH",
-  NOT_STARTS_WITH = "NOT_STARTS_WITH",
-  ENDS_WITH = "ENDS_WITH",
-  NOT_ENDS_WITH = "NOT_ENDS_WITH",
+export interface StatusDescriptor {
+  nodeId: string;
+  subject: AssertionSubject.STATUS;
 }
+
+/**
+ * Descriptor for latency assertions - no path needed
+ */
+export interface LatencyDescriptor {
+  nodeId: string;
+  subject: AssertionSubject.LATENCY;
+}
+
+/**
+ * Union of all assertion descriptors
+ */
+export type AssertionDescriptor =
+  | BodyDescriptor
+  | HeaderDescriptor
+  | StatusDescriptor
+  | LatencyDescriptor;
 
 /**
  * Binary predicate with operator and expected value
  */
-export interface BinaryPredicate {
-  operator: BinaryPredicateOperator;
-  expected: unknown;
-}
-
-/**
- * Serialized assertion ready for execution
- */
-export interface SerializedAssertion {
-  nodeId: string;
-  accessor: JSONAccessor;
-  path: string[];
-  predicate: UnaryPredicate | BinaryPredicate;
-}
+//export interface BinaryPredicate {
+//  operator: BinaryPredicateOperator;
+//  expected: unknown;
+//}
 
 // ============================================================================
 // State Proxy
 // ============================================================================
 
 /**
- * Symbol used to store path metadata in proxy objects
+ * Symbol used to store descriptor metadata in proxy objects
  */
-const PATH_SYMBOL = Symbol("__path__");
+const DESCRIPTOR_SYMBOL = Symbol("__descriptor__");
 
 /**
- * Internal interface for proxy objects that carry path information
+ * Internal interface for proxy objects that carry a body descriptor
  */
-interface ProxyWithPath {
-  [PATH_SYMBOL]: PathDescriptor;
+interface ProxyWithBodyDescriptor {
+  [DESCRIPTOR_SYMBOL]: BodyDescriptor;
 }
 
 /**
- * Proxy for accessing nested properties within a node result accessor (body, headers, status)
- * Note: The 'at' method is available at runtime but typed as NestedProxy for simplicity
+ * Internal interface for proxy objects that carry a header descriptor
  */
-export type NestedProxy = ProxyWithPath & {
-  [key: string]: NestedProxy;
+interface ProxyWithHeaderDescriptor {
+  [DESCRIPTOR_SYMBOL]: HeaderDescriptor;
+}
+
+/**
+ * Internal interface for proxy objects that carry a status descriptor
+ */
+interface ProxyWithStatusDescriptor {
+  [DESCRIPTOR_SYMBOL]: StatusDescriptor;
+}
+
+/**
+ * Internal interface for proxy objects that carry a latency descriptor
+ */
+interface ProxyWithLatencyDescriptor {
+  [DESCRIPTOR_SYMBOL]: LatencyDescriptor;
+}
+
+/**
+ * Proxy for accessing nested properties within a body.
+ * Supports arbitrary depth: body["data"]["users"][0]["name"]
+ */
+export type BodyProxy = ProxyWithBodyDescriptor & {
+  [key: string]: BodyProxy;
 };
 
 /**
- * Proxy for a node result with body, headers, and status accessors
+ * Terminal proxy for a single header value. No further nesting allowed.
+ */
+export type HeaderValueProxy = ProxyWithHeaderDescriptor;
+
+/**
+ * Proxy for accessing header values. Only allows one level of access.
+ * e.g., headers["content-type"] returns a HeaderValueProxy
+ */
+export type HeadersProxy = {
+  [key: string]: HeaderValueProxy;
+};
+
+/**
+ * Terminal proxy for status. No further nesting allowed.
+ */
+export type StatusProxy = ProxyWithStatusDescriptor;
+
+/**
+ * Terminal proxy for latency. No further nesting allowed.
+ */
+export type LatencyProxy = ProxyWithLatencyDescriptor;
+
+/**
+ * Proxy for a node result with body, headers, status, and latency accessors
  */
 export type NodeResultProxy = {
-  body: NestedProxy;
-  headers: NestedProxy;
-  status: NestedProxy;
+  body: BodyProxy;
+  headers: HeadersProxy;
+  status: StatusProxy;
+  latency: LatencyProxy;
 };
 
 /**
@@ -111,24 +160,24 @@ export type StateProxy<NodeNames extends string = string> = {
 };
 
 /**
- * Creates a nested proxy that accumulates path segments
+ * Creates a body proxy that accumulates JSONPath segments
  */
-function createNestedProxy(descriptor: PathDescriptor): NestedProxy {
-  return new Proxy({} as NestedProxy, {
+function createBodyProxy(descriptor: BodyDescriptor): BodyProxy {
+  return new Proxy({} as BodyProxy, {
     get(_, prop: string | symbol) {
-      if (prop === PATH_SYMBOL) {
+      if (prop === DESCRIPTOR_SYMBOL) {
         return descriptor;
       }
       if (prop === "at") {
         return (index: number) => {
-          return createNestedProxy({
+          return createBodyProxy({
             ...descriptor,
             path: [...descriptor.path, String(index)],
           });
         };
       }
       // Accumulate string property access
-      return createNestedProxy({
+      return createBodyProxy({
         ...descriptor,
         path: [...descriptor.path, String(prop)],
       });
@@ -137,13 +186,91 @@ function createNestedProxy(descriptor: PathDescriptor): NestedProxy {
 }
 
 /**
- * Creates a proxy for a node result with body, headers, and status accessors
+ * Creates a header value proxy (terminal - no further nesting)
  */
-function createNodeResultProxy(nodeId: string): NodeResultProxy {
+function createHeaderValueProxy(
+  descriptor: HeaderDescriptor,
+): HeaderValueProxy {
+  return new Proxy({} as HeaderValueProxy, {
+    get(_, prop: string | symbol) {
+      if (prop === DESCRIPTOR_SYMBOL) {
+        return descriptor;
+      }
+      return undefined;
+    },
+  });
+}
+
+/**
+ * Creates a headers proxy that only allows one level of property access.
+ * e.g., headers["content-type"] returns a HeaderValueProxy
+ */
+function createHeadersProxy(nodeId: string): HeadersProxy {
+  return new Proxy({} as HeadersProxy, {
+    get(_, prop: string | symbol) {
+      if (typeof prop === "symbol") {
+        return undefined;
+      }
+      return createHeaderValueProxy({
+        nodeId,
+        subject: AssertionSubject.HEADERS,
+        headerName: prop,
+      });
+    },
+  });
+}
+
+/**
+ * Creates a status proxy (terminal - no further nesting)
+ */
+function createStatusProxy(descriptor: StatusDescriptor): StatusProxy {
+  return new Proxy({} as StatusProxy, {
+    get(_, prop: string | symbol) {
+      if (prop === DESCRIPTOR_SYMBOL) {
+        return descriptor;
+      }
+      return undefined;
+    },
+  });
+}
+
+/**
+ * Creates a latency proxy (terminal - no further nesting)
+ */
+function createLatencyProxy(descriptor: LatencyDescriptor): LatencyProxy {
+  return new Proxy({} as LatencyProxy, {
+    get(_, prop: string | symbol) {
+      if (prop === DESCRIPTOR_SYMBOL) {
+        return descriptor;
+      }
+      return undefined;
+    },
+  });
+}
+
+/**
+ * Creates a proxy for a node result with body, headers, status, and latency accessors
+ */
+function createNodeResultProxy(
+  nodeId: string,
+  responseType: ResponseFormat = ResponseFormat.JSON,
+): NodeResultProxy {
   return {
-    body: createNestedProxy({ nodeId, accessor: JSONAccessor.BODY, path: [] }),
-    headers: createNestedProxy({ nodeId, accessor: JSONAccessor.HEADERS, path: [] }),
-    status: createNestedProxy({ nodeId, accessor: JSONAccessor.STATUS, path: [] }),
+    body: createBodyProxy({
+      nodeId,
+      subject: AssertionSubject.BODY,
+      path: [],
+      responseType,
+    }),
+    headers: createHeadersProxy(nodeId),
+    status: createStatusProxy({
+      nodeId,
+      subject: AssertionSubject.STATUS,
+    }),
+    latency: createLatencyProxy({
+      nodeId,
+      subject: AssertionSubject.LATENCY,
+    }),
   };
 }
 
@@ -174,7 +301,7 @@ export function createStateProxy<NodeNames extends string>(
 export class AssertBuilder {
   private negated = false;
 
-  constructor(private descriptor: PathDescriptor) {}
+  constructor(private descriptor: AssertionDescriptor) {}
 
   /**
    * Negation modifier - flips the meaning of the subsequent predicate
@@ -191,120 +318,193 @@ export class AssertBuilder {
 
   // Unary predicates
 
-  isNull(): SerializedAssertion {
-    return this.createAssertion(
-      this.negated ? UnaryPredicate.IS_NOT_NULL : UnaryPredicate.IS_NULL,
+  isNull(): Assertion {
+    return this.createUnaryAssertion(
+      this.negated
+        ? UnaryPredicateOperator.IS_NOT_NULL
+        : UnaryPredicateOperator.IS_NULL,
     );
   }
 
-  isDefined(): SerializedAssertion {
-    return this.createAssertion(
-      this.negated ? UnaryPredicate.IS_NULL : UnaryPredicate.IS_NOT_NULL,
+  isDefined(): Assertion {
+    return this.createUnaryAssertion(
+      this.negated
+        ? UnaryPredicateOperator.IS_NULL
+        : UnaryPredicateOperator.IS_NOT_NULL,
     );
   }
 
-  isTrue(): SerializedAssertion {
-    return this.createAssertion(
-      this.negated ? UnaryPredicate.IS_FALSE : UnaryPredicate.IS_TRUE,
+  isTrue(): Assertion {
+    return this.createUnaryAssertion(
+      this.negated
+        ? UnaryPredicateOperator.IS_FALSE
+        : UnaryPredicateOperator.IS_TRUE,
     );
   }
 
-  isFalse(): SerializedAssertion {
-    return this.createAssertion(
-      this.negated ? UnaryPredicate.IS_TRUE : UnaryPredicate.IS_FALSE,
+  isFalse(): Assertion {
+    return this.createUnaryAssertion(
+      this.negated
+        ? UnaryPredicateOperator.IS_TRUE
+        : UnaryPredicateOperator.IS_FALSE,
     );
   }
 
-  isEmpty(): SerializedAssertion {
-    return this.createAssertion(
-      this.negated ? UnaryPredicate.IS_NOT_EMPTY : UnaryPredicate.IS_EMPTY,
+  isEmpty(): Assertion {
+    return this.createUnaryAssertion(
+      this.negated
+        ? UnaryPredicateOperator.IS_NOT_EMPTY
+        : UnaryPredicateOperator.IS_EMPTY,
     );
   }
 
   // Binary predicates
 
-  equals(expected: unknown): SerializedAssertion {
-    return this.createAssertion({
-      operator: this.negated
+  equals(expected: unknown): Assertion {
+    return this.createBinaryAssertion(
+      this.negated
         ? BinaryPredicateOperator.NOT_EQUAL
         : BinaryPredicateOperator.EQUAL,
       expected,
-    });
+    );
   }
 
-  greaterThan(expected: number): SerializedAssertion {
-    return this.createAssertion({
-      operator: this.negated
+  greaterThan(expected: number): Assertion {
+    return this.createBinaryAssertion(
+      this.negated
         ? BinaryPredicateOperator.LESS_THAN_OR_EQUAL
         : BinaryPredicateOperator.GREATER_THAN,
       expected,
-    });
+    );
   }
 
-  lessThan(expected: number): SerializedAssertion {
-    return this.createAssertion({
-      operator: this.negated
+  lessThan(expected: number): Assertion {
+    return this.createBinaryAssertion(
+      this.negated
         ? BinaryPredicateOperator.GREATER_THAN_OR_EQUAL
         : BinaryPredicateOperator.LESS_THAN,
       expected,
-    });
+    );
   }
 
-  greaterThanOrEqual(expected: number): SerializedAssertion {
-    return this.createAssertion({
-      operator: this.negated
+  greaterThanOrEqual(expected: number): Assertion {
+    return this.createBinaryAssertion(
+      this.negated
         ? BinaryPredicateOperator.LESS_THAN
         : BinaryPredicateOperator.GREATER_THAN_OR_EQUAL,
       expected,
-    });
+    );
   }
 
-  lessThanOrEqual(expected: number): SerializedAssertion {
-    return this.createAssertion({
-      operator: this.negated
+  lessThanOrEqual(expected: number): Assertion {
+    return this.createBinaryAssertion(
+      this.negated
         ? BinaryPredicateOperator.GREATER_THAN
         : BinaryPredicateOperator.LESS_THAN_OR_EQUAL,
       expected,
-    });
+    );
   }
 
-  contains(expected: string): SerializedAssertion {
-    return this.createAssertion({
-      operator: this.negated
+  contains(expected: string): Assertion {
+    return this.createBinaryAssertion(
+      this.negated
         ? BinaryPredicateOperator.NOT_CONTAINS
         : BinaryPredicateOperator.CONTAINS,
       expected,
-    });
+    );
   }
 
-  startsWith(expected: string): SerializedAssertion {
-    return this.createAssertion({
-      operator: this.negated
+  startsWith(expected: string): Assertion {
+    return this.createBinaryAssertion(
+      this.negated
         ? BinaryPredicateOperator.NOT_STARTS_WITH
         : BinaryPredicateOperator.STARTS_WITH,
       expected,
-    });
+    );
   }
 
-  endsWith(expected: string): SerializedAssertion {
-    return this.createAssertion({
-      operator: this.negated
+  endsWith(expected: string): Assertion {
+    return this.createBinaryAssertion(
+      this.negated
         ? BinaryPredicateOperator.NOT_ENDS_WITH
         : BinaryPredicateOperator.ENDS_WITH,
       expected,
-    });
+    );
   }
 
-  private createAssertion(
-    predicate: UnaryPredicate | BinaryPredicate,
-  ): SerializedAssertion {
-    return {
-      nodeId: this.descriptor.nodeId,
-      accessor: this.descriptor.accessor,
-      path: this.descriptor.path,
-      predicate,
-    };
+  private createUnaryAssertion(operator: UnaryPredicateOperator): Assertion {
+    const descriptor = this.descriptor;
+    switch (descriptor.subject) {
+      case AssertionSubject.HEADERS:
+        return {
+          nodeId: descriptor.nodeId,
+          subject: descriptor.subject,
+          headerName: descriptor.headerName,
+          predicate: { operator, type: "unary" },
+        };
+      case AssertionSubject.BODY:
+        return {
+          nodeId: descriptor.nodeId,
+          subject: descriptor.subject,
+          responseType: descriptor.responseType,
+          path: descriptor.path,
+          predicate: { operator, type: "unary" },
+        };
+      default:
+        throw new Error(`Unsupported subject: ${descriptor.subject}`);
+    }
   }
+  private createBinaryAssertion(
+    operator: BinaryPredicateOperator,
+    expected: unknown,
+  ): Assertion {
+    const descriptor = this.descriptor;
+    switch (descriptor.subject) {
+      case AssertionSubject.BODY:
+        return {
+          nodeId: descriptor.nodeId,
+          subject: descriptor.subject,
+          responseType: descriptor.responseType,
+          path: descriptor.path,
+          predicate: { operator, expected, type: "binary" },
+        };
+      case AssertionSubject.STATUS:
+        return {
+          nodeId: descriptor.nodeId,
+          subject: descriptor.subject,
+          predicate: { operator, expected, type: "binary" },
+        };
+      case AssertionSubject.HEADERS:
+        return {
+          nodeId: descriptor.nodeId,
+          subject: descriptor.subject,
+          headerName: descriptor.headerName,
+          predicate: { operator, expected, type: "binary" },
+        };
+      case AssertionSubject.LATENCY:
+        return {
+          nodeId: descriptor.nodeId,
+          subject: descriptor.subject,
+          predicate: { operator, expected, type: "binary" },
+        };
+    }
+  }
+}
+
+/**
+ * Union of all assertable proxy types
+ */
+export type AssertableProxy =
+  | BodyProxy
+  | HeaderValueProxy
+  | StatusProxy
+  | LatencyProxy;
+
+/**
+ * Internal interface for extracting descriptor from any proxy type
+ */
+interface ProxyWithDescriptor {
+  [DESCRIPTOR_SYMBOL]: AssertionDescriptor;
 }
 
 /**
@@ -318,8 +518,8 @@ export class AssertBuilder {
  * Assert(state["create_user"].status).equals(201)
  * Assert(state["create_user"].headers["content-type"]).contains("application/json")
  */
-export function Assert(proxyRef: NestedProxy): AssertBuilder {
-  const descriptor = (proxyRef as ProxyWithPath)[PATH_SYMBOL];
+export function Assert(proxyRef: AssertableProxy): AssertBuilder {
+  const descriptor = (proxyRef as ProxyWithDescriptor)[DESCRIPTOR_SYMBOL];
   if (!descriptor) {
     throw new Error(
       "Assert() must be called with a reference from the state proxy",

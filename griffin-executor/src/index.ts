@@ -11,7 +11,7 @@ export type {
 } from "./types.js";
 export type {
   TestPlan,
-  Endpoint,
+  HttpRequest as HttpRequestNode,
   WaitNode,
   AssertionNode,
   Edge,

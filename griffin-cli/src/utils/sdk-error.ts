@@ -54,7 +54,7 @@ export function handleSDKError(error: unknown, context?: string): never {
       case 404:
         terminal.error(`${contextMsg}Resource not found`);
         if (sdkError.url) {
-          terminal.dim(`Endpoint: ${sdkError.url}`);
+          terminal.dim(`URL: ${sdkError.url}`);
         }
         terminal.dim("The requested resource may not exist on the hub.");
         return terminal.exit(1) as never;

@@ -46,13 +46,13 @@ export interface PlanEndEvent extends BaseEvent {
 export interface NodeStartEvent extends BaseEvent {
   type: "NODE_START";
   nodeId: string;
-  nodeType: "ASSERTION" | "ENDPOINT" | "WAIT";
+  nodeType: "ASSERTION" | "HTTP_REQUEST" | "WAIT";
 }
 
 export interface NodeEndEvent extends BaseEvent {
   type: "NODE_END";
   nodeId: string;
-  nodeType: "ASSERTION" | "ENDPOINT" | "WAIT";
+  nodeType: "ASSERTION" | "HTTP_REQUEST" | "WAIT";
   success: boolean;
   duration_ms: number;
   error?: string;

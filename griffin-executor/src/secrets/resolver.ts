@@ -1,13 +1,7 @@
 /**
  * Secret resolution utilities for test plans.
  */
-
-//import { TestPlanV1, Node } from "@griffin-app/griffin-ts/types";
-//import { NodeType } from "@griffin-app/griffin-ts/schema";
-import {
-  type PlanV1,
-} from "@griffin-app/griffin-hub-sdk";
-//import { NodeType}
+import { type PlanV1 } from "@griffin-app/griffin-hub-sdk";
 import type { SecretProviderRegistry } from "./registry.js";
 import type { SecretRef, SecretRefData } from "./types.js";
 import { isSecretRef, isStringLiteral } from "./types.js";
@@ -91,7 +85,7 @@ export function collectSecretsFromPlan(plan: PlanV1): CollectedSecrets {
     const node = plan.nodes[nodeIndex];
 
     // Only endpoints can have secrets (in headers and body)
-    if (node.type !== "ENDPOINT") {
+    if (node.type !== "HTTP_REQUEST") {
       continue;
     }
 
@@ -229,7 +223,7 @@ export async function resolveSecretsInPlan(
  */
 export function planHasSecrets(plan: PlanV1): boolean {
   for (const node of plan.nodes) {
-    if (node.type !== "ENDPOINT") {
+    if (node.type !== "HTTP_REQUEST") {
       continue;
     }
 

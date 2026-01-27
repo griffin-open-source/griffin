@@ -10,7 +10,7 @@ import {
   GET,
   POST,
   createGraphBuilder,
-  Endpoint,
+  HttpRequest,
   Wait,
   Assertion,
   Json,
@@ -27,7 +27,7 @@ const plan = createGraphBuilder({
 })
   .addNode(
     "create_foo",
-    Endpoint({
+    HttpRequest({
       method: POST,
       base: variable("api-service"),
       response_format: Json,
@@ -36,7 +36,7 @@ const plan = createGraphBuilder({
   )
   .addNode(
     "get_foo",
-    Endpoint({
+    HttpRequest({
       method: GET,
       base: variable("api-service"),
       response_format: Json,

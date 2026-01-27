@@ -100,7 +100,7 @@ interface ExecutionOptions {
 
 ## Node Types
 
-### Endpoint Nodes
+### HttpRequest Nodes
 
 - Makes HTTP requests using axios
 - Supports all HTTP methods (GET, POST, PUT, DELETE, PATCH)

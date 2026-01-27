@@ -1,9 +1,9 @@
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 export type ResponseFormat = "JSON" | "XML" | "TEXT";
 
-export interface Endpoint {
+export interface HttpRequest {
   id: string;
-  type: "endpoint";
+  type: "HTTP_REQUEST";
   method: HttpMethod;
   path: string;
   response_format: ResponseFormat;
@@ -13,13 +13,13 @@ export interface Endpoint {
 
 export interface WaitNode {
   id: string;
-  type: "wait";
+  type: "WAIT";
   duration_ms: number;
 }
 
 export interface AssertionNode {
   id: string;
-  type: "assertion";
+  type: "ASSERTION";
   assertions: Assertion[];
 }
 
@@ -44,6 +44,6 @@ export interface TestPlan {
   name: string;
   endpoint_host: string;
   frequency?: Frequency;
-  nodes: (Endpoint | WaitNode | AssertionNode)[];
+  nodes: (HttpRequest | WaitNode | AssertionNode)[];
   edges: Edge[];
 }

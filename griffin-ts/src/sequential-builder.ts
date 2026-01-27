@@ -1,8 +1,8 @@
 import {
-  Endpoint,
+  HttpRequest,
   Wait,
   Assertion,
-  type EndpointConfig,
+  type HttpRequestConfig,
   type WaitDuration,
 } from "./builder.js";
 import { START, END } from "./constants.js";
@@ -13,19 +13,16 @@ import {
   Frequency,
   PlanDSL,
   ResponseFormat,
+  type Assertion as AssertionType,
 } from "./schema.js";
-import {
-  createStateProxy,
-  type SerializedAssertion,
-  type StateProxy,
-} from "./assertions.js";
+import { createStateProxy, type StateProxy } from "./assertions.js";
 
 /**
  * Callback type for building assertions with type-safe state access
  */
 export type AssertionCallback<NodeNames extends string> = (
   state: StateProxy<NodeNames>,
-) => SerializedAssertion[];
+) => AssertionType[];
 
 /**
  * SequentialTestBuilder provides a simplified DSL for creating linear test flows.
@@ -36,10 +33,10 @@ export type AssertionCallback<NodeNames extends string> = (
  */
 export interface SequentialTestBuilder<NodeNames extends string = never> {
   /**
-   * Adds an endpoint request to the sequence.
+   * Adds an HTTP request to the sequence.
    *
    * @param name - Unique name for this node
-   * @param config - Endpoint configuration
+   * @param config - HttpRequest configuration
    * @returns Updated builder with node name registered
    *
    * @example
@@ -54,7 +51,7 @@ export interface SequentialTestBuilder<NodeNames extends string = never> {
    */
   request<Name extends string>(
     name: Name,
-    config: EndpointConfig,
+    config: HttpRequestConfig,
   ): SequentialTestBuilder<NodeNames | Name>;
 
   /**
@@ -134,9 +131,9 @@ class SequentialTestBuilderImpl<
 
   request<Name extends string>(
     name: Name,
-    config: EndpointConfig,
+    config: HttpRequestConfig,
   ): SequentialTestBuilder<NodeNames | Name> {
-    const node = Endpoint(config);
+    const node = HttpRequest(config);
     this.nodes.push({ ...node, id: name } as NodeDSL);
     this.nodeNames.push(name);
     return this as unknown as SequentialTestBuilder<NodeNames | Name>;
@@ -159,10 +156,12 @@ class SequentialTestBuilderImpl<
     const serializedAssertions = callback(stateProxy);
 
     const nodeName = this.generateNodeName();
-    const node = Assertion(serializedAssertions.map((assertion) => ({
-      ...assertion,
-      assertionType: ResponseFormat.JSON,
-    })));
+    const node = Assertion(
+      serializedAssertions.map((assertion) => ({
+        ...assertion,
+        assertionType: ResponseFormat.JSON,
+      })),
+    );
     this.nodes.push({ ...node, id: nodeName } as NodeDSL);
     this.nodeNames.push(nodeName);
     return this as unknown as SequentialTestBuilder<NodeNames>;

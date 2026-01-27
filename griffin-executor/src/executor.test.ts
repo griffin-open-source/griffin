@@ -1356,15 +1356,15 @@ describe("executePlanV1", () => {
       // Check node types
       expect(nodeStartEvents[0]).toMatchObject({
         nodeId: "endpoint-1",
-        nodeType: "endpoint",
+        nodeType: "ENDPOINT",
       });
       expect(nodeStartEvents[1]).toMatchObject({
         nodeId: "wait-1",
-        nodeType: "wait",
+        nodeType: "WAIT",
       });
       expect(nodeStartEvents[2]).toMatchObject({
         nodeId: "endpoint-2",
-        nodeType: "endpoint",
+        nodeType: "ENDPOINT",
       });
     });
 

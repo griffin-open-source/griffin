@@ -8,6 +8,7 @@
 
 /** Base event envelope with correlation and ordering metadata */
 export interface BaseEvent {
+  location?: string;
   /** Unique identifier for this specific event */
   eventId: string;
   /** Monotonic sequence number within this execution (0-indexed) */

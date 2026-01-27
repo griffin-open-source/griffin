@@ -43,6 +43,12 @@ export type {
   NodeStreamEvent,
   ErrorEvent,
 } from "./events/types.js";
+export {
+  // Event bus adapters
+  KinesisAdapter,
+  type KinesisAdapterOptions,
+  InMemoryAdapter,
+} from "./events/adapters/index.js";
 
 // Export secrets system
 export {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { isSecretRef } from "./types.js";
+import { isSecretRef, isStringLiteral } from "./types.js";
 import { SecretProviderRegistry } from "./registry.js";
 import { EnvSecretProvider } from "./providers/env.js";
 import {
@@ -15,6 +15,11 @@ function createSecretRef(path: string) {
   const provider = path.slice(0, colonIndex);
   const ref = path.slice(colonIndex + 1);
   return { $secret: { provider, ref } };
+}
+
+// Helper to create a string literal (mirrors the schema's StringLiteral)
+function createStringLiteral(value: string) {
+  return { $literal: value };
 }
 
 describe("Secret Types", () => {
@@ -39,6 +44,27 @@ describe("Secret Types", () => {
       expect(isSecretRef({ secret: { provider: "env", ref: "KEY" } })).toBe(
         false,
       ); // wrong key
+      expect(isSecretRef({ $literal: "value" })).toBe(false); // string literal
+    });
+  });
+
+  describe("isStringLiteral", () => {
+    it("should return true for valid string literals", () => {
+      expect(isStringLiteral({ $literal: "application/json" })).toBe(true);
+      expect(isStringLiteral({ $literal: "" })).toBe(true);
+      expect(isStringLiteral({ $literal: "Bearer token-123" })).toBe(true);
+    });
+
+    it("should return false for non-literal values", () => {
+      expect(isStringLiteral("string")).toBe(false);
+      expect(isStringLiteral(123)).toBe(false);
+      expect(isStringLiteral(null)).toBe(false);
+      expect(isStringLiteral(undefined)).toBe(false);
+      expect(isStringLiteral({})).toBe(false);
+      expect(isStringLiteral({ literal: "value" })).toBe(false); // wrong key
+      expect(
+        isStringLiteral({ $secret: { provider: "env", ref: "KEY" } }),
+      ).toBe(false); // secret ref
     });
   });
 });
@@ -141,7 +167,7 @@ describe("Plan Secret Resolution", () => {
   });
 
   describe("planHasSecrets", () => {
-    it("should return false for plans without secrets", () => {
+    it("should return false for plans without secrets or literals", () => {
       const plan = createTestPlan({ "Content-Type": "application/json" });
       expect(planHasSecrets(plan)).toBe(false);
     });
@@ -156,6 +182,20 @@ describe("Plan Secret Resolution", () => {
     it("should return true for plans with secret refs in body", () => {
       const plan = createTestPlan(undefined, {
         token: createSecretRef("env:TOKEN"),
+      });
+      expect(planHasSecrets(plan)).toBe(true);
+    });
+
+    it("should return true for plans with string literals in headers", () => {
+      const plan = createTestPlan({
+        "Content-Type": createStringLiteral("application/json"),
+      });
+      expect(planHasSecrets(plan)).toBe(true);
+    });
+
+    it("should return true for plans with string literals in body", () => {
+      const plan = createTestPlan(undefined, {
+        type: createStringLiteral("test"),
       });
       expect(planHasSecrets(plan)).toBe(true);
     });
@@ -209,6 +249,46 @@ describe("Plan Secret Resolution", () => {
 
       expect(collected.refs).toHaveLength(1);
       expect(collected.paths).toHaveLength(2);
+    });
+
+    it("should collect string literals from headers", () => {
+      const plan = createTestPlan({
+        "Content-Type": createStringLiteral("application/json"),
+        Accept: createStringLiteral("application/xml"),
+      });
+
+      const collected = collectSecretsFromPlan(plan);
+
+      expect(collected.refs).toHaveLength(0);
+      expect(collected.literalPaths).toHaveLength(2);
+      expect(collected.literalPaths).toContainEqual({
+        path: ["nodes", 0, "headers", "Content-Type"],
+        value: "application/json",
+      });
+      expect(collected.literalPaths).toContainEqual({
+        path: ["nodes", 0, "headers", "Accept"],
+        value: "application/xml",
+      });
+    });
+
+    it("should collect both secrets and literals", () => {
+      const plan = createTestPlan({
+        Authorization: createSecretRef("env:API_KEY"),
+        "Content-Type": createStringLiteral("application/json"),
+      });
+
+      const collected = collectSecretsFromPlan(plan);
+
+      expect(collected.refs).toHaveLength(1);
+      expect(collected.refs).toContainEqual({
+        provider: "env",
+        ref: "API_KEY",
+      });
+      expect(collected.literalPaths).toHaveLength(1);
+      expect(collected.literalPaths).toContainEqual({
+        path: ["nodes", 0, "headers", "Content-Type"],
+        value: "application/json",
+      });
     });
   });
 
@@ -313,6 +393,93 @@ describe("Plan Secret Resolution", () => {
 
       await expect(resolveSecretsInPlan(plan, registry)).rejects.toThrow(
         /not set/,
+      );
+    });
+
+    it("should unwrap string literals in headers", async () => {
+      const plan = createTestPlan({
+        "Content-Type": createStringLiteral("application/json"),
+        Accept: createStringLiteral("application/xml"),
+      });
+
+      const registry = new SecretProviderRegistry();
+
+      const resolved = await resolveSecretsInPlan(plan, registry);
+
+      const endpoint = resolved.nodes[0];
+      if (endpoint.type !== "ENDPOINT") {
+        throw new Error("Endpoint not found");
+      }
+      expect(endpoint.headers?.["Content-Type"]).toBe("application/json");
+      expect(endpoint.headers?.Accept).toBe("application/xml");
+    });
+
+    it("should unwrap string literals in body", async () => {
+      const plan = createTestPlan(undefined, {
+        type: createStringLiteral("test-type"),
+        data: "plain-value",
+      });
+
+      const registry = new SecretProviderRegistry();
+
+      const resolved = await resolveSecretsInPlan(plan, registry);
+
+      const endpoint = resolved.nodes[0];
+      if (endpoint.type !== "ENDPOINT") {
+        throw new Error("Endpoint not found");
+      }
+      expect((endpoint.body as { type: string }).type).toBe("test-type");
+      expect((endpoint.body as { data: string }).data).toBe("plain-value");
+    });
+
+    it("should resolve both secrets and literals", async () => {
+      const plan = createTestPlan({
+        Authorization: createSecretRef("env:API_KEY"),
+        "Content-Type": createStringLiteral("application/json"),
+      });
+
+      const registry = new SecretProviderRegistry();
+      registry.register(
+        new EnvSecretProvider({
+          env: { API_KEY: "Bearer secret-token" },
+        }),
+      );
+
+      const resolved = await resolveSecretsInPlan(plan, registry);
+
+      const endpoint = resolved.nodes[0];
+      if (endpoint.type !== "ENDPOINT") {
+        throw new Error("Endpoint not found");
+      }
+      expect(endpoint.headers?.Authorization).toBe("Bearer secret-token");
+      expect(endpoint.headers?.["Content-Type"]).toBe("application/json");
+    });
+
+    it("should not modify original plan with literals", async () => {
+      const plan = createTestPlan({
+        "Content-Type": createStringLiteral("application/json"),
+      });
+
+      const registry = new SecretProviderRegistry();
+
+      const resolved = await resolveSecretsInPlan(plan, registry);
+
+      // Original should still have literal wrapper
+      const originalEndpoint = plan.nodes[0];
+      if (originalEndpoint.type !== "ENDPOINT") {
+        throw new Error("Endpoint not found");
+      }
+      expect(originalEndpoint.headers?.["Content-Type"]).toEqual(
+        createStringLiteral("application/json"),
+      );
+
+      // Resolved should have unwrapped string
+      const resolvedEndpoint = resolved.nodes[0];
+      if (resolvedEndpoint.type !== "ENDPOINT") {
+        throw new Error("Endpoint not found");
+      }
+      expect(resolvedEndpoint.headers?.["Content-Type"]).toBe(
+        "application/json",
       );
     });
   });

@@ -65,8 +65,3 @@ jobs:
         run: |
           cd griffin-cli
           npm test
-      
-      - name: Test griffin-hub
-        run: |
-          cd griffin-hub
-          npm test

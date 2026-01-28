@@ -1,6 +1,6 @@
 {
   "name": "@griffin-app/griffin-cli",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "CLI tool for running and managing griffin API tests",
   "type": "module",
   "main": "dist/index.js",
@@ -23,9 +23,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@griffin-app/griffin-plan-executor": "0.1.11",
+    "@griffin-app/griffin-plan-executor": "0.1.12",
     "@griffin-app/griffin-hub-sdk": "1.0.4",
-    "@griffin-app/griffin-ts": "0.1.9",
+    "@griffin-app/griffin-ts": "0.1.10",
     "better-auth": "^1.4.17",
     "cli-table3": "^0.6.5",
     "commander": "^12.1.0",

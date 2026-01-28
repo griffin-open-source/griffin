@@ -9,7 +9,7 @@ import {
   HttpMethod,
   ResponseFormat,
   NodeType,
-  TEST_PLAN_VERSION,
+  CURRENT_PLAN_VERSION,
 } from "./schema.js";
 
 describe("Sequential Test Builder", () => {
@@ -28,7 +28,7 @@ describe("Sequential Test Builder", () => {
         .build();
 
       expect(plan.name).toBe("simple-check");
-      expect(plan.version).toBe(TEST_PLAN_VERSION);
+      expect(plan.version).toBe(CURRENT_PLAN_VERSION);
       expect(plan.frequency).toEqual({ every: 5, unit: "MINUTE" });
       expect(plan.nodes).toHaveLength(1);
       expect(plan.edges).toEqual([

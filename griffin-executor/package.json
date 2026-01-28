@@ -1,6 +1,6 @@
 {
   "name": "@griffin-app/griffin-plan-executor",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Executor for griffin JSON test plans",
   "type": "module",
   "main": "dist/index.js",
@@ -22,7 +22,8 @@
   "license": "MIT",
   "dependencies": {
     "@aws-sdk/client-kinesis": "^3.975.0",
-    "@griffin-app/griffin-hub-sdk": "1.0.4",
+    "@griffin-app/griffin-hub-sdk": "1.0.5",
+    "@griffin-app/griffin-ts": "0.1.10",
     "axios": "^1.13.2",
     "ts-edge": "^1.0.4",
     "typebox": "^1.0.77"

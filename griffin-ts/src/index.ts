@@ -70,3 +70,39 @@ export type {
   LatencyProxy,
   AssertableProxy,
 } from "./assertions.js";
+
+// ============================================================================
+// Schema Exports (for validation and type generation)
+// ============================================================================
+
+export {
+  CURRENT_PLAN_VERSION,
+  SUPPORTED_PLAN_VERSIONS,
+} from "./schema-exports.js";
+
+// ============================================================================
+// Migration Functions
+// ============================================================================
+
+export {
+  migratePlan,
+  migrateToLatest,
+  isSupportedVersion,
+  getSupportedVersions,
+} from "./migrations.js";
+
+export type {
+  PlanDSL,
+  ResolvedPlan,
+  ResolvedPlanV1,
+  NodeDSL,
+  NodeResolved,
+  HttpRequestDSL,
+  HttpRequestResolved,
+  Edge,
+  Frequency as FrequencyType,
+  Assertion as AssertionType,
+  Assertions as AssertionsType,
+  SecretRef as SecretRefType,
+  VariableRef as VariableRefType,
+} from "./schema-exports.js";

@@ -14,7 +14,6 @@ Griffin is an open-source API testing platform for creating TypeScript-based API
 | **griffin-executor** | Execution engine for JSON test plans |
 | **griffin-cli** | Command-line tool for test management |
 | **griffin-hub** | Control plane & REST API service |
-| **griffin-agent** | Distributed test execution worker |
 | **griffin-hub-sdk** | Auto-generated OpenAPI client for hub |
 | **sample-apis** | Sample JSON API for testing |
 
@@ -38,8 +37,6 @@ cd ../griffin-cli && npm install && npm run build
 # Build hub (depends on griffin-ts, executor, cli)
 cd ../griffin-hub && npm install && npm run build
 
-# Build agent (depends on griffin-ts, executor, hub-sdk)
-cd ../griffin-agent && npm install && npm run build
 ```
 
 ## Running Tests
@@ -101,14 +98,6 @@ npm run db:generate   # generate new migrations
 npm run db:push       # apply schema to database
 ```
 
-## Running the Agent
-
-```bash
-cd griffin-agent
-npm run dev      # development with hot reload
-npm start        # production mode
-```
-
 ## Sample API Server
 
 ```bash
@@ -130,7 +119,6 @@ Griffin supports two deployment architectures:
 
 #### 2. Distributed Mode (Hub + Agents)
 - **griffin-hub** - Control plane: stores plans, schedules runs, tracks agents
-- **griffin-agent** - Distributed workers: execute test plans, report results
 - Agents register with hub and receive jobs via PostgreSQL-backed queue
 - Hub monitors agent health via heartbeat protocol
 - Enables geographic distribution and horizontal scaling
@@ -250,8 +238,6 @@ builder.endpoint("call", {
 | `griffin-hub/src/executor/service.ts` | Built-in executor service |
 | `griffin-hub/src/executor/plugin.ts` | Executor Fastify plugin |
 | `griffin-hub/src/plugins/secrets.ts` | Secret registry initialization |
-| `griffin-agent/src/index.ts` | Agent entry point |
-| `griffin-agent/src/config.ts` | Agent configuration schema |
 
 ## Updating PR Descriptions
 

@@ -4,7 +4,7 @@
  */
 
 export {
-  // Schema values
+  // Schema values - DSL (what users write)
   SecretRefDataSchema,
   SecretRefSchema,
   StringLiteralSchema,
@@ -26,6 +26,14 @@ export {
   NodeDSLSchema,
   EdgeSchema,
   PlanDSLSchema,
+  PlanDSLSchemaV1,
+
+  // Schema values - Resolved (what hub/executor use)
+  ResolvedStringSchema,
+  HttpRequestResolvedSchema,
+  NodeResolvedSchema,
+  ResolvedPlanV1Schema,
+  ResolvedPlanSchema,
 
   // Enums (runtime values)
   FrequencyUnit,
@@ -36,5 +44,24 @@ export {
   BinaryPredicateOperator,
 
   // Constants
-  TEST_PLAN_VERSION,
+  CURRENT_PLAN_VERSION,
+  SUPPORTED_PLAN_VERSIONS,
+} from "./schema.js";
+
+// Type exports
+export type {
+  PlanDSL,
+  PlanDSLV1,
+  NodeDSL,
+  HttpRequestDSL,
+  Edge,
+  Frequency,
+  Assertion,
+  Assertions,
+  SecretRef,
+  VariableRef,
+  ResolvedPlan,
+  ResolvedPlanV1,
+  NodeResolved,
+  HttpRequestResolved,
 } from "./schema.js";

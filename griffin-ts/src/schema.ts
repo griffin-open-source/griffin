@@ -1,7 +1,9 @@
 import { Type, type Static } from "typebox";
 import { Ref, StringEnum } from "./shared.js";
 
-export const TEST_PLAN_VERSION = "1.0";
+// Version constants
+export const CURRENT_PLAN_VERSION = "1.0";
+export const SUPPORTED_PLAN_VERSIONS = ["1.0"] as const;
 
 // Secret reference schema for values that may contain secrets
 export const SecretRefDataSchema = Type.Object({
@@ -311,21 +313,27 @@ export const EdgeSchema = Type.Object(
   { $id: "Edge" },
 );
 
-export const PlanDSLSchema = Type.Object(
+// Version-specific DSL schemas
+export const PlanDSLSchemaV1 = Type.Object(
   {
     locations: Type.Optional(Type.Array(Type.String())),
     name: Type.String(),
-    version: Type.Literal(TEST_PLAN_VERSION),
+    version: Type.Literal("1.0"),
     frequency: FrequencySchema,
     nodes: Type.Array(NodeDSLSchema),
     edges: Type.Array(EdgeSchema),
   },
   {
-    $id: "PlanDSL",
+    $id: "PlanDSLV1",
   },
 );
 
-export type PlanDSL = Static<typeof PlanDSLSchema>;
+// Union schema for validation (accepts any supported version)
+export const PlanDSLSchema = PlanDSLSchemaV1; // Currently only v1.0, will become union when v2.0 is added
+
+// Type extraction
+export type PlanDSLV1 = Static<typeof PlanDSLSchemaV1>;
+export type PlanDSL = PlanDSLV1; // Currently only v1.0, will become union when v2.0 is added
 export type VariableRef = Static<typeof VariableRefSchema>;
 export type NodeDSL = Static<typeof NodeDSLSchema>;
 export type Edge = Static<typeof EdgeSchema>;
@@ -342,3 +350,59 @@ export type SecretRefData = Static<typeof SecretRefDataSchema>;
 export type StringLiteral = Static<typeof StringLiteralSchema>;
 export type String = Static<typeof StringSchema>;
 export type Frequency = Static<typeof FrequencySchema>;
+
+// ============================================================================
+// Resolved Plan Schemas (after variable resolution, used by hub/executor)
+// ============================================================================
+
+// Union type for resolved values (variables are resolved, only secrets/literals remain)
+export const ResolvedStringSchema = Type.Union([
+  StringLiteralSchema,
+  SecretRefSchema,
+]);
+
+export const HttpRequestResolvedSchema = Type.Object(
+  {
+    id: Type.String(),
+    type: Type.Literal(NodeType.HTTP_REQUEST),
+    method: HttpMethodSchema,
+    path: Type.String(),
+    base: Type.String(),
+    headers: Type.Optional(Type.Record(Type.String(), ResolvedStringSchema)),
+    body: Type.Optional(Type.Any()), // Body can contain nested SecretRefs
+    response_format: ResponseFormatSchema,
+  },
+  { $id: "HttpRequestResolved" },
+);
+
+export const NodeResolvedSchema = Type.Union(
+  [HttpRequestResolvedSchema, WaitSchema, AssertionsSchema],
+  { $id: "NodeResolved" },
+);
+
+// Version-specific resolved plan schemas
+export const ResolvedPlanV1Schema = Type.Object(
+  {
+    project: Type.String(),
+    locations: Type.Optional(Type.Array(Type.String())),
+    id: Type.Readonly(Type.String()),
+    name: Type.String(),
+    version: Type.Literal("1.0"),
+    frequency: FrequencySchema,
+    environment: Type.String({ default: "default" }),
+    nodes: Type.Array(NodeResolvedSchema),
+    edges: Type.Array(EdgeSchema),
+  },
+  {
+    $id: "ResolvedPlanV1",
+  },
+);
+
+// Union of all supported resolved plan versions
+export const ResolvedPlanSchema = ResolvedPlanV1Schema;
+
+// Type exports for resolved plans
+export type ResolvedPlanV1 = Static<typeof ResolvedPlanV1Schema>;
+export type ResolvedPlan = ResolvedPlanV1;
+export type HttpRequestResolved = Static<typeof HttpRequestResolvedSchema>;
+export type NodeResolved = Static<typeof NodeResolvedSchema>;

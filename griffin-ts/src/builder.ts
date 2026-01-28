@@ -10,7 +10,7 @@ import {
   NodeType,
   Wait,
   Assertions,
-  TEST_PLAN_VERSION,
+  CURRENT_PLAN_VERSION,
 } from "./schema.js";
 import { type START as StartType, type END as EndType } from "./constants.js";
 
@@ -163,7 +163,7 @@ class TestBuilderImpl<
     const buildFn = (): PlanDSL => {
       return {
         name,
-        version: TEST_PLAN_VERSION,
+        version: CURRENT_PLAN_VERSION,
         frequency,
         locations,
         nodes,

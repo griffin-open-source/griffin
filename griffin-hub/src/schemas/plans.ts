@@ -8,7 +8,7 @@ import {
   NodeType,
   HttpMethodSchema,
   ResponseFormatSchema,
-  TEST_PLAN_VERSION,
+  SUPPORTED_PLAN_VERSIONS,
   AssertionSchema,
   SecretRefSchema,
   StringLiteralSchema,
@@ -39,13 +39,18 @@ export const NodeSchema = Type.Union(
   { $id: "Node" },
 );
 
+const PlanVersionSchema = Type.Union(
+  SUPPORTED_PLAN_VERSIONS.map((version) => Type.Literal(version)),
+  { $id: "PlanVersion" },
+);
+
 export const PlanV1Schema = Type.Object(
   {
     project: Type.String(),
     locations: Type.Optional(Type.Array(Type.String())),
     id: Type.Readonly(Type.String()),
     name: Type.String(),
-    version: Type.Literal(TEST_PLAN_VERSION),
+    version: PlanVersionSchema,
     frequency: FrequencySchema,
     environment: Type.String({ default: "default" }),
     nodes: Type.Array(NodeSchema),

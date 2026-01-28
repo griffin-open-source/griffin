@@ -9,7 +9,7 @@ import {
   HttpMethod,
   ResponseFormat,
   NodeType,
-  TEST_PLAN_VERSION,
+  CURRENT_PLAN_VERSION,
   BinaryPredicateOperator,
   AssertionSubject,
   UnaryPredicateOperator,
@@ -37,7 +37,7 @@ describe("Graph Builder", () => {
 
       expect(plan).toEqual({
         name: "health-check",
-        version: TEST_PLAN_VERSION,
+        version: CURRENT_PLAN_VERSION,
         frequency: { every: 5, unit: "MINUTE" },
         locations: undefined,
         nodes: [

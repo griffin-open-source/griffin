@@ -7,7 +7,7 @@ import {
 } from "./builder.js";
 import { START, END } from "./constants.js";
 import {
-  TEST_PLAN_VERSION,
+  CURRENT_PLAN_VERSION,
   Edge,
   NodeDSL,
   Frequency,
@@ -177,7 +177,7 @@ class SequentialTestBuilderImpl<
         name,
         frequency,
         locations,
-        version: TEST_PLAN_VERSION,
+        version: CURRENT_PLAN_VERSION,
         nodes: [],
         edges: [{ from: START, to: END }],
       };
@@ -199,7 +199,7 @@ class SequentialTestBuilderImpl<
 
     return {
       name,
-      version: TEST_PLAN_VERSION,
+      version: CURRENT_PLAN_VERSION,
       frequency,
       locations,
       nodes: this.nodes,

@@ -28,6 +28,11 @@ import {
   SecretResolutionError,
 } from "./secrets/index.js";
 import { utcNow } from "./utils/dates.js";
+import {
+  migrateToLatest,
+  CURRENT_PLAN_VERSION,
+  isSupportedVersion,
+} from "@griffin-app/griffin-ts";
 
 // Define context type that matches ts-edge's GraphNodeExecuteContext (not exported from library)
 interface NodeExecuteContext {
@@ -337,17 +342,29 @@ export async function executePlanV1(
   // Generate or use provided executionId
   const executionId = options.executionId || randomUUID();
 
+  // Migrate plan to latest version if needed
+  let migratedPlan = plan;
+  if (plan.version !== CURRENT_PLAN_VERSION) {
+    if (!isSupportedVersion(plan.version)) {
+      throw new Error(
+        `Unsupported plan version: ${plan.version}. Supported versions: ${CURRENT_PLAN_VERSION}`,
+      );
+    }
+    // Migrate to latest version
+    migratedPlan = migrateToLatest(plan as any) as PlanV1;
+  }
+
   // Create execution context for event emission
   const executionContext = new ExecutionContext(
     executionId,
-    plan,
+    migratedPlan,
     organizationId,
     options.eventEmitter,
   );
 
   try {
     // Resolve secrets if the plan contains any
-    let resolvedPlan = plan;
+    let resolvedPlan = migratedPlan;
     if (planHasSecrets(plan)) {
       if (!options.secretRegistry) {
         throw new SecretResolutionError(

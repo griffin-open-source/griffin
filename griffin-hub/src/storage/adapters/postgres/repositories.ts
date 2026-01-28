@@ -17,6 +17,11 @@ import type {
 import type { DrizzleDatabase } from "../../../plugins/storage.js";
 import { agentsTable, plansTable, runsTable } from "./schema.js";
 import type { TestPlanDB } from "../../repositories.js";
+import {
+  mapDbPlanToVersionedPlan,
+  mapDbPlansToVersionedPlans,
+  type VersionedPlan,
+} from "../../plan-mapper.js";
 
 // =============================================================================
 // Plans Repository
@@ -25,7 +30,7 @@ import type { TestPlanDB } from "../../repositories.js";
 export class PostgresPlansRepository implements PlansRepository {
   constructor(private db: DrizzleDatabase) {}
 
-  async create(data: Omit<TestPlanDB, "id">): Promise<TestPlanDB> {
+  async create(data: Omit<TestPlanDB, "id">): Promise<VersionedPlan> {
     const result = await this.db
       .insert(plansTable)
       .values({
@@ -34,15 +39,10 @@ export class PostgresPlansRepository implements PlansRepository {
       })
       .returning();
 
-    const plan = result[0];
-    return {
-      ...plan,
-      version: "1.0",
-      locations: plan.locations || [],
-    };
+    return mapDbPlanToVersionedPlan(result[0]);
   }
 
-  async findById(id: string): Promise<TestPlanDB | null> {
+  async findById(id: string): Promise<VersionedPlan | null> {
     const result = await this.db.query.plansTable.findFirst({
       where: eq(plansTable.id, id),
     });
@@ -51,14 +51,10 @@ export class PostgresPlansRepository implements PlansRepository {
       return null;
     }
 
-    return {
-      ...result,
-      locations: result.locations || [],
-      version: "1.0",
-    };
+    return mapDbPlanToVersionedPlan(result);
   }
 
-  async findMany(options?: QueryOptions): Promise<TestPlanDB[]> {
+  async findMany(options?: QueryOptions): Promise<VersionedPlan[]> {
     const result = await this.db.query.plansTable.findMany({
       where: options?.where,
       orderBy: options?.orderBy,
@@ -66,28 +62,20 @@ export class PostgresPlansRepository implements PlansRepository {
       offset: options?.offset,
     });
 
-    return result.map((plan) => ({
-      ...plan,
-      locations: plan.locations || [],
-      version: "1.0",
-    }));
+    return mapDbPlansToVersionedPlans(result);
   }
 
   async update(
     id: string,
     data: Partial<Omit<TestPlanDB, "id">>,
-  ): Promise<TestPlanDB> {
+  ): Promise<VersionedPlan> {
     const result = await this.db
       .update(plansTable)
       .set(data)
       .where(eq(plansTable.id, id))
       .returning();
 
-    return {
-      ...result[0],
-      locations: result[0].locations || [],
-      version: "1.0",
-    };
+    return mapDbPlanToVersionedPlan(result[0]);
   }
 
   async delete(id: string): Promise<void> {
@@ -98,7 +86,7 @@ export class PostgresPlansRepository implements PlansRepository {
     return this.db.$count(plansTable, where);
   }
 
-  async findDue(): Promise<PlanV1[]> {
+  async findDue(): Promise<VersionedPlan[]> {
     // Complex query: find plans that are due based on their frequency
     // A plan is due if:
     // 1. It has a frequency defined AND
@@ -134,11 +122,7 @@ export class PostgresPlansRepository implements PlansRepository {
         )
       `);
 
-    return result.map((plan) => ({
-      ...plan.plans,
-      locations: plan.plans.locations || [],
-      version: "1.0",
-    }));
+    return mapDbPlansToVersionedPlans(result.map((r) => r.plans));
   }
 }
 

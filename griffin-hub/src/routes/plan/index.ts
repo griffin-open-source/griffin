@@ -1,8 +1,6 @@
 import { Type } from "typebox";
 import { FastifyTypeBox } from "../../types.js";
-import {
-  PlanV1Schema,
-} from "../../schemas/plans.js";
+import { PlanV1Schema } from "../../schemas/plans.js";
 import {
   Ref,
   ErrorResponseOpts,
@@ -12,8 +10,14 @@ import {
 } from "../../schemas/shared.js";
 import { eq, and } from "drizzle-orm";
 import { plansTable } from "../../storage/adapters/postgres/schema.js";
-import { AssertionSchema, BinaryPredicateOperatorSchema, BinaryPredicateSchema, UnaryPredicateSchema } from "@griffin-app/griffin-ts/schema";
+import {
+  AssertionSchema,
+  BinaryPredicateOperatorSchema,
+  BinaryPredicateSchema,
+  UnaryPredicateSchema,
+} from "@griffin-app/griffin-ts/schema";
 import { UnaryPredicateOperatorSchema } from "../../../../griffin-ts/dist/schema.js";
+import { migrateToLatest, CURRENT_PLAN_VERSION } from "@griffin-app/griffin-ts";
 
 export const CreatePlanEndpoint = {
   tags: ["plan"],
@@ -66,6 +70,7 @@ export const GetPlanByNameEndpoint = {
     projectId: Type.String(),
     environment: Type.String(),
     name: Type.String(),
+    version: Type.Optional(Type.Union([Type.Literal("latest"), Type.String()])),
   }),
   response: {
     200: SuccessResponseSchema(Ref(PlanV1Schema)),
@@ -89,8 +94,10 @@ export default function (fastify: FastifyTypeBox) {
       },
     },
     async (request, reply) => {
-      // TODO: Will retrieve this from token
-      const defaultOrganization = "default";
+      const organizationId = request.auth.organizationId;
+      if (!organizationId) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
       const planData = request.body;
 
       // Validate locations if specified
@@ -112,14 +119,13 @@ export default function (fastify: FastifyTypeBox) {
       // Store the plan using the repository
       const savedPlan = await fastify.storage.plans.create({
         ...planData,
-        organization: defaultOrganization,
+        organization: organizationId,
       });
 
       return reply.code(201).send({
         data: {
           ...savedPlan,
           locations: savedPlan.locations || [],
-          version: "1.0",
         },
       });
     },
@@ -133,32 +139,31 @@ export default function (fastify: FastifyTypeBox) {
       },
     },
     async (request, reply) => {
+      const organizationId = request.auth.organizationId;
+      if (!organizationId) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
       const { projectId, environment, limit = 50, offset = 0 } = request.query;
 
       // Build where clause with optional filters
-      let whereClause;
-      if (projectId && environment) {
-        whereClause = and(
-          eq(plansTable.project, projectId),
-          eq(plansTable.environment, environment),
-        );
-      } else if (projectId) {
-        whereClause = eq(plansTable.project, projectId);
-      } else if (environment) {
-        whereClause = eq(plansTable.environment, environment);
-      }
+      const whereConditions = [];
+      if (projectId) whereConditions.push(eq(plansTable.project, projectId));
+      if (environment)
+        whereConditions.push(eq(plansTable.environment, environment));
+      if (organizationId)
+        whereConditions.push(eq(plansTable.organization, organizationId));
 
       const plans = await fastify.storage.plans.findMany({
-        where: whereClause,
+        where: and(...whereConditions),
         limit,
         offset,
       });
-      const total = await fastify.storage.plans.count(whereClause);
+      const total = await fastify.storage.plans.count(and(...whereConditions));
+
       return reply.send({
         data: plans.map((plan) => ({
           ...plan,
           locations: plan.locations || [],
-          version: "1.0",
         })),
         total,
         limit,
@@ -178,6 +183,12 @@ export default function (fastify: FastifyTypeBox) {
     async (request, reply) => {
       const { id } = request.params;
       const planData = request.body;
+
+      // TODO: Retrieve organization from token once auth is fully implemented
+      const organizationId = request.auth.organizationId;
+      if (!organizationId) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
 
       // Verify plan exists
       const existing = await fastify.storage.plans.findById(id);
@@ -204,14 +215,13 @@ export default function (fastify: FastifyTypeBox) {
       // Update the plan
       const updated = await fastify.storage.plans.update(id, {
         ...planData,
-        organization: existing.organization,
+        organization: organizationId,
       });
 
       return reply.send({
         data: {
           ...updated,
           locations: updated.locations || [],
-          version: "1.0",
         },
       });
     },
@@ -247,7 +257,7 @@ export default function (fastify: FastifyTypeBox) {
       },
     },
     async (request, reply) => {
-      const { projectId, environment, name } = request.query;
+      const { projectId, environment, name, version } = request.query;
 
       const plans = await fastify.storage.plans.findMany({
         where: and(
@@ -262,11 +272,17 @@ export default function (fastify: FastifyTypeBox) {
         return reply.code(404).send({ error: "Plan not found" });
       }
 
+      let plan = plans[0];
+
+      // Migrate to latest if requested
+      if (version === "latest" && plan.version !== CURRENT_PLAN_VERSION) {
+        plan = migrateToLatest(plan as any) as typeof plan;
+      }
+
       return reply.send({
         data: {
-          ...plans[0],
-          locations: plans[0].locations || [],
-          version: "1.0",
+          ...plan,
+          locations: plan.locations || [],
         },
       });
     },

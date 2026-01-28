@@ -16,10 +16,7 @@ const oauthGrant = "urn:ietf:params:oauth:grant-type:device_code";
 
 const authClient = createAuthClient({
   baseURL: baseURL,
-  plugins: [
-    deviceAuthorizationClient(),
-    jwtClient(),
-  ],
+  plugins: [deviceAuthorizationClient(), jwtClient()],
 });
 async function pollForToken(
   clientId: string,
@@ -49,15 +46,13 @@ async function pollForToken(
   }
 }
 
-
 export async function executeLogin(): Promise<void> {
   let state: StateFile | undefined;
   let clientId: string | undefined;
   try {
     state = await loadState();
     clientId = state.hub?.clientId;
-  } catch (error) {
-  }
+  } catch (error) {}
   if (!clientId) {
     clientId = randomBytes(16).toString("hex");
   }

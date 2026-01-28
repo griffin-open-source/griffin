@@ -5,9 +5,9 @@
 
 import type { SQL } from "drizzle-orm";
 import * as schema from "./adapters/postgres/schema.js";
-import type { PlanV1 } from "../schemas/plans.js";
 import type { JobRun } from "../schemas/job-run.js";
 import type { Agent } from "../schemas/agent.js";
+import type { VersionedPlan } from "./plan-mapper.js";
 
 // =============================================================================
 // Query Options
@@ -32,13 +32,13 @@ export type TestPlanDB = typeof schema.plansTable.$inferInsert;
  * Repository for test plans
  */
 export interface PlansRepository {
-  create(data: Omit<TestPlanDB, "id">): Promise<TestPlanDB>;
-  findById(id: string): Promise<TestPlanDB | null>;
-  findMany(options?: QueryOptions): Promise<TestPlanDB[]>;
+  create(data: Omit<TestPlanDB, "id">): Promise<VersionedPlan>;
+  findById(id: string): Promise<VersionedPlan | null>;
+  findMany(options?: QueryOptions): Promise<VersionedPlan[]>;
   update(
     id: string,
     data: Partial<Omit<TestPlanDB, "id">>,
-  ): Promise<TestPlanDB>;
+  ): Promise<VersionedPlan>;
   delete(id: string): Promise<void>;
   count(where?: SQL): Promise<number>;
 
@@ -46,7 +46,7 @@ export interface PlansRepository {
    * Find plans that are due for execution based on their frequency.
    * Returns plans that have never run or whose next run time has passed.
    */
-  findDue(): Promise<PlanV1[]>;
+  findDue(): Promise<VersionedPlan[]>;
 }
 
 /**

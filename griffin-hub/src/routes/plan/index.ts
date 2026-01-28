@@ -33,7 +33,6 @@ export const ListPlansEndpoint = {
   querystring: Type.Object({
     projectId: Type.Optional(Type.String()),
     environment: Type.Optional(Type.String()),
-    version: Type.Optional(Type.Union([Type.Literal("latest"), Type.String()])),
     ...PaginationRequestOpts,
   }),
   response: {
@@ -95,8 +94,10 @@ export default function (fastify: FastifyTypeBox) {
       },
     },
     async (request, reply) => {
-      // TODO: Will retrieve this from token
-      const defaultOrganization = "default";
+      const organizationId = request.auth.organizationId;
+      if (!organizationId) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
       const planData = request.body;
 
       // Validate locations if specified
@@ -118,7 +119,7 @@ export default function (fastify: FastifyTypeBox) {
       // Store the plan using the repository
       const savedPlan = await fastify.storage.plans.create({
         ...planData,
-        organization: defaultOrganization,
+        organization: organizationId,
       });
 
       return reply.code(201).send({
@@ -138,47 +139,29 @@ export default function (fastify: FastifyTypeBox) {
       },
     },
     async (request, reply) => {
-      const {
-        projectId,
-        environment,
-        limit = 50,
-        offset = 0,
-        version,
-      } = request.query;
+      const organizationId = request.auth.organizationId;
+      if (!organizationId) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
+      const { projectId, environment, limit = 50, offset = 0 } = request.query;
 
       // Build where clause with optional filters
-      let whereClause;
-      if (projectId && environment) {
-        whereClause = and(
-          eq(plansTable.project, projectId),
-          eq(plansTable.environment, environment),
-        );
-      } else if (projectId) {
-        whereClause = eq(plansTable.project, projectId);
-      } else if (environment) {
-        whereClause = eq(plansTable.environment, environment);
-      }
+      const whereConditions = [];
+      if (projectId) whereConditions.push(eq(plansTable.project, projectId));
+      if (environment)
+        whereConditions.push(eq(plansTable.environment, environment));
+      if (organizationId)
+        whereConditions.push(eq(plansTable.organization, organizationId));
 
       const plans = await fastify.storage.plans.findMany({
-        where: whereClause,
+        where: and(...whereConditions),
         limit,
         offset,
       });
-      const total = await fastify.storage.plans.count(whereClause);
-
-      // Migrate plans to latest if requested
-      const processedPlans =
-        version === "latest"
-          ? plans.map((plan) => {
-              if (plan.version === CURRENT_PLAN_VERSION) {
-                return plan;
-              }
-              return migrateToLatest(plan as any) as typeof plan;
-            })
-          : plans;
+      const total = await fastify.storage.plans.count(and(...whereConditions));
 
       return reply.send({
-        data: processedPlans.map((plan) => ({
+        data: plans.map((plan) => ({
           ...plan,
           locations: plan.locations || [],
         })),
@@ -202,7 +185,10 @@ export default function (fastify: FastifyTypeBox) {
       const planData = request.body;
 
       // TODO: Retrieve organization from token once auth is fully implemented
-      const defaultOrganization = "default";
+      const organizationId = request.auth.organizationId;
+      if (!organizationId) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
 
       // Verify plan exists
       const existing = await fastify.storage.plans.findById(id);
@@ -229,7 +215,7 @@ export default function (fastify: FastifyTypeBox) {
       // Update the plan
       const updated = await fastify.storage.plans.update(id, {
         ...planData,
-        organization: defaultOrganization,
+        organization: organizationId,
       });
 
       return reply.send({

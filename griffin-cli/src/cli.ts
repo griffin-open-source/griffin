@@ -13,7 +13,7 @@ import { executeRunLocal } from "./commands/local/run.js";
 import { executeConnect } from "./commands/hub/connect.js";
 import { executeStatus } from "./commands/hub/status.js";
 import { executeRuns } from "./commands/hub/runs.js";
-import { executePlan } from "./commands/hub/plan.js";
+import { executeMonitor } from "./commands/hub/monitor.js";
 import { executeApply } from "./commands/hub/apply.js";
 import { executeRun } from "./commands/hub/run.js";
 import { executeLogin } from "./commands/hub/login.js";
@@ -40,7 +40,7 @@ program
 
 program
   .command("validate")
-  .description("Validate test plan files without syncing")
+  .description("Validate test monitor files without syncing")
   .action(async () => {
     await executeValidate();
   });
@@ -94,7 +94,7 @@ hub
 hub
   .command("runs")
   .description("Show recent runs from the hub")
-  .option("--plan <name>", "Filter by plan name")
+  .option("--monitor <name>", "Filter by monitor name")
   .option("--limit <number>", "Number of runs to show", "10")
   .action(async (options) => {
     await executeRuns({
@@ -104,11 +104,11 @@ hub
   });
 
 hub
-  .command("plan <env>")
+  .command("monitor <env>")
   .description("Show what changes would be applied")
   .option("--json", "Output in JSON format")
   .action(async (env, options) => {
-    await executePlan({ ...options, env });
+    await executeMonitor({ ...options, env });
   });
 
 hub
@@ -116,17 +116,17 @@ hub
   .description("Apply changes to the hub")
   .option("--auto-approve", "Skip confirmation prompt")
   .option("--dry-run", "Show what would be done without making changes")
-  .option("--prune", "Delete plans on hub that don't exist locally")
+  .option("--prune", "Delete monitors on hub that don't exist locally")
   .action(async (env, options) => {
     await executeApply({ ...options, env });
   });
 
 hub
   .command("run <env>")
-  .description("Trigger a plan run on the hub")
-  .requiredOption("--plan <name>", "Plan name to run")
+  .description("Trigger a monitor run on the hub")
+  .requiredOption("--monitor <name>", "Monitor name to run")
   .option("--wait", "Wait for run to complete")
-  .option("--force", "Run even if local plan differs from hub")
+  .option("--force", "Run even if local monitor differs from hub")
   .action(async (env, options) => {
     await executeRun({ ...options, env });
   });

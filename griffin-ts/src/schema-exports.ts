@@ -1,5 +1,5 @@
 /**
- * TypeBox schemas and enums for griffin test plans.
+ * TypeBox schemas and enums for griffin test monitors.
  * Import from "griffin/schema" to access validation schemas.
  */
 
@@ -26,15 +26,15 @@ export {
   AssertionsSchema,
   NodeDSLSchema,
   EdgeSchema,
-  PlanDSLSchema,
-  PlanDSLSchemaV1,
+  MonitorDSLSchema,
+  MonitorDSLSchemaV1,
 
   // Schema values - Resolved (what hub/executor use)
   ResolvedStringSchema,
   HttpRequestResolvedSchema,
   NodeResolvedSchema,
-  ResolvedPlanV1Schema,
-  ResolvedPlanSchema,
+  ResolvedMonitorV1Schema,
+  ResolvedMonitorSchema,
 
   // Enums (runtime values)
   FrequencyUnit,
@@ -45,14 +45,14 @@ export {
   BinaryPredicateOperator,
 
   // Constants
-  CURRENT_PLAN_VERSION,
-  SUPPORTED_PLAN_VERSIONS,
+  CURRENT_MONITOR_VERSION,
+  SUPPORTED_MONITOR_VERSIONS,
 } from "./schema.js";
 
 // Type exports
 export type {
-  PlanDSL,
-  PlanDSLV1,
+  MonitorDSL,
+  MonitorDSLV1,
   NodeDSL,
   HttpRequestDSL,
   Edge,
@@ -61,8 +61,8 @@ export type {
   Assertions,
   SecretRef,
   VariableRef,
-  ResolvedPlan,
-  ResolvedPlanV1,
+  ResolvedMonitor,
+  ResolvedMonitorV1,
   NodeResolved,
   HttpRequestResolved,
 } from "./schema.js";

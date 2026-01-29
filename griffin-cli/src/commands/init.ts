@@ -11,7 +11,7 @@ import { terminal } from "../utils/terminal.js";
 
 const VARIABLES_FILE = "variables.yaml";
 
-const VARIABLES_TEMPLATE = `# Per-environment variables for test plans. Reference in plans with variable("key").
+const VARIABLES_TEMPLATE = `# Per-environment variables for test monitors. Reference in monitors with variable("key").
 # Edit values below for each environment.
 environments:
   dev:
@@ -75,7 +75,7 @@ export async function executeInit(options: InitOptions): Promise<void> {
   terminal.info("Next steps:");
   terminal.dim("  1. Edit variables.yaml to set api_host and other variables per environment");
   terminal.dim(
-    "  2. Create test plans (*.ts files in __griffin__/ directories)",
+    "  2. Create test monitors (*.ts files in __griffin__/ directories)",
   );
   terminal.dim("  3. Run tests locally (pass environment name):");
   terminal.dim("     griffin local run dev");

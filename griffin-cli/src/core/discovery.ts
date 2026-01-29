@@ -1,18 +1,18 @@
 import { glob } from "glob";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { PlanDSLSchema } from "@griffin-app/griffin-ts/schema";
-import type { PlanDSL } from "@griffin-app/griffin-ts/types";
+import { MonitorDSLSchema } from "@griffin-app/griffin-ts/schema";
+import type { MonitorDSL } from "@griffin-app/griffin-ts/types";
 import { Value } from "typebox/value";
 
-export interface DiscoveredPlan {
-  plan: PlanDSL;
+export interface DiscoveredMonitor {
+  monitor: MonitorDSL;
   filePath: string;
   exportName: string;
 }
 
 export interface DiscoveryResult {
-  plans: DiscoveredPlan[];
+  monitors: DiscoveredMonitor[];
   errors: DiscoveryError[];
 }
 
@@ -22,13 +22,13 @@ export interface DiscoveryError {
 }
 
 /**
- * Discover and load test plan files from the filesystem
+ * Discover and load test monitor files from the filesystem
  */
-export async function discoverPlans(
+export async function discoverMonitors(
   pattern: string,
   ignore: string[],
 ): Promise<DiscoveryResult> {
-  const plans: DiscoveredPlan[] = [];
+  const monitors: DiscoveredMonitor[] = [];
   const errors: DiscoveryError[] = [];
 
   // Find all matching files
@@ -41,8 +41,8 @@ export async function discoverPlans(
   // Load each file
   for (const filePath of files) {
     try {
-      const loaded = await loadPlansFromFile(filePath);
-      plans.push(...loaded);
+      const loaded = await loadMonitorsFromFile(filePath);
+      monitors.push(...loaded);
     } catch (error) {
       errors.push({
         filePath,
@@ -51,19 +51,19 @@ export async function discoverPlans(
     }
   }
 
-  return { plans, errors };
+  return { monitors, errors };
 }
 
-function isPlan(value: unknown): value is PlanDSL {
-  return Value.Check(PlanDSLSchema, value);
+function isMonitor(value: unknown): value is MonitorDSL {
+  return Value.Check(MonitorDSLSchema, value);
 }
 
 /**
- * Load plans from a single file
+ * Load monitors from a single file
  * Supports both default and named exports
  */
-async function loadPlansFromFile(filePath: string): Promise<DiscoveredPlan[]> {
-  const plans: DiscoveredPlan[] = [];
+async function loadMonitorsFromFile(filePath: string): Promise<DiscoveredMonitor[]> {
+  const monitors: DiscoveredMonitor[] = [];
 
   // Convert to file URL for dynamic import (works with both ESM and CJS)
   const fileUrl = pathToFileURL(filePath).href;
@@ -73,28 +73,28 @@ async function loadPlansFromFile(filePath: string): Promise<DiscoveredPlan[]> {
 
     // Check default export
     if (module.default) {
-      if (isPlan(module.default)) {
-        plans.push({
-          plan: module.default,
+      if (isMonitor(module.default)) {
+        monitors.push({
+          monitor: module.default,
           filePath,
           exportName: "default",
         });
       } else {
-        const errors = Value.Errors(PlanDSLSchema, module.default);
+        const errors = Value.Errors(MonitorDSLSchema, module.default);
         throw new Error(
-          `Default export is not a valid TestPlan. Got: ${JSON.stringify(errors, null, 2)}`,
+          `Default export is not a valid TestMonitor. Got: ${JSON.stringify(errors, null, 2)}`,
         );
       }
     }
 
-    if (plans.length === 0) {
-      throw new Error("No valid TestPlan exports found in file");
+    if (monitors.length === 0) {
+      throw new Error("No valid TestMonitor exports found in file");
     }
   } catch (error) {
     throw new Error(`Failed to load ${filePath}: ${(error as Error).message}`);
   }
 
-  return plans;
+  return monitors;
 }
 
 /**

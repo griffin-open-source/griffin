@@ -19,7 +19,7 @@ export default fp(async (fastify) => {
       openapi: "3.0.0",
       info: {
         title: "griffin-runner API",
-        description: "API for managing and running test plans",
+        description: "API for managing and running test monitors",
         version: "1.0.0",
       },
       servers: [
@@ -29,7 +29,7 @@ export default fp(async (fastify) => {
         },
       ],
       tags: [
-        { name: "plans", description: "Test plan management endpoints" },
+        { name: "monitors", description: "Test monitor management endpoints" },
         { name: "runs", description: "Test run management endpoints" },
       ],
       components: {

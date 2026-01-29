@@ -96,7 +96,7 @@ export async function saveState(state: StateFile): Promise<void> {
 export async function initState(projectId: string): Promise<void> {
   if (await stateExists()) {
     throw new Error(
-      `State file already exists: ${getStateFilePath()}\nUse 'griffin plan' to see current state.`,
+      `State file already exists: ${getStateFilePath()}\nUse 'griffin monitor' to see current state.`,
     );
   }
 

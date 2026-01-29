@@ -1,18 +1,18 @@
-import type { PlanV1 } from "@griffin-app/griffin-hub-sdk";
-import type { PlanDSL } from "@griffin-app/griffin-ts/types";
-import { comparePlans, type PlanChanges } from "./plan-diff.js";
+import type { MonitorV1 } from "@griffin-app/griffin-hub-sdk";
+import type { MonitorDSL } from "@griffin-app/griffin-ts/types";
+import { compareMonitors, type MonitorChanges } from "./monitor-diff.js";
 
 export type DiffActionType = "create" | "update" | "delete" | "noop";
 
-// Type for resolved plans (DSL plans with variables resolved)
-export type ResolvedPlan = Omit<PlanV1, "id">;
+// Type for resolved monitors (DSL monitors with variables resolved)
+export type ResolvedMonitor = Omit<MonitorV1, "id">;
 
 export interface DiffAction {
   type: DiffActionType;
-  plan: ResolvedPlan | null; // Local plan (null for delete actions)
-  remotePlan: PlanV1 | null; // Hub plan (null for create actions)
+  monitor: ResolvedMonitor | null; // Local monitor (null for delete actions)
+  remoteMonitor: MonitorV1 | null; // Hub monitor (null for create actions)
   reason: string;
-  changes?: PlanChanges; // Granular changes for 'update' actions
+  changes?: MonitorChanges; // Granular changes for 'update' actions
 }
 
 export interface DiffResult {
@@ -30,80 +30,80 @@ export interface DiffOptions {
 }
 
 /**
- * Compute diff between local plans and remote plans (hub is source of truth).
- * Local plans should be resolved (variables replaced with actual values) before calling this.
- * Plans are matched by name.
+ * Compute diff between local monitors and remote monitors (hub is source of truth).
+ * Local monitors should be resolved (variables replaced with actual values) before calling this.
+ * Monitors are matched by name.
  *
  * Rules:
- * - CREATE: Plan exists locally but not on hub
- * - UPDATE: Plan exists in both, but content differs
- * - DELETE: Plan exists on hub but not locally (only if includeDeletions is true)
- * - NOOP: Plan exists in both with same content
+ * - CREATE: Monitor exists locally but not on hub
+ * - UPDATE: Monitor exists in both, but content differs
+ * - DELETE: Monitor exists on hub but not locally (only if includeDeletions is true)
+ * - NOOP: Monitor exists in both with same content
  */
 export function computeDiff(
-  localPlans: ResolvedPlan[],
-  remotePlans: PlanV1[],
+  localMonitors: ResolvedMonitor[],
+  remoteMonitors: MonitorV1[],
   options: DiffOptions,
 ): DiffResult {
   const actions: DiffAction[] = [];
 
-  // Build lookup: remote plans by name
-  const remoteByName = new Map<string, PlanV1>();
-  for (const plan of remotePlans) {
-    remoteByName.set(plan.name, plan);
+  // Build lookup: remote monitors by name
+  const remoteByName = new Map<string, MonitorV1>();
+  for (const monitor of remoteMonitors) {
+    remoteByName.set(monitor.name, monitor);
   }
 
   const localNames = new Set<string>();
-  for (const plan of localPlans) {
-    localNames.add(plan.name);
+  for (const monitor of localMonitors) {
+    localNames.add(monitor.name);
   }
 
-  // Check local plans against remote
-  for (const local of localPlans) {
+  // Check local monitors against remote
+  for (const local of localMonitors) {
     const remote = remoteByName.get(local.name);
 
     if (!remote) {
-      // Plan not on hub -> CREATE
+      // Monitor not on hub -> CREATE
       actions.push({
         type: "create",
-        plan: local,
-        remotePlan: null,
-        reason: `Plan "${local.name}" does not exist on hub`,
+        monitor: local,
+        remoteMonitor: null,
+        reason: `Monitor "${local.name}" does not exist on hub`,
       });
     } else {
-      // Plan exists in both - compute granular changes
-      const changes = comparePlans(local as PlanV1, remote);
+      // Monitor exists in both - compute granular changes
+      const changes = compareMonitors(local as MonitorV1, remote);
 
       if (changes.hasChanges) {
-        // Plan on hub but differs -> UPDATE
+        // Monitor on hub but differs -> UPDATE
         actions.push({
           type: "update",
-          plan: local,
-          remotePlan: remote,
-          reason: `Plan "${local.name}" has local changes`,
+          monitor: local,
+          remoteMonitor: remote,
+          reason: `Monitor "${local.name}" has local changes`,
           changes,
         });
       } else {
-        // Plan matches -> NOOP
+        // Monitor matches -> NOOP
         actions.push({
           type: "noop",
-          plan: local,
-          remotePlan: remote,
-          reason: `Plan "${local.name}" is up to date`,
+          monitor: local,
+          remoteMonitor: remote,
+          reason: `Monitor "${local.name}" is up to date`,
         });
       }
     }
   }
 
-  // Check for plans on hub not present locally -> DELETE (only if --prune)
+  // Check for monitors on hub not present locally -> DELETE (only if --prune)
   if (options.includeDeletions) {
-    for (const remote of remotePlans) {
+    for (const remote of remoteMonitors) {
       if (!localNames.has(remote.name)) {
         actions.push({
           type: "delete",
-          plan: null,
-          remotePlan: remote,
-          reason: `Plan "${remote.name}" no longer exists locally`,
+          monitor: null,
+          remoteMonitor: remote,
+          reason: `Monitor "${remote.name}" no longer exists locally`,
         });
       }
     }
@@ -135,21 +135,21 @@ export function formatDiff(diff: DiffResult): string {
     return lines.join("\n");
   }
 
-  lines.push("Plan:");
+  lines.push("Monitor:");
   lines.push("");
 
   for (const action of diff.actions) {
     if (action.type === "create") {
-      lines.push(`  + ${action.plan!.name} (create)`);
+      lines.push(`  + ${action.monitor!.name} (create)`);
     } else if (action.type === "update") {
-      lines.push(`  ~ ${action.plan!.name} (update)`);
+      lines.push(`  ~ ${action.monitor!.name} (update)`);
 
       // Show granular changes for updates
       if (action.changes) {
-        formatPlanChanges(action.changes, lines);
+        formatMonitorChanges(action.changes, lines);
       }
     } else if (action.type === "delete") {
-      lines.push(`  - ${action.remotePlan!.name} (delete)`);
+      lines.push(`  - ${action.remoteMonitor!.name} (delete)`);
     }
   }
 
@@ -163,9 +163,9 @@ export function formatDiff(diff: DiffResult): string {
 }
 
 /**
- * Format granular plan changes in terraform style
+ * Format granular monitor changes in terraform style
  */
-function formatPlanChanges(changes: PlanChanges, lines: string[]): void {
+function formatMonitorChanges(changes: MonitorChanges, lines: string[]): void {
   // Nodes section
   if (changes.nodes.length > 0) {
     lines.push("      Nodes:");

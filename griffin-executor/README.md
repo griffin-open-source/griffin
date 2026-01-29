@@ -1,12 +1,12 @@
-# griffin Plan Executor
+# griffin Monitor Executor
 
-The griffin Plan Executor takes JSON test plans (output from the test system DSL) and executes them. It can run tests locally or remotely (e.g., in a Lambda function).
+The griffin Monitor Executor takes JSON test monitors (output from the test system DSL) and executes them. It can run tests locally or remotely (e.g., in a Lambda function).
 
 ## Features
 
 ✅ **Currently Working**:
 
-- Execute JSON test plans
+- Execute JSON test monitors
 - Support for HTTP endpoints (GET, POST, PUT, DELETE, PATCH)
 - Support for wait nodes
 - Graph-based execution following edges (topological sort)
@@ -32,10 +32,10 @@ npm run build
 ### Programmatic Usage
 
 ```typescript
-import { executePlan } from "./dist/executor";
-import type { TestPlan } from "./dist/test-plan-types";
+import { executeMonitor } from "./dist/executor";
+import type { TestMonitor } from "./dist/test-monitor-types";
 
-const testPlan: TestPlan = {
+const testMonitor: TestMonitor = {
   name: "my-test",
   endpoint_host: "http://localhost",
   nodes: [
@@ -53,11 +53,11 @@ const testPlan: TestPlan = {
   ],
 };
 
-const results = await executePlan(testPlan, {
+const results = await executeMonitor(testMonitor, {
   mode: "local",
   baseUrl: "http://localhost:3000",
   timeout: 30000,
-  secretRegistry: secretRegistry, // Optional: for resolving secrets in test plans
+  secretRegistry: secretRegistry, // Optional: for resolving secrets in test monitors
 });
 
 console.log(results);
@@ -81,15 +81,15 @@ console.log(results);
 ```typescript
 interface ExecutionOptions {
   mode: "local" | "remote"; // Currently only 'local' is fully supported
-  baseUrl?: string; // Base URL for endpoints (overrides plan's endpoint_host)
+  baseUrl?: string; // Base URL for endpoints (overrides monitor's endpoint_host)
   timeout?: number; // Request timeout in ms (default: 30000)
-  secretRegistry?: SecretProviderRegistry; // Optional: for resolving secrets in test plans
+  secretRegistry?: SecretProviderRegistry; // Optional: for resolving secrets in test monitors
 }
 ```
 
 ## Execution Flow
 
-1. **Parse the test plan JSON** - Validates structure and types
+1. **Parse the test monitor JSON** - Validates structure and types
 2. **Build execution graph** - Performs topological sort starting from `__START__`
 3. **Execute nodes in order**:
    - **Endpoints**: Makes HTTP requests, stores responses
@@ -119,7 +119,7 @@ interface ExecutionOptions {
 
 ### Secrets Resolution
 
-If a test plan contains secret references (created using the `secret()` function in the DSL), they are resolved before execution begins. Secrets can be used in endpoint headers and request bodies.
+If a test monitor contains secret references (created using the `secret()` function in the DSL), they are resolved before execution begins. Secrets can be used in endpoint headers and request bodies.
 
 **Supported Providers:**
 
@@ -127,7 +127,7 @@ If a test plan contains secret references (created using the `secret()` function
 - **AWS Secrets Manager**: Retrieve secrets from AWS Secrets Manager
 - **HashiCorp Vault**: Retrieve secrets from Vault KV secrets engine
 
-**Example test plan with secrets:**
+**Example test monitor with secrets:**
 
 ```json
 {
@@ -149,4 +149,4 @@ If a test plan contains secret references (created using the `secret()` function
 }
 ```
 
-The executor will resolve all secrets before executing the plan. If any secret cannot be resolved, execution fails immediately with a clear error message.
+The executor will resolve all secrets before executing the monitor. If any secret cannot be resolved, execution fails immediately with a clear error message.

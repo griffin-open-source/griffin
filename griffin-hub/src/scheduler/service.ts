@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Storage } from "../storage/index.js";
 import type { JobQueueBackend } from "../job-queue/index.js";
-import type { PlanV1 } from "../schemas/plans.js";
+import type { MonitorV1 } from "../schemas/monitors.js";
 import { JobRunStatus, TriggerType, type JobRun } from "../schemas/job-run.js";
 import { utcNow } from "../utils/dates.js";
 export interface SchedulerConfig {
@@ -13,18 +13,18 @@ export interface SchedulerConfig {
 }
 
 export interface ExecutionJobData {
-  type: "execute-plan";
-  planId: string;
+  type: "execute-monitor";
+  monitorId: string;
   jobRunId: string;
   environment: string;
   location: string;
   executionGroupId: string;
-  plan: PlanV1; // Full plan included for executor/agent self-sufficiency
+  monitor: MonitorV1; // Full monitor included for executor/agent self-sufficiency
   scheduledAt: string; // ISO timestamp
 }
 
 /**
- * Scheduler service that finds plans due for execution and enqueues them.
+ * Scheduler service that finds monitors due for execution and enqueues them.
  */
 export class SchedulerService {
   private tickInterval: number;
@@ -85,7 +85,7 @@ export class SchedulerService {
   }
 
   /**
-   * Find plans that are due and enqueue execution jobs for them.
+   * Find monitors that are due and enqueue execution jobs for them.
    */
   async tick(): Promise<void> {
     if (this.currentTickPromise) {
@@ -104,16 +104,16 @@ export class SchedulerService {
 
   private async _tick(): Promise<void> {
     try {
-      // Find plans that are due
-      const duePlans = await this.findDuePlans();
+      // Find monitors that are due
+      const dueMonitors = await this.findDueMonitors();
 
-      // Enqueue execution jobs for each due plan
-      for (const plan of duePlans) {
-        await this.enqueuePlanExecution(plan);
+      // Enqueue execution jobs for each due monitor
+      for (const monitor of dueMonitors) {
+        await this.enqueueMonitorExecution(monitor);
       }
 
-      if (duePlans.length > 0) {
-        console.log(`Scheduled ${duePlans.length} plan(s) for execution`);
+      if (dueMonitors.length > 0) {
+        console.log(`Scheduled ${dueMonitors.length} monitor(s) for execution`);
       }
     } catch (error) {
       console.error("Error in scheduler tick:", error);
@@ -121,25 +121,25 @@ export class SchedulerService {
     }
   }
 
-  private async findDuePlans(): Promise<PlanV1[]> {
-    return await this.storage.plans.findDue();
+  private async findDueMonitors(): Promise<MonitorV1[]> {
+    return await this.storage.monitors.findDue();
   }
 
-  private async enqueuePlanExecution(plan: PlanV1): Promise<void> {
+  private async enqueueMonitorExecution(monitor: MonitorV1): Promise<void> {
     const now = utcNow();
-    const queue = this.jobQueue.queue<ExecutionJobData>("plan-executions");
+    const queue = this.jobQueue.queue<ExecutionJobData>("monitor-executions");
 
-    const environment = plan.environment ?? "default";
+    const environment = monitor.environment ?? "default";
     const executionGroupId = randomUUID();
-    // TODO: Phase 2 - Resolve location from agent registry or plan.locations
+    // TODO: Phase 2 - Resolve location from agent registry or monitor.locations
     const location = "local";
 
     // Create a JobRun record
     const jobRun = await this.storage.runs.create({
-      planId: plan.id,
+      monitorId: monitor.id,
       executionGroupId,
       location,
-      environment: plan.environment,
+      environment: monitor.environment,
       status: JobRunStatus.PENDING,
       triggeredBy: TriggerType.SCHEDULE,
       startedAt: now,
@@ -148,13 +148,13 @@ export class SchedulerService {
     // Enqueue the job
     await queue.enqueue(
       {
-        type: "execute-plan",
-        planId: plan.id,
+        type: "execute-monitor",
+        monitorId: monitor.id,
         jobRunId: jobRun.id,
         environment,
         location,
         executionGroupId,
-        plan, // Include full plan for executor/agent
+        monitor, // Include full monitor for executor/agent
         scheduledAt: now,
       },
       {
@@ -164,7 +164,7 @@ export class SchedulerService {
     );
 
     console.log(
-      `Enqueued plan execution: ${plan.name} (${plan.id}), jobRun: ${jobRun.id}, environment: ${environment}`,
+      `Enqueued monitor execution: ${monitor.name} (${monitor.id}), jobRun: ${jobRun.id}, environment: ${environment}`,
     );
   }
 }

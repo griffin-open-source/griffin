@@ -4,7 +4,7 @@ import { terminal } from "../../utils/terminal.js";
 import { withSDKErrorHandling } from "../../utils/sdk-error.js";
 
 export interface RunsOptions {
-  plan?: string;
+  monitor?: string;
   limit?: number;
 }
 
@@ -36,7 +36,7 @@ export async function executeRuns(options: RunsOptions): Promise<void> {
       () =>
         sdk.getRuns({
           query: {
-            planId: options.plan,
+            monitorId: options.monitor,
             limit: limit,
             offset: 0,
           },
@@ -61,7 +61,7 @@ export async function executeRuns(options: RunsOptions): Promise<void> {
 
     // Create table
     const table = terminal.table({
-      head: ["Status", "Plan", "Duration", "Started"],
+      head: ["Status", "Monitor", "Duration", "Started"],
     });
 
     for (const run of runsData.data) {
@@ -72,7 +72,7 @@ export async function executeRuns(options: RunsOptions): Promise<void> {
           : "-";
         const started = new Date(run.startedAt).toLocaleString();
 
-        table.push([statusIcon, run.planId || "-", duration, started]);
+        table.push([statusIcon, run.monitorId || "-", duration, started]);
       } catch (error) {
         terminal.error(
           `Error processing run ${run.id}: ${(error as Error).message}`,
@@ -100,7 +100,7 @@ export async function executeRuns(options: RunsOptions): Promise<void> {
 
       for (const run of runsWithErrors) {
         terminal.log(
-          `${terminal.colors.red("✗")} ${terminal.colors.cyan(run.planId || run.id)}`,
+          `${terminal.colors.red("✗")} ${terminal.colors.cyan(run.monitorId || run.id)}`,
         );
         if (Array.isArray(run.errors) && run.errors.length > 0) {
           const errorsToShow = run.errors.slice(0, 3);

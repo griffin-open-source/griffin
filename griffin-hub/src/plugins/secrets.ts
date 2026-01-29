@@ -45,7 +45,7 @@ function createVaultHttpClient(): VaultHttpClient {
  * - Makes the registry available on the Fastify instance
  *
  * Usage:
- *   const resolvedPlan = await resolveSecretsInPlan(plan, fastify.secretRegistry);
+ *   const resolvedMonitor = await resolveSecretsInMonitor(monitor, fastify.secretRegistry);
  */
 const secretsPlugin: FastifyPluginAsync = async (fastify) => {
   const config = fastify.config.secrets;

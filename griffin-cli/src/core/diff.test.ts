@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { computeDiff, type ResolvedPlan } from "./diff.js";
-import type { PlanV1 } from "@griffin-app/griffin-hub-sdk";
+import { computeDiff, type ResolvedMonitor } from "./diff.js";
+import type { MonitorV1 } from "@griffin-app/griffin-hub-sdk";
 
-// Helper to create a minimal test plan
-function createPlan(name: string, overrides?: Partial<PlanV1>): PlanV1 {
+// Helper to create a minimal test monitor
+function createMonitor(name: string, overrides?: Partial<MonitorV1>): MonitorV1 {
   return {
-    id: `plan-${name}`,
+    id: `monitor-${name}`,
     name,
     project: "test-project",
     environment: "test",
@@ -17,11 +17,11 @@ function createPlan(name: string, overrides?: Partial<PlanV1>): PlanV1 {
   };
 }
 
-// Helper to create a resolved plan (without id)
-function createResolvedPlan(
+// Helper to create a resolved monitor (without id)
+function createResolvedMonitor(
   name: string,
-  overrides?: Partial<ResolvedPlan>,
-): ResolvedPlan {
+  overrides?: Partial<ResolvedMonitor>,
+): ResolvedMonitor {
   return {
     name,
     project: "test-project",
@@ -36,9 +36,9 @@ function createResolvedPlan(
 
 describe("computeDiff", () => {
   describe("CREATE actions", () => {
-    it("should create action when plan exists locally but not remotely", () => {
-      const local = [createResolvedPlan("health-check")];
-      const remote: PlanV1[] = [];
+    it("should create action when monitor exists locally but not remotely", () => {
+      const local = [createResolvedMonitor("health-check")];
+      const remote: MonitorV1[] = [];
 
       const result = computeDiff(local, remote, {
         includeDeletions: false,
@@ -46,8 +46,8 @@ describe("computeDiff", () => {
 
       expect(result.actions).toHaveLength(1);
       expect(result.actions[0].type).toBe("create");
-      expect(result.actions[0].plan?.name).toBe("health-check");
-      expect(result.actions[0].remotePlan).toBeNull();
+      expect(result.actions[0].monitor?.name).toBe("health-check");
+      expect(result.actions[0].remoteMonitor).toBeNull();
       expect(result.summary.creates).toBe(1);
       expect(result.summary.updates).toBe(0);
       expect(result.summary.deletes).toBe(0);
@@ -55,14 +55,14 @@ describe("computeDiff", () => {
   });
 
   describe("UPDATE actions", () => {
-    it("should create update action when plan content differs", () => {
+    it("should create update action when monitor content differs", () => {
       const local = [
-        createResolvedPlan("health-check", {
+        createResolvedMonitor("health-check", {
           frequency: { every: 10, unit: "MINUTE" },
         }),
       ];
       const remote = [
-        createPlan("health-check", {
+        createMonitor("health-check", {
           frequency: { every: 5, unit: "MINUTE" },
         }),
       ];
@@ -73,8 +73,8 @@ describe("computeDiff", () => {
 
       expect(result.actions).toHaveLength(1);
       expect(result.actions[0].type).toBe("update");
-      expect(result.actions[0].plan?.name).toBe("health-check");
-      expect(result.actions[0].remotePlan?.name).toBe("health-check");
+      expect(result.actions[0].monitor?.name).toBe("health-check");
+      expect(result.actions[0].remoteMonitor?.name).toBe("health-check");
       expect(result.summary.creates).toBe(0);
       expect(result.summary.updates).toBe(1);
       expect(result.summary.deletes).toBe(0);
@@ -82,11 +82,11 @@ describe("computeDiff", () => {
   });
 
   describe("NOOP actions", () => {
-    it("should create noop action when plan content matches", () => {
-      const resolvedPlan = createResolvedPlan("health-check");
-      const remotePlan = createPlan("health-check");
-      const local = [resolvedPlan];
-      const remote = [remotePlan];
+    it("should create noop action when monitor content matches", () => {
+      const resolvedMonitor = createResolvedMonitor("health-check");
+      const remoteMonitor = createMonitor("health-check");
+      const local = [resolvedMonitor];
+      const remote = [remoteMonitor];
 
       const result = computeDiff(local, remote, {
         includeDeletions: false,
@@ -103,8 +103,8 @@ describe("computeDiff", () => {
 
   describe("DELETE actions", () => {
     it("should not create delete action when includeDeletions is false", () => {
-      const local: ResolvedPlan[] = [];
-      const remote = [createPlan("old-plan")];
+      const local: ResolvedMonitor[] = [];
+      const remote = [createMonitor("old-monitor")];
 
       const result = computeDiff(local, remote, { includeDeletions: false });
 
@@ -113,34 +113,34 @@ describe("computeDiff", () => {
     });
 
     it("should create delete action when includeDeletions is true", () => {
-      const local: ResolvedPlan[] = [];
-      const remote = [createPlan("old-plan")];
+      const local: ResolvedMonitor[] = [];
+      const remote = [createMonitor("old-monitor")];
 
       const result = computeDiff(local, remote, { includeDeletions: true });
 
       expect(result.actions).toHaveLength(1);
       expect(result.actions[0].type).toBe("delete");
-      expect(result.actions[0].plan).toBeNull();
-      expect(result.actions[0].remotePlan?.name).toBe("old-plan");
+      expect(result.actions[0].monitor).toBeNull();
+      expect(result.actions[0].remoteMonitor?.name).toBe("old-monitor");
       expect(result.summary.deletes).toBe(1);
     });
   });
 
   describe("Mixed scenarios", () => {
-    it("should handle multiple plans with different actions", () => {
+    it("should handle multiple monitors with different actions", () => {
       const local = [
-        createResolvedPlan("new-plan"),
-        createResolvedPlan("updated-plan", {
+        createResolvedMonitor("new-monitor"),
+        createResolvedMonitor("updated-monitor", {
           frequency: { every: 10, unit: "MINUTE" },
         }),
-        createResolvedPlan("unchanged-plan"),
+        createResolvedMonitor("unchanged-monitor"),
       ];
       const remote = [
-        createPlan("updated-plan", {
+        createMonitor("updated-monitor", {
           frequency: { every: 5, unit: "MINUTE" },
         }),
-        createPlan("unchanged-plan"),
-        createPlan("deleted-plan"),
+        createMonitor("unchanged-monitor"),
+        createMonitor("deleted-monitor"),
       ];
 
       const result = computeDiff(local, remote, {
@@ -156,10 +156,10 @@ describe("computeDiff", () => {
   });
 
   describe("Matching by name", () => {
-    it("should match plans by name, not by ID", () => {
-      // Local plans don't have IDs after resolution
-      const local = [createResolvedPlan("health-check")];
-      const remote = [createPlan("health-check", { id: "remote-id-456" })];
+    it("should match monitors by name, not by ID", () => {
+      // Local monitors don't have IDs after resolution
+      const local = [createResolvedMonitor("health-check")];
+      const remote = [createMonitor("health-check", { id: "remote-id-456" })];
 
       const result = computeDiff(local, remote, {
         includeDeletions: false,

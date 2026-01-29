@@ -2,7 +2,7 @@
 export type { StateFile, HubConfig } from "./schemas/state.js";
 export type { CredentialsFile, HubCredentials } from "./schemas/credentials.js";
 export type {
-  DiscoveredPlan,
+  DiscoveredMonitor,
   DiscoveryResult,
   DiscoveryError,
 } from "./core/discovery.js";
@@ -47,7 +47,7 @@ export {
   removeHubCredentials,
 } from "./core/credentials.js";
 
-export { discoverPlans, formatDiscoveryErrors } from "./core/discovery.js";
+export { discoverMonitors, formatDiscoveryErrors } from "./core/discovery.js";
 
 export { computeDiff, formatDiff, formatDiffJson } from "./core/diff.js";
 
@@ -69,7 +69,7 @@ export { executeRunLocal } from "./commands/local/run.js";
 export { executeConnect } from "./commands/hub/connect.js";
 export { executeStatus } from "./commands/hub/status.js";
 export { executeRuns } from "./commands/hub/runs.js";
-export { executePlan } from "./commands/hub/plan.js";
+export { executeMonitor } from "./commands/hub/monitor.js";
 export { executeApply } from "./commands/hub/apply.js";
 export { executeRun } from "./commands/hub/run.js";
 export { executeLogin } from "./commands/hub/login.js";

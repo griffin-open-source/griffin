@@ -7,17 +7,17 @@ griffin is an open-source API testing platform that allows developers to create 
 griffin is a monorepo containing multiple TypeScript packages:
 
 ### 1. [griffin-ts](./griffin-ts/)
-The TypeScript DSL library for defining API tests. Tests are written in TypeScript and output JSON test plans that can be executed by the plan executor.
+The TypeScript DSL library for defining API tests. Tests are written in TypeScript and output JSON test monitors that can be executed by the monitor executor.
 
 **Key Features:**
 - Sequential and graph-based builder patterns for test creation
 - Support for endpoints, waits, assertions, and edges
 - Secrets management using `secret("provider:path")` syntax
 - Frequency-based test scheduling
-- Outputs JSON test plans for execution
+- Outputs JSON test monitors for execution
 
 ### 2. [griffin-executor](./griffin-executor/)
-The core execution library that takes JSON test plans and executes them using graph-based execution (powered by ts-edge).
+The core execution library that takes JSON test monitors and executes them using graph-based execution (powered by ts-edge).
 
 **Key Features:**
 - Graph-based execution engine
@@ -27,17 +27,17 @@ The core execution library that takes JSON test plans and executes them using gr
 - Event emitter for execution lifecycle hooks
 
 ### 3. [griffin-hub](./griffin-hub/)
-The control plane service responsible for scheduling tests, managing test plans, and coordinating agent execution.
+The control plane service responsible for scheduling tests, managing test monitors, and coordinating agent execution.
 
 **Key Features:**
-- REST API for plan management (`/plan`, `/runs`, `/agents`, `/config`)
+- REST API for monitor management (`/monitor`, `/runs`, `/agents`, `/config`)
 - Scheduler service for frequency-based test execution
 - Agent registry with heartbeat monitoring
 - Support for multiple storage backends (Postgres, SQLite, memory)
 - Multi-location execution support
 
 ### 4. [griffin-agent](./griffin-agent/)
-The execution component that runs in specific locations and executes test plans from the job queue.
+The execution component that runs in specific locations and executes test monitors from the job queue.
 
 **Key Features:**
 - Location-based job consumption
@@ -47,12 +47,12 @@ The execution component that runs in specific locations and executes test plans 
 - Independent deployment (communicates with hub via HTTP)
 
 ### 5. [griffin-cli](./griffin-cli/)
-The CLI tool for running tests locally, managing test plans, and interacting with the hub.
+The CLI tool for running tests locally, managing test monitors, and interacting with the hub.
 
 **Key Features:**
 - Discovers `.ts` test files in `__griffin__` subdirectories
 - Runs tests locally against development servers
-- Plan validation and deployment to hub
+- Monitor validation and deployment to hub
 - Hub connectivity management
 - Test execution and log viewing
 
@@ -84,10 +84,10 @@ A simple JSON API server for testing griffin functionality during development.
    # Build DSL library (required first)
    cd griffin-ts && npm install && npm run build
    
-   # Build plan executor (depends on griffin-ts)
+   # Build monitor executor (depends on griffin-ts)
    cd ../griffin-executor && npm install && npm run build
    
-   # Build CLI (depends on plan executor)
+   # Build CLI (depends on monitor executor)
    cd ../griffin-cli && npm install && npm run build
    ```
 
@@ -101,7 +101,7 @@ A simple JSON API server for testing griffin functionality during development.
    // __griffin__/my-test.ts
    import { createTestBuilder, GET, Json, Frequency, target } from "../griffin-ts/src/index";
    
-   const plan = createTestBuilder({
+   const monitor = createTestBuilder({
      name: "health-check",
      frequency: Frequency.every(1).minute(),
    })
@@ -127,7 +127,7 @@ A simple JSON API server for testing griffin functionality during development.
 
 griffin uses a **hub-and-agent architecture** for distributed test execution:
 
-- **Hub**: Control plane that manages plans, schedules tests, and coordinates agents
+- **Hub**: Control plane that manages monitors, schedules tests, and coordinates agents
 - **Agent**: Execution component that runs tests from specific locations
 - **Multi-location execution**: Tests can run from multiple geographic regions or network zones simultaneously
 
@@ -165,8 +165,8 @@ See [griffin-executor README](./griffin-executor/README.md) for detailed secrets
 - Secrets system with multiple providers (env, AWS, Vault)
 - Agent registry with heartbeat monitoring
 - CLI test discovery and local execution
-- Plan validation with location support
-- Hub REST API for plans, runs, and agent management
+- Monitor validation with location support
+- Hub REST API for monitors, runs, and agent management
 
 🚧 **In Development** (Hub/Agent Refactoring):
 - Scheduler updates for multi-location execution (Phase 3)
@@ -186,18 +186,18 @@ See [griffin-executor README](./griffin-executor/README.md) for detailed secrets
 ### Hub-Based Execution
 1. **Deploy Hub**: Deploy griffin-hub service with database backend
 2. **Deploy Agents**: Deploy griffin-agent instances in target locations
-3. **Apply Plans**: Use CLI to deploy test plans to the hub
+3. **Apply Monitors**: Use CLI to deploy test monitors to the hub
    ```bash
    griffin-cli hub apply
    ```
 4. **Monitor**: View execution results via hub API or CLI
    ```bash
-   griffin-cli hub runs --plan <plan-name>
+   griffin-cli hub runs --monitor <monitor-name>
    ```
 
 ## Running Services
 
-### Hub (Control Plane)
+### Hub (Control Monitore)
 ```bash
 cd griffin-hub
 npm install
@@ -230,7 +230,7 @@ For simple deployments, griffin-runner will combine hub and agent in a single pr
 ## Testing
 
 ```bash
-# Plan executor tests
+# Monitor executor tests
 cd griffin-executor
 npm test              # single run
 npm run test:watch    # watch mode

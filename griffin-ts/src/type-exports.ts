@@ -14,5 +14,5 @@ export type {
   Assertions,
   NodeDSL,
   Edge,
-  PlanDSL,
+  MonitorDSL,
 } from "./schema.js";

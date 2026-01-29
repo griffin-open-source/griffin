@@ -68,8 +68,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.plans": {
-      "name": "plans",
+    "public.monitors": {
+      "name": "monitors",
       "schema": "",
       "columns": {
         "organization": {
@@ -253,7 +253,7 @@
         "runs_plan_id_plans_id_fk": {
           "name": "runs_plan_id_plans_id_fk",
           "tableFrom": "runs",
-          "tableTo": "plans",
+          "tableTo": "monitors",
           "columnsFrom": ["plan_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",

@@ -13,7 +13,7 @@ declare module "fastify" {
  * Fastify plugin that initializes and manages the scheduler service.
  * Configuration is loaded from fastify.config (provided by the config plugin).
  *
- * The scheduler finds plans due for execution and enqueues them.
+ * The scheduler finds monitors due for execution and enqueues them.
  * Jobs are executed by either:
  * - Built-in executor (server-standalone.ts)
  * - Remote agents (griffin-agent)

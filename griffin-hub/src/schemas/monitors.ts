@@ -8,7 +8,7 @@ import {
   NodeType,
   HttpMethodSchema,
   ResponseFormatSchema,
-  SUPPORTED_PLAN_VERSIONS,
+  SUPPORTED_MONITOR_VERSIONS,
   AssertionSchema,
   SecretRefSchema,
   StringLiteralSchema,
@@ -39,32 +39,32 @@ export const NodeSchema = Type.Union(
   { $id: "Node" },
 );
 
-const PlanVersionSchema = Type.Union(
-  SUPPORTED_PLAN_VERSIONS.map((version) => Type.Literal(version)),
-  { $id: "PlanVersion" },
+const MonitorVersionSchema = Type.Union(
+  SUPPORTED_MONITOR_VERSIONS.map((version) => Type.Literal(version)),
+  { $id: "MonitorVersion" },
 );
 
-export const PlanV1Schema = Type.Object(
+export const MonitorV1Schema = Type.Object(
   {
     project: Type.String(),
     locations: Type.Optional(Type.Array(Type.String())),
     id: Type.Readonly(Type.String()),
     name: Type.String(),
-    version: PlanVersionSchema,
+    version: MonitorVersionSchema,
     frequency: FrequencySchema,
     environment: Type.String({ default: "default" }),
     nodes: Type.Array(NodeSchema),
     edges: Type.Array(EdgeSchema),
   },
   {
-    $id: "PlanV1",
+    $id: "MonitorV1",
   },
 );
 
 export type Assertion = Static<typeof AssertionSchema>;
 export type Assertions = Static<typeof AssertionsSchema>;
 export type Node = Static<typeof NodeSchema>;
-export type PlanV1 = Static<typeof PlanV1Schema>;
+export type MonitorV1 = Static<typeof MonitorV1Schema>;
 
 export type Frequency = Static<typeof FrequencySchema>;
 export type Wait = Static<typeof WaitSchema>;

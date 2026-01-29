@@ -1,12 +1,12 @@
 import { loadState } from "../core/state.js";
-import { discoverPlans, formatDiscoveryErrors } from "../core/discovery.js";
+import { discoverMonitors, formatDiscoveryErrors } from "../core/discovery.js";
 import { terminal } from "../utils/terminal.js";
 
 /**
- * Validate test plan files without syncing
+ * Validate test monitor files without syncing
  */
 export async function executeValidate(): Promise<void> {
-  const spinner = terminal.spinner("Validating test plans...").start();
+  const spinner = terminal.spinner("Validating test monitors...").start();
 
   try {
     // Load state for discovery settings
@@ -18,8 +18,8 @@ export async function executeValidate(): Promise<void> {
       "dist/**",
     ];
 
-    // Discover plans
-    const { plans, errors } = await discoverPlans(
+    // Discover monitors
+    const { monitors, errors } = await discoverMonitors(
       discoveryPattern,
       discoveryIgnore,
     );
@@ -34,30 +34,30 @@ export async function executeValidate(): Promise<void> {
 
     // Report success
     spinner.succeed(
-      `Found ${terminal.colors.bold(plans.length.toString())} valid plan(s)`,
+      `Found ${terminal.colors.bold(monitors.length.toString())} valid monitor(s)`,
     );
     terminal.blank();
 
-    for (const { plan, filePath, exportName } of plans) {
+    for (const { monitor, filePath, exportName } of monitors) {
       const shortPath = filePath.replace(process.cwd(), ".");
       const exportInfo =
         exportName === "default" ? "" : terminal.colors.dim(` (${exportName})`);
       terminal.log(
-        `  ${terminal.colors.green("●")} ${terminal.colors.cyan(plan.name)}${exportInfo}`,
+        `  ${terminal.colors.green("●")} ${terminal.colors.cyan(monitor.name)}${exportInfo}`,
       );
       terminal.dim(`    ${shortPath}`);
       terminal.dim(
-        `    Nodes: ${plan.nodes.length}, Edges: ${plan.edges.length}`,
+        `    Nodes: ${monitor.nodes.length}, Edges: ${monitor.edges.length}`,
       );
-      if (plan.frequency) {
+      if (monitor.frequency) {
         terminal.dim(
-          `    Schedule: Every ${plan.frequency.every} ${plan.frequency.unit}`,
+          `    Schedule: Every ${monitor.frequency.every} ${monitor.frequency.unit}`,
         );
       }
       terminal.blank();
     }
 
-    terminal.success("All plans are valid");
+    terminal.success("All monitors are valid");
   } catch (error) {
     spinner.fail("Validation failed");
     terminal.error((error as Error).message);

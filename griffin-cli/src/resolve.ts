@@ -1,29 +1,29 @@
-import { PlanV1 } from "@griffin-app/griffin-hub-sdk";
+import { MonitorV1 } from "@griffin-app/griffin-hub-sdk";
 import {
-  PlanDSL,
+  MonitorDSL,
   migrateToLatest,
-  CURRENT_PLAN_VERSION,
+  CURRENT_MONITOR_VERSION,
 } from "@griffin-app/griffin-ts";
-import { resolveVariablesInPlan } from "./core/variables.js";
+import { resolveVariablesInMonitor } from "./core/variables.js";
 
-export function resolvePlan(
-  plan: PlanDSL,
+export function resolveMonitor(
+  monitor: MonitorDSL,
   projectId: string,
   envName: string,
   variables: Record<string, string>,
-): Omit<PlanV1, "id"> {
-  // Migrate DSL plan to latest version before resolving
-  const migratedPlan =
-    plan.version === CURRENT_PLAN_VERSION
-      ? plan
-      : (migrateToLatest(plan) as PlanDSL);
+): Omit<MonitorV1, "id"> {
+  // Migrate DSL monitor to latest version before resolving
+  const migratedMonitor =
+    monitor.version === CURRENT_MONITOR_VERSION
+      ? monitor
+      : (migrateToLatest(monitor) as MonitorDSL);
 
-  const resolvedPlan = resolveVariablesInPlan(migratedPlan, variables) as Omit<
-    PlanV1,
+  const resolvedMonitor = resolveVariablesInMonitor(migratedMonitor, variables) as Omit<
+    MonitorV1,
     "id" | "project" | "environment"
   >;
   return {
-    ...resolvedPlan,
+    ...resolvedMonitor,
     project: projectId,
     environment: envName,
   };

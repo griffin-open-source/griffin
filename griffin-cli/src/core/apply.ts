@@ -1,8 +1,8 @@
 import type { DiffAction, DiffResult } from "./diff.js";
 import type { GriffinHubSdk } from "@griffin-app/griffin-hub-sdk";
-import type { PlanV1 } from "@griffin-app/griffin-hub-sdk";
+import type { MonitorV1 } from "@griffin-app/griffin-hub-sdk";
 import { loadVariables } from "./variables.js";
-import { resolvePlan } from "../resolve.js";
+import { resolveMonitor } from "../resolve.js";
 import { terminal } from "../utils/terminal.js";
 import { withSDKErrorHandling } from "../utils/sdk-error.js";
 export interface ApplyResult {
@@ -13,7 +13,7 @@ export interface ApplyResult {
 
 export interface ApplyAction {
   type: "create" | "update" | "delete";
-  planName: string;
+  monitorName: string;
   success: boolean;
   error?: string;
 }
@@ -25,7 +25,7 @@ export interface ApplyError {
 
 /**
  * Apply diff actions to the hub.
- * CLI injects both project and environment into plan payloads.
+ * CLI injects both project and environment into monitor payloads.
  */
 export async function applyDiff(
   diff: DiffResult,
@@ -49,7 +49,7 @@ export async function applyDiff(
     try {
       if (options?.dryRun) {
         terminal.dim(
-          `[DRY RUN] Would ${action.type} plan: ${action.plan?.name || action.remotePlan?.name}`,
+          `[DRY RUN] Would ${action.type} monitor: ${action.monitor?.name || action.remoteMonitor?.name}`,
         );
         continue;
       }
@@ -74,7 +74,7 @@ export async function applyDiff(
 
       applied.push({
         type: action.type as "create" | "update" | "delete",
-        planName: action.plan?.name || action.remotePlan?.name || "unknown",
+        monitorName: action.monitor?.name || action.remoteMonitor?.name || "unknown",
         success: false,
         error: (error as Error).message,
       });
@@ -96,22 +96,22 @@ async function applyCreate(
   sdk: GriffinHubSdk,
   applied: ApplyAction[],
 ): Promise<void> {
-  const resolvedPlan = action.plan!;
+  const resolvedMonitor = action.monitor!;
 
   //const variables = await loadVariables(environment);
-  //const resolvedPlan = resolvePlan(plan, projectId, environment, variables);
+  //const resolvedMonitor = resolveMonitor(monitor, projectId, environment, variables);
 
-  const { data: createdPlan } = await sdk.postPlan({
-    body: resolvedPlan,
+  const { data: createdMonitor } = await sdk.postMonitor({
+    body: resolvedMonitor,
   });
 
   applied.push({
     type: "create",
-    planName: createdPlan!.data.name,
+    monitorName: createdMonitor!.data.name,
     success: true,
   });
 
-  terminal.success(`Created: ${terminal.colors.cyan(createdPlan!.data.name)}`);
+  terminal.success(`Created: ${terminal.colors.cyan(createdMonitor!.data.name)}`);
 }
 
 /**
@@ -122,26 +122,26 @@ async function applyUpdate(
   sdk: GriffinHubSdk,
   applied: ApplyAction[],
 ): Promise<void> {
-  const resolvedPlan = action.plan!;
-  //const remotePlan = action.remotePlan!;
+  const resolvedMonitor = action.monitor!;
+  //const remoteMonitor = action.remoteMonitor!;
   //const variables = await loadVariables(environment);
-  //const resolvedPlan = resolvePlan(plan, projectId, environment, variables);
+  //const resolvedMonitor = resolveMonitor(monitor, projectId, environment, variables);
 
-  // Use the remote plan's ID for the update
-  await sdk.putPlanById({
+  // Use the remote monitor's ID for the update
+  await sdk.putMonitorById({
     path: {
-      id: action.remotePlan!.id,
+      id: action.remoteMonitor!.id,
     },
-    body: resolvedPlan,
+    body: resolvedMonitor,
   });
 
   applied.push({
     type: "update",
-    planName: action.remotePlan!.name,
+    monitorName: action.remoteMonitor!.name,
     success: true,
   });
 
-  terminal.success(`Updated: ${terminal.colors.cyan(action.remotePlan!.name)}`);
+  terminal.success(`Updated: ${terminal.colors.cyan(action.remoteMonitor!.name)}`);
 }
 
 /**
@@ -152,25 +152,25 @@ async function applyDelete(
   sdk: GriffinHubSdk,
   applied: ApplyAction[],
 ): Promise<void> {
-  const remotePlan = action.remotePlan!;
+  const remoteMonitor = action.remoteMonitor!;
 
   await withSDKErrorHandling(
     () =>
-      sdk.deletePlanById({
+      sdk.deleteMonitorById({
         path: {
-          id: remotePlan.id,
+          id: remoteMonitor.id,
         },
       }),
-    `Failed to delete plan "${remotePlan.name}"`,
+    `Failed to delete monitor "${remoteMonitor.name}"`,
   );
 
   applied.push({
     type: "delete",
-    planName: remotePlan.name,
+    monitorName: remoteMonitor.name,
     success: true,
   });
 
-  terminal.success(`Deleted: ${terminal.colors.cyan(remotePlan.name)}`);
+  terminal.success(`Deleted: ${terminal.colors.cyan(remoteMonitor.name)}`);
 }
 
 /**
@@ -190,7 +190,7 @@ export function formatApplyResult(result: ApplyResult): string {
   for (const action of result.applied) {
     const icon = action.success ? "✓" : "✗";
     const status = action.success ? action.type : `${action.type} (failed)`;
-    lines.push(`  ${icon} ${action.planName} - ${status}`);
+    lines.push(`  ${icon} ${action.monitorName} - ${status}`);
     if (action.error) {
       lines.push(`    Error: ${action.error}`);
     }

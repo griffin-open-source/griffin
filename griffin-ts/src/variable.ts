@@ -2,7 +2,7 @@
  * Variable reference utilities for griffin DSL.
  *
  * Variables are resolved at evaluation time (when the CLI imports test files)
- * by reading from variables.yaml. The resolved values are baked into the plan.
+ * by reading from variables.yaml. The resolved values are baked into the monitor.
  */
 
 /**
@@ -19,7 +19,7 @@ export interface VariableRef {
  * Create a variable reference that will be resolved from variables.yaml.
  *
  * Variables are resolved when the CLI evaluates the test file, so the final
- * plan contains resolved string values rather than variable references.
+ * monitor contains resolved string values rather than variable references.
  *
  * @param key - The variable key to look up in variables.yaml
  * @returns A variable reference object

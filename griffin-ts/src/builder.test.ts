@@ -9,16 +9,16 @@ import {
   HttpMethod,
   ResponseFormat,
   NodeType,
-  CURRENT_PLAN_VERSION,
+  CURRENT_MONITOR_VERSION,
   BinaryPredicateOperator,
   AssertionSubject,
   UnaryPredicateOperator,
 } from "./schema.js";
 
 describe("Graph Builder", () => {
-  describe("Basic Test Plans", () => {
-    it("should build a minimal test plan with single endpoint", () => {
-      const plan = createGraphBuilder({
+  describe("Basic Test Monitors", () => {
+    it("should build a minimal test monitor with single endpoint", () => {
+      const monitor = createGraphBuilder({
         name: "health-check",
         frequency: Frequency.every(5).minutes(),
       })
@@ -35,9 +35,9 @@ describe("Graph Builder", () => {
         .addEdge("health", END)
         .build();
 
-      expect(plan).toEqual({
+      expect(monitor).toEqual({
         name: "health-check",
-        version: CURRENT_PLAN_VERSION,
+        version: CURRENT_MONITOR_VERSION,
         frequency: { every: 5, unit: "MINUTE" },
         locations: undefined,
         nodes: [
@@ -57,8 +57,8 @@ describe("Graph Builder", () => {
       });
     });
 
-    it("should build test plan with multiple HTTP methods", () => {
-      const plan = createGraphBuilder({
+    it("should build test monitor with multiple HTTP methods", () => {
+      const monitor = createGraphBuilder({
         name: "crud-test",
         frequency: Frequency.every(1).hour(),
       })
@@ -107,16 +107,16 @@ describe("Graph Builder", () => {
         .addEdge("delete", END)
         .build();
 
-      expect(plan.nodes).toHaveLength(4);
-      expect(plan.nodes[0].type).toBe(NodeType.HTTP_REQUEST);
-      expect((plan.nodes[0] as any).method).toBe(HttpMethod.POST);
-      expect((plan.nodes[1] as any).method).toBe(HttpMethod.GET);
-      expect((plan.nodes[2] as any).method).toBe(HttpMethod.PUT);
-      expect((plan.nodes[3] as any).method).toBe(HttpMethod.DELETE);
+      expect(monitor.nodes).toHaveLength(4);
+      expect(monitor.nodes[0].type).toBe(NodeType.HTTP_REQUEST);
+      expect((monitor.nodes[0] as any).method).toBe(HttpMethod.POST);
+      expect((monitor.nodes[1] as any).method).toBe(HttpMethod.GET);
+      expect((monitor.nodes[2] as any).method).toBe(HttpMethod.PUT);
+      expect((monitor.nodes[3] as any).method).toBe(HttpMethod.DELETE);
     });
 
     it("should include locations when specified", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "distributed-test",
         frequency: Frequency.every(10).minutes(),
         locations: ["us-east-1", "eu-west-1", "ap-south-1"],
@@ -134,13 +134,13 @@ describe("Graph Builder", () => {
         .addEdge("check", END)
         .build();
 
-      expect(plan.locations).toEqual(["us-east-1", "eu-west-1", "ap-south-1"]);
+      expect(monitor.locations).toEqual(["us-east-1", "eu-west-1", "ap-south-1"]);
     });
   });
 
   describe("Endpoints with Headers", () => {
     it("should build endpoint with literal headers", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "auth-test",
         frequency: Frequency.every(5).minutes(),
       })
@@ -162,7 +162,7 @@ describe("Graph Builder", () => {
         .addEdge("protected", END)
         .build();
 
-      const endpoint = plan.nodes[0] as any;
+      const endpoint = monitor.nodes[0] as any;
       expect(endpoint.headers).toBeDefined();
       expect(endpoint.headers["Authorization"]).toBe("Bearer token123");
       expect(endpoint.headers["Content-Type"]).toBe("application/json");
@@ -170,7 +170,7 @@ describe("Graph Builder", () => {
     });
 
     it("should build endpoint with secret headers", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "secret-test",
         frequency: Frequency.every(5).minutes(),
       })
@@ -191,7 +191,7 @@ describe("Graph Builder", () => {
         .addEdge("secured", END)
         .build();
 
-      const endpoint = plan.nodes[0] as any;
+      const endpoint = monitor.nodes[0] as any;
       expect(endpoint.headers["Authorization"]).toEqual({
         $secret: {
           provider: "env",
@@ -209,7 +209,7 @@ describe("Graph Builder", () => {
 
   describe("Endpoints with Variables", () => {
     it("should build endpoint with variable base URL", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "variable-test",
         frequency: Frequency.every(5).minutes(),
       })
@@ -226,7 +226,7 @@ describe("Graph Builder", () => {
         .addEdge("check", END)
         .build();
 
-      const endpoint = plan.nodes[0] as any;
+      const endpoint = monitor.nodes[0] as any;
       expect(endpoint.base).toEqual({
         $variable: {
           key: "api-host",
@@ -235,7 +235,7 @@ describe("Graph Builder", () => {
     });
 
     it("should build endpoint with templated path", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "template-test",
         frequency: Frequency.every(5).minutes(),
       })
@@ -252,7 +252,7 @@ describe("Graph Builder", () => {
         .addEdge("versioned", END)
         .build();
 
-      const endpoint = plan.nodes[0] as any;
+      const endpoint = monitor.nodes[0] as any;
       expect(endpoint.path).toEqual({
         $variable: {
           key: "api-version",
@@ -264,7 +264,7 @@ describe("Graph Builder", () => {
 
   describe("Wait Nodes", () => {
     it("should build wait node with milliseconds", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "wait-test",
         frequency: Frequency.every(5).minutes(),
       })
@@ -273,7 +273,7 @@ describe("Graph Builder", () => {
         .addEdge("pause", END)
         .build();
 
-      expect(plan.nodes[0]).toEqual({
+      expect(monitor.nodes[0]).toEqual({
         id: "pause",
         type: NodeType.WAIT,
         duration_ms: 2000,
@@ -281,7 +281,7 @@ describe("Graph Builder", () => {
     });
 
     it("should build wait node with seconds", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "wait-seconds",
         frequency: Frequency.every(5).minutes(),
       })
@@ -290,7 +290,7 @@ describe("Graph Builder", () => {
         .addEdge("pause", END)
         .build();
 
-      expect(plan.nodes[0]).toEqual({
+      expect(monitor.nodes[0]).toEqual({
         id: "pause",
         type: NodeType.WAIT,
         duration_ms: 5000,
@@ -298,7 +298,7 @@ describe("Graph Builder", () => {
     });
 
     it("should build wait node with minutes", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "wait-minutes",
         frequency: Frequency.every(5).minutes(),
       })
@@ -307,7 +307,7 @@ describe("Graph Builder", () => {
         .addEdge("pause", END)
         .build();
 
-      expect(plan.nodes[0]).toEqual({
+      expect(monitor.nodes[0]).toEqual({
         id: "pause",
         type: NodeType.WAIT,
         duration_ms: 120000,
@@ -317,7 +317,7 @@ describe("Graph Builder", () => {
 
   describe("Assertion Nodes", () => {
     it("should build status assertion", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "status-assertion",
         frequency: Frequency.every(5).minutes(),
       })
@@ -349,7 +349,7 @@ describe("Graph Builder", () => {
         .addEdge("checks", END)
         .build();
 
-      const assertionNode = plan.nodes[1] as any;
+      const assertionNode = monitor.nodes[1] as any;
       expect(assertionNode.type).toBe(NodeType.ASSERTION);
       expect(assertionNode.assertions).toHaveLength(1);
       expect(assertionNode.assertions[0]).toEqual({
@@ -364,7 +364,7 @@ describe("Graph Builder", () => {
     });
 
     it("should build JSON body assertion", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "body-assertion",
         frequency: Frequency.every(5).minutes(),
       })
@@ -398,7 +398,7 @@ describe("Graph Builder", () => {
         .addEdge("checks", END)
         .build();
 
-      const assertionNode = plan.nodes[1] as any;
+      const assertionNode = monitor.nodes[1] as any;
       expect(assertionNode.assertions[0]).toEqual({
         nodeId: "call",
         subject: AssertionSubject.BODY,
@@ -413,7 +413,7 @@ describe("Graph Builder", () => {
     });
 
     it("should build multiple assertions", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "multi-assertion",
         frequency: Frequency.every(5).minutes(),
       })
@@ -464,14 +464,14 @@ describe("Graph Builder", () => {
         .addEdge("checks", END)
         .build();
 
-      const assertionNode = plan.nodes[1] as any;
+      const assertionNode = monitor.nodes[1] as any;
       expect(assertionNode.assertions).toHaveLength(3);
     });
   });
 
   describe("Complex Flows", () => {
     it("should build sequential flow with waits and assertions", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "complex-flow",
         frequency: Frequency.every(15).minutes(),
       })
@@ -516,9 +516,9 @@ describe("Graph Builder", () => {
         .addEdge("check", END)
         .build();
 
-      expect(plan.nodes).toHaveLength(4);
-      expect(plan.edges).toHaveLength(5);
-      expect(plan.nodes.map((n) => n.id)).toEqual([
+      expect(monitor.nodes).toHaveLength(4);
+      expect(monitor.edges).toHaveLength(5);
+      expect(monitor.nodes.map((n) => n.id)).toEqual([
         "create",
         "wait1",
         "poll",
@@ -527,7 +527,7 @@ describe("Graph Builder", () => {
     });
 
     it("should build test with different response formats", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "format-test",
         frequency: Frequency.every(5).minutes(),
       })
@@ -554,14 +554,14 @@ describe("Graph Builder", () => {
         .addEdge("xml", END)
         .build();
 
-      expect((plan.nodes[0] as any).response_format).toBe(ResponseFormat.JSON);
-      expect((plan.nodes[1] as any).response_format).toBe(ResponseFormat.XML);
+      expect((monitor.nodes[0] as any).response_format).toBe(ResponseFormat.JSON);
+      expect((monitor.nodes[1] as any).response_format).toBe(ResponseFormat.XML);
     });
   });
 
   describe("Edge Configuration", () => {
     it("should create correct edges for linear flow", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "linear",
         frequency: Frequency.every(5).minutes(),
       })
@@ -598,7 +598,7 @@ describe("Graph Builder", () => {
         .addEdge("step3", END)
         .build();
 
-      expect(plan.edges).toEqual([
+      expect(monitor.edges).toEqual([
         { from: START, to: "step1" },
         { from: "step1", to: "step2" },
         { from: "step2", to: "step3" },
@@ -609,7 +609,7 @@ describe("Graph Builder", () => {
 
   describe("Frequency Configurations", () => {
     it("should support minute frequency", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "test",
         frequency: Frequency.every(1).minute(),
       })
@@ -626,11 +626,11 @@ describe("Graph Builder", () => {
         .addEdge("check", END)
         .build();
 
-      expect(plan.frequency).toEqual({ every: 1, unit: "MINUTE" });
+      expect(monitor.frequency).toEqual({ every: 1, unit: "MINUTE" });
     });
 
     it("should support hour frequency", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "test",
         frequency: Frequency.every(2).hours(),
       })
@@ -647,11 +647,11 @@ describe("Graph Builder", () => {
         .addEdge("check", END)
         .build();
 
-      expect(plan.frequency).toEqual({ every: 2, unit: "HOUR" });
+      expect(monitor.frequency).toEqual({ every: 2, unit: "HOUR" });
     });
 
     it("should support day frequency", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "test",
         frequency: Frequency.every(1).day(),
       })
@@ -668,13 +668,13 @@ describe("Graph Builder", () => {
         .addEdge("check", END)
         .build();
 
-      expect(plan.frequency).toEqual({ every: 1, unit: "DAY" });
+      expect(monitor.frequency).toEqual({ every: 1, unit: "DAY" });
     });
   });
 
   describe("Request Body", () => {
     it("should include request body in POST request", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "post-test",
         frequency: Frequency.every(5).minutes(),
       })
@@ -699,7 +699,7 @@ describe("Graph Builder", () => {
         .addEdge("create", END)
         .build();
 
-      const endpoint = plan.nodes[0] as any;
+      const endpoint = monitor.nodes[0] as any;
       expect(endpoint.body).toEqual({
         name: "John Doe",
         email: "john@example.com",
@@ -711,7 +711,7 @@ describe("Graph Builder", () => {
     });
 
     it("should support secrets in request body", () => {
-      const plan = createGraphBuilder({
+      const monitor = createGraphBuilder({
         name: "secret-body-test",
         frequency: Frequency.every(5).minutes(),
       })
@@ -732,7 +732,7 @@ describe("Graph Builder", () => {
         .addEdge("create", END)
         .build();
 
-      const endpoint = plan.nodes[0] as any;
+      const endpoint = monitor.nodes[0] as any;
       expect(endpoint.body.apiKey).toEqual({
         $secret: {
           provider: "env",

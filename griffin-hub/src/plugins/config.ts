@@ -32,9 +32,9 @@ const configPlugin: FastifyPluginAsync = async (fastify) => {
       jobQueue: { backend: config.jobQueue.backend },
       scheduler: config.scheduler,
       worker: config.worker,
-      planExecution: {
-        hasBaseUrl: !!config.planExecution.baseUrl,
-        timeout: config.planExecution.timeout,
+      monitorExecution: {
+        hasBaseUrl: !!config.monitorExecution.baseUrl,
+        timeout: config.monitorExecution.timeout,
       },
       secrets: {
         providers: config.secrets.providers,

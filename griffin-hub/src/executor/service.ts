@@ -1,7 +1,7 @@
 import type { JobQueue, Job } from "../job-queue/index.js";
 import type { Storage } from "../storage/repositories.js";
 import type { SecretProviderRegistry } from "@griffin-app/griffin-plan-executor";
-import { executePlanV1 } from "@griffin-app/griffin-plan-executor";
+import { executeMonitorV1 } from "@griffin-app/griffin-plan-executor";
 import type {
   HttpClientAdapter,
   ExecutionOptions,
@@ -14,13 +14,13 @@ import { utcNow } from "../utils/dates.js";
  * Must match the format used by the scheduler when enqueueing jobs.
  */
 export interface ExecutionJobData {
-  type: "execute-plan";
-  planId: string;
+  type: "execute-monitor";
+  monitorId: string;
   jobRunId: string;
   environment: string;
   location: string;
   executionGroupId: string;
-  plan: any; // TestPlanV1 - Full plan included for self-sufficiency
+  monitor: any; // TestMonitorV1 - Full monitor included for self-sufficiency
   scheduledAt: string;
 }
 
@@ -37,17 +37,17 @@ export interface ExecutorConfig {
   maxEmptyDelay: number;
 
   /**
-   * HTTP client for plan execution.
+   * HTTP client for monitor execution.
    */
   httpClient: HttpClientAdapter;
 
   /**
-   * Request timeout for plan execution (ms).
+   * Request timeout for monitor execution (ms).
    */
   timeout: number;
 
   /**
-   * Secret provider registry for resolving secrets in plans.
+   * Secret provider registry for resolving secrets in monitors.
    */
   secretRegistry: SecretProviderRegistry;
 }
@@ -140,18 +140,18 @@ export class ExecutorService {
     const data = job.data;
 
     try {
-      const plan = data.plan;
+      const monitor = data.monitor;
 
       console.log(
-        `Executing plan: ${plan.name} (${plan.id}) in environment: ${data.environment} from location: ${data.location}`,
+        `Executing monitor: ${monitor.name} (${monitor.id}) in environment: ${data.environment} from location: ${data.location}`,
       );
 
-      // Get the organization from the plan
-      if (!plan.organization) {
-        throw new Error(`Plan ${plan.id} does not have an organization set`);
+      // Get the organization from the monitor
+      if (!monitor.organization) {
+        throw new Error(`Monitor ${monitor.id} does not have an organization set`);
       }
 
-      // Execute the plan with status callbacks
+      // Execute the monitor with status callbacks
       const executionOptions: ExecutionOptions = {
         mode: "local",
         httpClient: this.httpClient,
@@ -183,9 +183,9 @@ export class ExecutorService {
         },
       };
 
-      const result = await executePlanV1(
-        plan,
-        plan.organization!,
+      const result = await executeMonitorV1(
+        monitor,
+        monitor.organization!,
         executionOptions,
       );
 
@@ -193,7 +193,7 @@ export class ExecutorService {
       await this.jobQueue.acknowledge(job.id);
 
       console.log(
-        `Plan execution ${result.success ? "succeeded" : "failed"}: ${plan.name} (${plan.id}) in ${result.totalDuration_ms}ms`,
+        `Monitor execution ${result.success ? "succeeded" : "failed"}: ${monitor.name} (${monitor.id}) in ${result.totalDuration_ms}ms`,
       );
     } catch (error) {
       console.error(`Error processing job ${job.id}:`, error);

@@ -12,7 +12,7 @@ This guide will help you set up and test compile the griffin CLI with sample tes
 
 ### 1. Install TypeScript Dependencies
 
-First, install dependencies for the test system and plan executor:
+First, install dependencies for the test system and monitor executor:
 
 ```bash
 # Install test system dependencies
@@ -20,7 +20,7 @@ cd griffin-ts
 npm install
 npm run build
 
-# Install plan executor dependencies
+# Install monitor executor dependencies
 cd ../griffin-executor
 npm install
 npm run build
@@ -43,7 +43,7 @@ This creates the compiled TypeScript in the `dist/` directory.
 A sample test file has been created at `__griffin__/example-check.ts`. This test:
 - Makes a GET request to `/health`
 - Waits 1 second
-- Outputs a JSON test plan
+- Outputs a JSON test monitor
 
 You can create additional tests by:
 1. Creating a `__griffin__` directory anywhere in your project
@@ -65,7 +65,7 @@ npm run dev run-local
 # The CLI will:
 # - Discover all .ts files in __griffin__ directories
 # - Execute each test file (which outputs JSON)
-# - Run the JSON test plan using the endpoint_host from each test file
+# - Run the JSON test monitor using the endpoint_host from each test file
 # - Display results with pass/fail status
 ```
 
@@ -104,7 +104,7 @@ cd griffin-ts && npm install && npm run build
 cd ../griffin-executor && npm install && npm run build
 ```
 
-### "Plan executor not found" error
+### "Monitor executor not found" error
 
 Same as above - ensure both TypeScript projects are built.
 
@@ -121,7 +121,7 @@ griffin/
 ├── griffin-cli/          # TypeScript CLI tool
 ├── griffin-runner/       # TypeScript orchestration service
 ├── griffin-ts/           # TypeScript DSL library
-├── griffin-executor/# TypeScript plan executor
+├── griffin-executor/# TypeScript monitor executor
 └── __griffin__/          # Test files directory
     └── example-check.ts
 ```

@@ -4,13 +4,13 @@
 
 import { describe, it, expect } from "vitest";
 import {
-  migratePlan,
+  migrateMonitor,
   migrateToLatest,
   isSupportedVersion,
   getSupportedVersions,
 } from "./migrations.js";
-import { CURRENT_PLAN_VERSION, SUPPORTED_PLAN_VERSIONS } from "./schema.js";
-import type { ResolvedPlanV1 } from "./schema.js";
+import { CURRENT_MONITOR_VERSION, SUPPORTED_MONITOR_VERSIONS } from "./schema.js";
+import type { ResolvedMonitorV1 } from "./schema.js";
 
 describe("migrations", () => {
   describe("isSupportedVersion", () => {
@@ -27,17 +27,17 @@ describe("migrations", () => {
   describe("getSupportedVersions", () => {
     it("should return all supported versions", () => {
       const versions = getSupportedVersions();
-      expect(versions).toEqual(SUPPORTED_PLAN_VERSIONS);
+      expect(versions).toEqual(SUPPORTED_MONITOR_VERSIONS);
       expect(versions).toContain("1.0");
     });
   });
 
   describe("migrateToLatest", () => {
-    it("should return plan unchanged if already at latest version", () => {
-      const plan: ResolvedPlanV1 = {
+    it("should return monitor unchanged if already at latest version", () => {
+      const monitor: ResolvedMonitorV1 = {
         project: "test",
         id: "test-id",
-        name: "test-plan",
+        name: "test-monitor",
         version: "1.0",
         frequency: { every: 1, unit: "MINUTE" as any },
         environment: "default",
@@ -45,15 +45,15 @@ describe("migrations", () => {
         edges: [],
       };
 
-      const migrated = migrateToLatest(plan);
-      expect(migrated).toEqual(plan);
-      expect(migrated.version).toBe(CURRENT_PLAN_VERSION);
+      const migrated = migrateToLatest(monitor);
+      expect(migrated).toEqual(monitor);
+      expect(migrated.version).toBe(CURRENT_MONITOR_VERSION);
     });
 
-    it("should preserve all plan properties", () => {
-      const plan: ResolvedPlanV1 = {
+    it("should preserve all monitor properties", () => {
+      const monitor: ResolvedMonitorV1 = {
         project: "test-project",
-        id: "plan-123",
+        id: "monitor-123",
         name: "my-test",
         version: "1.0",
         frequency: { every: 5, unit: "MINUTE" as any },
@@ -72,33 +72,33 @@ describe("migrations", () => {
         ],
       };
 
-      const migrated = migrateToLatest(plan);
-      expect(migrated.project).toBe(plan.project);
-      expect(migrated.id).toBe(plan.id);
-      expect(migrated.name).toBe(plan.name);
-      expect(migrated.frequency).toEqual(plan.frequency);
-      expect(migrated.environment).toBe(plan.environment);
-      expect(migrated.locations).toEqual(plan.locations);
-      expect(migrated.nodes).toEqual(plan.nodes);
-      expect(migrated.edges).toEqual(plan.edges);
+      const migrated = migrateToLatest(monitor);
+      expect(migrated.project).toBe(monitor.project);
+      expect(migrated.id).toBe(monitor.id);
+      expect(migrated.name).toBe(monitor.name);
+      expect(migrated.frequency).toEqual(monitor.frequency);
+      expect(migrated.environment).toBe(monitor.environment);
+      expect(migrated.locations).toEqual(monitor.locations);
+      expect(migrated.nodes).toEqual(monitor.nodes);
+      expect(migrated.edges).toEqual(monitor.edges);
     });
 
     it("should throw error for unsupported version", () => {
-      const plan = {
+      const monitor = {
         version: "99.0",
         name: "test",
       };
 
-      expect(() => migrateToLatest(plan)).toThrow("Unsupported plan version");
+      expect(() => migrateToLatest(monitor)).toThrow("Unsupported monitor version");
     });
   });
 
-  describe("migratePlan", () => {
+  describe("migrateMonitor", () => {
     it("should migrate to specific target version", () => {
-      const plan: ResolvedPlanV1 = {
+      const monitor: ResolvedMonitorV1 = {
         project: "test",
         id: "test-id",
-        name: "test-plan",
+        name: "test-monitor",
         version: "1.0",
         frequency: { every: 1, unit: "MINUTE" as any },
         environment: "default",
@@ -106,18 +106,18 @@ describe("migrations", () => {
         edges: [],
       };
 
-      const migrated = migratePlan(plan, "1.0");
-      expect(migrated).toEqual(plan);
+      const migrated = migrateMonitor(monitor, "1.0");
+      expect(migrated).toEqual(monitor);
     });
 
     it("should throw error if no migration path exists", () => {
-      const plan = {
+      const monitor = {
         version: "1.0",
         name: "test",
       };
 
       // Trying to migrate to a non-existent version
-      expect(() => migratePlan(plan, "99.0")).toThrow();
+      expect(() => migrateMonitor(monitor, "99.0")).toThrow();
     });
   });
 
@@ -126,10 +126,10 @@ describe("migrations", () => {
       // This test documents the expected behavior when v2.0 is added
       // Uncomment and update when v2.0 is implemented:
       //
-      // const v1Plan: ResolvedPlanV1 = {
+      // const v1Monitor: ResolvedMonitorV1 = {
       //   project: "test",
       //   id: "test-id",
-      //   name: "test-plan",
+      //   name: "test-monitor",
       //   version: "1.0",
       //   frequency: { every: 1, unit: "MINUTE" },
       //   environment: "default",
@@ -137,9 +137,9 @@ describe("migrations", () => {
       //   edges: [],
       // };
       //
-      // const v2Plan = migratePlan<ResolvedPlanV2>(v1Plan, "2.0");
-      // expect(v2Plan.version).toBe("2.0");
-      // expect(v2Plan.name).toBe(v1Plan.name);
+      // const v2Monitor = migrateMonitor<ResolvedMonitorV2>(v1Monitor, "2.0");
+      // expect(v2Monitor.version).toBe("2.0");
+      // expect(v2Monitor.name).toBe(v1Monitor.name);
       // // Add assertions for new v2 fields
 
       expect(true).toBe(true); // Placeholder

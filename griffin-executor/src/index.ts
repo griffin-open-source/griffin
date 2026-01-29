@@ -1,4 +1,4 @@
-export { executePlanV1 } from "./executor.js";
+export { executeMonitorV1 } from "./executor.js";
 export type {
   ExecutionOptions,
   ExecutionResult,
@@ -10,12 +10,12 @@ export type {
   StatusCallbacks,
 } from "./types.js";
 export type {
-  TestPlan,
+  TestMonitor,
   HttpRequest as HttpRequestNode,
   WaitNode,
   AssertionNode,
   Edge,
-} from "./test-plan-types.js";
+} from "./test-monitor-types.js";
 export {
   AxiosAdapter,
   StubAdapter,
@@ -31,8 +31,8 @@ export {
 export type {
   ExecutionEvent,
   BaseEvent,
-  PlanStartEvent,
-  PlanEndEvent,
+  MonitorStartEvent,
+  MonitorEndEvent,
   NodeStartEvent,
   NodeEndEvent,
   HttpRequestEvent,
@@ -62,8 +62,8 @@ export {
   // Registry
   SecretProviderRegistry,
   // Resolution utilities
-  resolveSecretsInPlan,
-  collectSecretsFromPlan,
+  resolveSecretsInMonitor,
+  collectSecretsFromMonitor,
   planHasSecrets,
   // Providers
   EnvSecretProvider,

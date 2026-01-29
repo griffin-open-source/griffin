@@ -49,8 +49,8 @@ export const ConfigSchema = Type.Object({
     heartbeatTimeout: Type.Number({ default: 60, minimum: 1 }),
   }),
 
-  // Plan execution configuration
-  planExecution: Type.Object({
+  // Monitor execution configuration
+  monitorExecution: Type.Object({
     baseUrl: Type.Optional(Type.String()),
     timeout: Type.Number({ default: 30000, minimum: 0 }),
   }),
@@ -299,9 +299,9 @@ export function loadConfigFromEnv(): Config {
         60,
       ),
     },
-    planExecution: {
-      baseUrl: process.env.PLAN_EXECUTION_BASE_URL,
-      timeout: parseInteger(process.env.PLAN_EXECUTION_TIMEOUT, 30000),
+    monitorExecution: {
+      baseUrl: process.env.MONITOR_EXECUTION_BASE_URL,
+      timeout: parseInteger(process.env.MONITOR_EXECUTION_TIMEOUT, 30000),
     },
     secrets: {
       providers: secretProviders,

@@ -11,7 +11,7 @@ Griffin is an open-source API testing platform for creating TypeScript-based API
 | Package | Purpose |
 |---------|---------|
 | **griffin-ts** | TypeScript DSL for defining API tests |
-| **griffin-executor** | Execution engine for JSON test plans |
+| **griffin-executor** | Execution engine for JSON test monitors |
 | **griffin-cli** | Command-line tool for test management |
 | **griffin-hub** | Control plane & REST API service |
 | **griffin-hub-sdk** | Auto-generated OpenAPI client for hub |
@@ -25,7 +25,7 @@ The projects must be built in dependency order:
 # Build DSL library (required first)
 cd griffin-ts && npm install && npm run build
 
-# Build plan executor (depends on griffin-ts)
+# Build monitor executor (depends on griffin-ts)
 cd ../griffin-executor && npm install && npm run build
 
 # Build hub SDK (auto-generated OpenAPI client)
@@ -42,7 +42,7 @@ cd ../griffin-hub && npm install && npm run build
 ## Running Tests
 
 ```bash
-# Plan executor tests
+# Monitor executor tests
 cd griffin-executor && npm test           # single run
 cd griffin-executor && npm run test:watch # watch mode
 
@@ -67,12 +67,12 @@ griffin hub connect --url https://hub.example.com --token <token>
 griffin hub status
 griffin hub login                   # authenticate with OIDC device flow
 griffin hub logout                  # clear OIDC credentials
-griffin hub plan                    # show planned changes for default environment
-griffin hub plan production         # show planned changes for production
+griffin hub monitor                    # show monitored changes for default environment
+griffin hub monitor production         # show monitored changes for production
 griffin hub apply                   # apply changes for default environment
-griffin hub apply production --prune # apply and delete removed plans
+griffin hub apply production --prune # apply and delete removed monitors
 griffin hub runs --limit 20         # show recent runs
-griffin hub run production --plan my-test # trigger run in production
+griffin hub run production --monitor my-test # trigger run in production
 
 # Other commands
 griffin init                        # initialize griffin in directory
@@ -118,7 +118,7 @@ Griffin supports two deployment architectures:
 - Entrypoint: `src/server-standalone.ts`
 
 #### 2. Distributed Mode (Hub + Agents)
-- **griffin-hub** - Control plane: stores plans, schedules runs, tracks agents
+- **griffin-hub** - Control plane: stores monitors, schedules runs, tracks agents
 - Agents register with hub and receive jobs via PostgreSQL-backed queue
 - Hub monitors agent health via heartbeat protocol
 - Enables geographic distribution and horizontal scaling
@@ -126,10 +126,10 @@ Griffin supports two deployment architectures:
 
 ### Execution Flow
 1. **griffin-ts** (DSL) - Builder pattern creates test definitions in TypeScript
-2. Test files serialize to JSON test plans
-3. **griffin-executor** - Executes JSON plans using graph-based execution (ts-edge)
+2. Test files serialize to JSON test monitors
+3. **griffin-executor** - Executes JSON monitors using graph-based execution (ts-edge)
 4. **griffin-hub** - Schedules jobs and enqueues them
-5. **Executor** (built-in or agent) - Polls queue, executes plans, reports results
+5. **Executor** (built-in or agent) - Polls queue, executes monitors, reports results
 
 ### Key Patterns
 - **Graph-based execution**: Uses `ts-edge` for node/edge state management. Tests are graphs with nodes (endpoints, waits, assertions) and edges defining execution flow.
@@ -140,7 +140,7 @@ Griffin supports two deployment architectures:
 - **Ports and adapters**: Storage layer uses interfaces for PostgreSQL (via Drizzle ORM)
 
 ### Test File Structure
-Test files go in `__griffin__/` directories and export JSON plans:
+Test files go in `__griffin__/` directories and export JSON monitors:
 
 ```typescript
 // Graph-based builder (explicit edges)
@@ -180,7 +180,7 @@ Environment-based config via Typebox schema. Key variables:
 - `SCHEDULER_TICK_INTERVAL`: Scheduler polling interval in ms (default: 30000)
 - `WORKER_EMPTY_DELAY`: Executor initial empty queue delay in ms (default: 1000)
 - `WORKER_MAX_EMPTY_DELAY`: Executor max empty queue delay in ms (default: 30000)
-- `PLAN_EXECUTION_TIMEOUT`: Execution timeout in ms (default: 30000)
+- `MONITOR_EXECUTION_TIMEOUT`: Execution timeout in ms (default: 30000)
 - `AUTH_MODE`: none | api-key | oidc (default: none)
 - `AUTH_API_KEYS`: Comma-separated API keys (required if AUTH_MODE=api-key)
 - `AUTH_OIDC_ISSUER`: OIDC issuer URL (required if AUTH_MODE=oidc)
@@ -229,7 +229,7 @@ builder.endpoint("call", {
 | `griffin-ts/src/builder.ts` | Graph-based TestBuilder |
 | `griffin-ts/src/sequential-builder.ts` | Sequential TestBuilder |
 | `griffin-ts/src/secrets.ts` | secret() function for DSL |
-| `griffin-executor/src/executor.ts` | Plan execution engine |
+| `griffin-executor/src/executor.ts` | Monitor execution engine |
 | `griffin-executor/src/secrets/` | Secret providers and resolution |
 | `griffin-hub/src/app.ts` | Fastify app setup |
 | `griffin-hub/src/server.ts` | Hub-only entry point (control plane) |

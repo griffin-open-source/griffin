@@ -19,7 +19,7 @@ const app = Fastify({
 app.register(appPlugin);
 
 // Register the built-in executor plugin
-// This makes the hub a standalone instance that can execute plans without separate agents
+// This makes the hub a standalone instance that can execute monitors without separate agents
 app.register(executorPlugin);
 
 // delay is the number of milliseconds for the graceful close to finish

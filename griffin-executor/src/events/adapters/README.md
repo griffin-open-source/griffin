@@ -21,7 +21,7 @@ import { KinesisClient } from "@aws-sdk/client-kinesis";
 import {
   DurableEventEmitter,
   KinesisAdapter,
-} from "@griffin-app/griffin-executor";
+} from "@griffin-app/griffin-plan-executor";
 
 // Create Kinesis client
 const kinesisClient = new KinesisClient({ region: "us-east-1" });
@@ -41,7 +41,7 @@ const emitter = new DurableEventEmitter(adapter, {
 });
 
 // Use with executor
-const result = await executePlanV1(plan, {
+const result = await executeMonitorV1(monitor, {
   eventEmitter: emitter,
 });
 
@@ -67,7 +67,7 @@ Simple in-memory storage for testing and local development.
 import {
   DurableEventEmitter,
   InMemoryAdapter,
-} from "@griffin-app/griffin-executor";
+} from "@griffin-app/griffin-plan-executor";
 
 const adapter = new InMemoryAdapter({
   latencyMs: 10, // Optional: simulate network latency
@@ -79,13 +79,13 @@ const emitter = new DurableEventEmitter(adapter, {
   flushIntervalMs: 50,
 });
 
-// Execute plan
-await executePlanV1(plan, { eventEmitter: emitter });
+// Execute monitor
+await executeMonitorV1(monitor, { eventEmitter: emitter });
 await emitter.flush();
 
 // Inspect events
 const allEvents = adapter.getEvents();
-const planStartEvents = adapter.getEventsByType("PLAN_START");
+const planStartEvents = adapter.getEventsByType("MONITOR_START");
 const executionEvents = adapter.getEventsForExecution("exec-123");
 const publishCount = adapter.getPublishCount(); // Number of batches
 
@@ -109,7 +109,7 @@ To create a new adapter, implement the `DurableEventBusAdapter` interface:
 import type {
   DurableEventBusAdapter,
   ExecutionEvent,
-} from "@griffin-app/griffin-executor";
+} from "@griffin-app/griffin-plan-executor";
 
 export class MyCustomAdapter implements DurableEventBusAdapter {
   async publish(events: ExecutionEvent[]): Promise<void> {

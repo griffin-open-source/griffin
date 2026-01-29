@@ -31,7 +31,7 @@ export const TriggerTypeSchema = StringEnum(
 
 export const JobRunSchema = Type.Object({
   id: Type.Readonly(Type.String()),
-  planId: Type.String(),
+  monitorId: Type.String(),
   executionGroupId: Type.String(),
   location: Type.String(),
   environment: Type.String(),

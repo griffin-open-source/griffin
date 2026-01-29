@@ -1,13 +1,13 @@
 /**
- * Secret resolution utilities for test plans.
+ * Secret resolution utilities for test monitors.
  */
-import { type PlanV1 } from "@griffin-app/griffin-hub-sdk";
+import { type MonitorV1 } from "@griffin-app/griffin-hub-sdk";
 import type { SecretProviderRegistry } from "./registry.js";
 import type { SecretRef, SecretRefData } from "./types.js";
 import { isSecretRef, isStringLiteral } from "./types.js";
 
 /**
- * Collected secret references and literals from a plan.
+ * Collected secret references and literals from a monitor.
  */
 interface CollectedSecrets {
   /** All unique secret references found */
@@ -71,18 +71,20 @@ function collectSecretsFromValue(
 }
 
 /**
- * Collect all secret references and string literals from a test plan.
+ * Collect all secret references and string literals from a test monitor.
  * Scans endpoint headers and bodies for $secret markers and $literal wrappers.
  */
-export function collectSecretsFromPlan(plan: PlanV1): CollectedSecrets {
+export function collectSecretsFromMonitor(
+  monitor: MonitorV1,
+): CollectedSecrets {
   const collected: CollectedSecrets = {
     refs: [],
     paths: [],
     literalPaths: [],
   };
 
-  for (let nodeIndex = 0; nodeIndex < plan.nodes.length; nodeIndex++) {
-    const node = plan.nodes[nodeIndex];
+  for (let nodeIndex = 0; nodeIndex < monitor.nodes.length; nodeIndex++) {
+    const node = monitor.nodes[nodeIndex];
 
     // Only endpoints can have secrets (in headers and body)
     if (node.type !== "HTTP_REQUEST") {
@@ -165,24 +167,24 @@ function deepClone<T>(value: T): T {
 }
 
 /**
- * Resolve all secrets and unwrap string literals in a plan and return a new plan with substituted values.
- * The original plan is not modified.
+ * Resolve all secrets and unwrap string literals in a monitor and return a new monitor with substituted values.
+ * The original monitor is not modified.
  *
- * @param plan - The test plan containing secret references and string literals
+ * @param monitor - The test monitor containing secret references and string literals
  * @param registry - The secret provider registry
- * @returns A new plan with all secrets resolved to their values and literals unwrapped
+ * @returns A new monitor with all secrets resolved to their values and literals unwrapped
  * @throws SecretResolutionError if any secret cannot be resolved (fail-fast)
  */
-export async function resolveSecretsInPlan(
-  plan: PlanV1,
+export async function resolveSecretsInMonitor(
+  monitor: MonitorV1,
   registry: SecretProviderRegistry,
-): Promise<PlanV1> {
+): Promise<MonitorV1> {
   // Collect all secret references and string literals
-  const collected = collectSecretsFromPlan(plan);
+  const collected = collectSecretsFromMonitor(monitor);
 
   if (collected.refs.length === 0 && collected.literalPaths.length === 0) {
     // No secrets or literals to resolve
-    return plan;
+    return monitor;
   }
 
   // Resolve all secrets (fail-fast on any error)
@@ -191,8 +193,8 @@ export async function resolveSecretsInPlan(
       ? await registry.resolveMany(collected.refs)
       : new Map();
 
-  // Clone the plan for modification
-  const resolvedPlan = deepClone(plan);
+  // Clone the monitor for modification
+  const resolvedMonitor = deepClone(monitor);
 
   // Substitute resolved secret values at each path
   for (const { path, secretRef } of collected.paths) {
@@ -206,23 +208,23 @@ export async function resolveSecretsInPlan(
       );
     }
 
-    setAtPath(resolvedPlan, path, value);
+    setAtPath(resolvedMonitor, path, value);
   }
 
   // Unwrap string literals at each path
   for (const { path, value } of collected.literalPaths) {
-    setAtPath(resolvedPlan, path, value);
+    setAtPath(resolvedMonitor, path, value);
   }
 
-  return resolvedPlan;
+  return resolvedMonitor;
 }
 
 /**
- * Check if a plan contains any secret references or string literals that need resolution.
+ * Check if a monitor contains any secret references or string literals that need resolution.
  * Useful for short-circuiting resolution when no secrets or literals are present.
  */
-export function planHasSecrets(plan: PlanV1): boolean {
-  for (const node of plan.nodes) {
+export function planHasSecrets(monitor: MonitorV1): boolean {
+  for (const node of monitor.nodes) {
     if (node.type !== "HTTP_REQUEST") {
       continue;
     }

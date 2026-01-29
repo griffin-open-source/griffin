@@ -4,7 +4,7 @@ import {
   UnaryPredicate,
   Assertions,
   Node,
-  PlanV1,
+  MonitorV1,
   Wait,
   HttpRequest,
 } from "@griffin-app/griffin-hub-sdk";
@@ -23,14 +23,14 @@ import { createStateGraph, graphStore, StateGraphRegistry } from "ts-edge";
 import type { ExecutionEvent, BaseEvent } from "./events/index.js";
 import { randomUUID } from "crypto";
 import {
-  resolveSecretsInPlan,
+  resolveSecretsInMonitor,
   planHasSecrets,
   SecretResolutionError,
 } from "./secrets/index.js";
 import { utcNow } from "./utils/dates.js";
 import {
   migrateToLatest,
-  CURRENT_PLAN_VERSION,
+  CURRENT_MONITOR_VERSION,
   isSupportedVersion,
 } from "@griffin-app/griffin-ts";
 
@@ -41,7 +41,7 @@ interface NodeExecuteContext {
 }
 
 /**
- * Execution context that tracks event emission state throughout a plan execution.
+ * Execution context that tracks event emission state throughout a monitor execution.
  * Maintains sequence counter and provides event creation helpers.
  */
 class ExecutionContext {
@@ -49,7 +49,7 @@ class ExecutionContext {
 
   constructor(
     public readonly executionId: string,
-    public readonly plan: PlanV1,
+    public readonly monitor: MonitorV1,
     public readonly organizationId: string,
     private readonly emitter?: ExecutionOptions["eventEmitter"],
   ) {}
@@ -62,7 +62,7 @@ class ExecutionContext {
       eventId: randomUUID(),
       seq: this.seq++,
       timestamp: Date.now(),
-      planId: this.plan.id,
+      monitorId: this.monitor.id,
       executionId: this.executionId,
       organizationId: this.organizationId,
     };
@@ -121,7 +121,7 @@ interface ExecutionState {
 }
 
 function buildNode(
-  plan: PlanV1,
+  monitor: MonitorV1,
   node: Node,
   options: ExecutionOptions,
 ): {
@@ -294,7 +294,7 @@ function buildNode(
 }
 
 function buildGraph(
-  plan: PlanV1,
+  monitor: MonitorV1,
   options: ExecutionOptions,
   executionContext: ExecutionContext,
 ): DynamicStateGraph {
@@ -317,23 +317,24 @@ function buildGraph(
     }) as DynamicStateGraph;
 
   // Add all nodes - cast back to DynamicStateGraph to maintain our dynamic type
-  const graphWithNodes = plan.nodes.reduce<DynamicStateGraph>(
-    (g, node) => g.addNode(buildNode(plan, node, options)) as DynamicStateGraph,
+  const graphWithNodes = monitor.nodes.reduce<DynamicStateGraph>(
+    (g, node) =>
+      g.addNode(buildNode(monitor, node, options)) as DynamicStateGraph,
     graph,
   );
 
   // Add all edges
   // Cast the edge method to accept string arguments since ts-edge expects literal types
-  // but we have runtime strings from the plan
-  const graphWithEdges = plan.edges.reduce<DynamicStateGraph>((g, edge) => {
+  // but we have runtime strings from the monitor
+  const graphWithEdges = monitor.edges.reduce<DynamicStateGraph>((g, edge) => {
     const addEdge = g.edge as (from: string, to: string) => DynamicStateGraph;
     return addEdge(edge.from, edge.to);
   }, graphWithNodes);
 
   return graphWithEdges;
 }
-export async function executePlanV1(
-  plan: PlanV1,
+export async function executeMonitorV1(
+  monitor: MonitorV1,
   organizationId: string,
   options: ExecutionOptions,
 ): Promise<ExecutionResult> {
@@ -342,33 +343,33 @@ export async function executePlanV1(
   // Generate or use provided executionId
   const executionId = options.executionId || randomUUID();
 
-  // Migrate plan to latest version if needed
-  let migratedPlan = plan;
-  if (plan.version !== CURRENT_PLAN_VERSION) {
-    if (!isSupportedVersion(plan.version)) {
+  // Migrate monitor to latest version if needed
+  let migratedMonitor = monitor;
+  if (monitor.version !== CURRENT_MONITOR_VERSION) {
+    if (!isSupportedVersion(monitor.version)) {
       throw new Error(
-        `Unsupported plan version: ${plan.version}. Supported versions: ${CURRENT_PLAN_VERSION}`,
+        `Unsupported monitor version: ${monitor.version}. Supported versions: ${CURRENT_MONITOR_VERSION}`,
       );
     }
     // Migrate to latest version
-    migratedPlan = migrateToLatest(plan as any) as PlanV1;
+    migratedMonitor = migrateToLatest(monitor as any) as MonitorV1;
   }
 
   // Create execution context for event emission
   const executionContext = new ExecutionContext(
     executionId,
-    migratedPlan,
+    migratedMonitor,
     organizationId,
     options.eventEmitter,
   );
 
   try {
-    // Resolve secrets if the plan contains any
-    let resolvedPlan = migratedPlan;
-    if (planHasSecrets(plan)) {
+    // Resolve secrets if the monitor contains any
+    let resolvedMonitor = migratedMonitor;
+    if (planHasSecrets(monitor)) {
       if (!options.secretRegistry) {
         throw new SecretResolutionError(
-          "Plan contains secret references but no secret registry was provided",
+          "Monitor contains secret references but no secret registry was provided",
           { provider: "unknown", ref: "unknown" },
         );
       }
@@ -380,7 +381,10 @@ export async function executePlanV1(
       });
 
       try {
-        resolvedPlan = await resolveSecretsInPlan(plan, options.secretRegistry);
+        resolvedMonitor = await resolveSecretsInMonitor(
+          monitor,
+          options.secretRegistry,
+        );
 
         executionContext.emit({
           type: "NODE_END",
@@ -402,13 +406,13 @@ export async function executePlanV1(
       }
     }
 
-    // Emit PLAN_START event
+    // Emit MONITOR_START event
     executionContext.emit({
-      type: "PLAN_START",
-      planName: resolvedPlan.name,
-      planVersion: resolvedPlan.version,
-      nodeCount: resolvedPlan.nodes.length,
-      edgeCount: resolvedPlan.edges.length,
+      type: "MONITOR_START",
+      monitorName: resolvedMonitor.name,
+      monitorVersion: resolvedMonitor.version,
+      nodeCount: resolvedMonitor.nodes.length,
+      edgeCount: resolvedMonitor.edges.length,
     });
 
     // Call onStart callback if provided
@@ -422,7 +426,7 @@ export async function executePlanV1(
     }
 
     // Build execution graph (state-based)
-    const graph = buildGraph(resolvedPlan, options, executionContext);
+    const graph = buildGraph(resolvedMonitor, options, executionContext);
 
     // Compile and run the state graph
     const app = graph.compile(START, END);
@@ -436,9 +440,9 @@ export async function executePlanV1(
       const finalResults = graphResult.output?.results || [];
       const finalErrors = graphResult.output?.errors || [errorMessage];
 
-      // Emit PLAN_END event
+      // Emit MONITOR_END event
       executionContext.emit({
-        type: "PLAN_END",
+        type: "MONITOR_END",
         success: false,
         totalDuration_ms: Date.now() - startTime,
         nodeResultCount: finalResults.length,
@@ -477,9 +481,9 @@ export async function executePlanV1(
     const success = finalState.errors.length === 0;
     const duration = Date.now() - startTime;
 
-    // Emit PLAN_END event
+    // Emit MONITOR_END event
     executionContext.emit({
-      type: "PLAN_END",
+      type: "MONITOR_END",
       success,
       totalDuration_ms: duration,
       nodeResultCount: finalState.results.length,
@@ -519,9 +523,9 @@ export async function executePlanV1(
     const errorMessage = error instanceof Error ? error.message : String(error);
     const duration = Date.now() - startTime;
 
-    // Emit PLAN_END event
+    // Emit MONITOR_END event
     executionContext.emit({
-      type: "PLAN_END",
+      type: "MONITOR_END",
       success: false,
       totalDuration_ms: duration,
       nodeResultCount: 0,
@@ -572,12 +576,12 @@ async function executeHttpRequest(
   const path = endpoint.path;
   const url = `${baseUrl}${path}`;
 
-  // TODO: Add retry configuration from plan (node-level or plan-level)
+  // TODO: Add retry configuration from monitor (node-level or monitor-level)
   // For now, we always attempt once (attempt: 1)
   const attempt = 1;
 
   // After secret resolution, headers are guaranteed to be plain strings
-  // Cast is safe because resolveSecretsInPlan substitutes all SecretRefs
+  // Cast is safe because resolveSecretsInMonitor substitutes all SecretRefs
   const resolvedHeaders = endpoint.headers as
     | Record<string, string>
     | undefined;

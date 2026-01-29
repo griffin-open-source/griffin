@@ -40,7 +40,7 @@ export interface Frequency {
   unit: "minute" | "hour" | "day";
 }
 
-export interface TestPlan {
+export interface TestMonitor {
   name: string;
   endpoint_host: string;
   frequency?: Frequency;

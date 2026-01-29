@@ -10,7 +10,7 @@ import {
   variable,
 } from "@griffin-app/griffin-ts";
 
-const plan = createGraphBuilder({
+const monitor = createGraphBuilder({
   name: "runner-api-check",
   frequency: Frequency.every(5).minute(),
 })
@@ -20,7 +20,7 @@ const plan = createGraphBuilder({
       method: GET,
       base: variable("griffin-hub"),
       response_format: Json,
-      path: "/plan",
+      path: "/monitor",
       headers: { "X-API-Key": secret("env:RUNNER_API_KEY") },
     }),
   )
@@ -39,4 +39,4 @@ const plan = createGraphBuilder({
   .addEdge("list_runs", END)
   .build();
 
-export default plan;
+export default monitor;

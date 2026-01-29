@@ -1,6 +1,6 @@
 import {
   Assertion,
-  PlanDSL,
+  MonitorDSL,
   NodeDSL,
   Edge,
   Frequency,
@@ -10,7 +10,7 @@ import {
   NodeType,
   Wait,
   Assertions,
-  CURRENT_PLAN_VERSION,
+  CURRENT_MONITOR_VERSION,
 } from "./schema.js";
 import { type START as StartType, type END as EndType } from "./constants.js";
 
@@ -21,7 +21,7 @@ import { type START as StartType, type END as EndType } from "./constants.js";
 export type NodeWithoutId = Omit<NodeDSL, "id">;
 
 /**
- * TestBuilder provides a type-safe DSL for constructing test plans with compile-time graph validation.
+ * TestBuilder provides a type-safe DSL for constructing test monitors with compile-time graph validation.
  *
  * Type parameters track the state of the graph during construction:
  * @template NodeName - Union of all registered node names
@@ -83,7 +83,7 @@ export interface TestBuilder<
   >;
 
   /**
-   * Builds the final test plan.
+   * Builds the final test monitor.
    *
    * This method is only callable when all graph constraints are satisfied:
    * - All nodes must have at least one outgoing edge
@@ -93,7 +93,7 @@ export interface TestBuilder<
    */
   build: [Exclude<NodeName, HasOutput>] extends [never]
     ? [Exclude<NodeName, HasInput>] extends [never]
-      ? () => PlanDSL
+      ? () => MonitorDSL
       : {
           error: "Some nodes have no incoming edges";
           unconnected: Exclude<NodeName, HasInput>;
@@ -160,10 +160,10 @@ class TestBuilderImpl<
     const nodes = this.nodes;
     const edges = this.edges;
 
-    const buildFn = (): PlanDSL => {
+    const buildFn = (): MonitorDSL => {
       return {
         name,
-        version: CURRENT_PLAN_VERSION,
+        version: CURRENT_MONITOR_VERSION,
         frequency,
         locations,
         nodes,
@@ -178,9 +178,9 @@ class TestBuilderImpl<
 }
 
 /**
- * Creates a new test builder for constructing a test plan.
+ * Creates a new test builder for constructing a test monitor.
  *
- * @param config - Configuration for the test plan
+ * @param config - Configuration for the test monitor
  * @param config.name - Name of the test
  * @param config.frequency - frequency for scheduled execution
  * @param config.locations - Optional array of location identifiers where this test should run
@@ -188,7 +188,7 @@ class TestBuilderImpl<
  *
  * @example
  * ```typescript
- * const plan = createGraphBuilder({
+ * const monitor = createGraphBuilder({
  *   name: "health-check",
  *   frequency: Frequency.every(5).minute(),
  *   locations: ["us-east-1", "eu-west-1"]

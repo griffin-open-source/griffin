@@ -1,6 +1,6 @@
 import { Storage } from "../../repositories.js";
 import {
-  PostgresPlansRepository,
+  PostgresMonitorsRepository,
   PostgresRunsRepository,
   PostgresAgentsRepository,
 } from "./repositories.js";
@@ -19,7 +19,7 @@ export class PostgresStorage implements Storage {
   private pool: Pool | null = null;
   private db: NodePgDatabase<typeof schema> | null = null;
 
-  public plans!: PostgresPlansRepository;
+  public monitors!: PostgresMonitorsRepository;
   public runs!: PostgresRunsRepository;
   public agents!: PostgresAgentsRepository;
 
@@ -43,7 +43,7 @@ export class PostgresStorage implements Storage {
     await migrate(this.db, { migrationsFolder });
 
     // Initialize repositories
-    this.plans = new PostgresPlansRepository(this.db);
+    this.monitors = new PostgresMonitorsRepository(this.db);
     this.runs = new PostgresRunsRepository(this.db);
     this.agents = new PostgresAgentsRepository(this.db);
   }
@@ -74,12 +74,12 @@ export class PostgresStorage implements Storage {
  * Uses a single transaction context for all operations.
  */
 class PostgresTransactionStorage implements Storage {
-  public plans: PostgresPlansRepository;
+  public monitors: PostgresMonitorsRepository;
   public runs: PostgresRunsRepository;
   public agents: PostgresAgentsRepository;
 
   constructor(private tx: NodePgDatabase<typeof schema>) {
-    this.plans = new PostgresPlansRepository(tx);
+    this.monitors = new PostgresMonitorsRepository(tx);
     this.runs = new PostgresRunsRepository(tx);
     this.agents = new PostgresAgentsRepository(tx);
   }

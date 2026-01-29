@@ -1,6 +1,6 @@
 import { Type } from "typebox";
 import { FastifyTypeBox } from "../../types.js";
-import { PlanV1Schema } from "../../schemas/plans.js";
+import { MonitorV1Schema } from "../../schemas/monitors.js";
 import {
   Ref,
   ErrorResponseOpts,
@@ -9,7 +9,7 @@ import {
   SuccessResponseSchema,
 } from "../../schemas/shared.js";
 import { eq, and } from "drizzle-orm";
-import { plansTable } from "../../storage/adapters/postgres/schema.js";
+import { monitorsTable } from "../../storage/adapters/postgres/schema.js";
 import {
   AssertionSchema,
   BinaryPredicateOperatorSchema,
@@ -17,44 +17,44 @@ import {
   UnaryPredicateOperatorSchema,
   UnaryPredicateSchema,
 } from "@griffin-app/griffin-ts/schema";
-import { migrateToLatest, CURRENT_PLAN_VERSION } from "@griffin-app/griffin-ts";
+import { migrateToLatest, CURRENT_MONITOR_VERSION } from "@griffin-app/griffin-ts";
 
-export const CreatePlanEndpoint = {
-  tags: ["plan"],
-  body: Type.Omit(PlanV1Schema, ["id"]),
+export const CreateMonitorEndpoint = {
+  tags: ["monitor"],
+  body: Type.Omit(MonitorV1Schema, ["id"]),
   response: {
-    201: SuccessResponseSchema(Ref(PlanV1Schema)),
+    201: SuccessResponseSchema(Ref(MonitorV1Schema)),
     ...ErrorResponseOpts,
   },
 };
 
-export const ListPlansEndpoint = {
-  tags: ["plan"],
+export const ListMonitorsEndpoint = {
+  tags: ["monitor"],
   querystring: Type.Object({
     projectId: Type.Optional(Type.String()),
     environment: Type.Optional(Type.String()),
     ...PaginationRequestOpts,
   }),
   response: {
-    200: PaginatedResponseSchema(Ref(PlanV1Schema)),
+    200: PaginatedResponseSchema(Ref(MonitorV1Schema)),
     ...ErrorResponseOpts,
   },
 };
 
-export const UpdatePlanEndpoint = {
-  tags: ["plan"],
+export const UpdateMonitorEndpoint = {
+  tags: ["monitor"],
   params: Type.Object({
     id: Type.String(),
   }),
-  body: Type.Omit(PlanV1Schema, ["id"]),
+  body: Type.Omit(MonitorV1Schema, ["id"]),
   response: {
-    200: SuccessResponseSchema(Ref(PlanV1Schema)),
+    200: SuccessResponseSchema(Ref(MonitorV1Schema)),
     ...ErrorResponseOpts,
   },
 };
 
-export const DeletePlanEndpoint = {
-  tags: ["plan"],
+export const DeleteMonitorEndpoint = {
+  tags: ["monitor"],
   params: Type.Object({
     id: Type.String(),
   }),
@@ -64,8 +64,8 @@ export const DeletePlanEndpoint = {
   },
 };
 
-export const GetPlanByNameEndpoint = {
-  tags: ["plan"],
+export const GetMonitorByNameEndpoint = {
+  tags: ["monitor"],
   querystring: Type.Object({
     projectId: Type.String(),
     environment: Type.String(),
@@ -73,13 +73,13 @@ export const GetPlanByNameEndpoint = {
     version: Type.Optional(Type.Union([Type.Literal("latest"), Type.String()])),
   }),
   response: {
-    200: SuccessResponseSchema(Ref(PlanV1Schema)),
+    200: SuccessResponseSchema(Ref(MonitorV1Schema)),
     ...ErrorResponseOpts,
   },
 };
 
 export default function (fastify: FastifyTypeBox) {
-  fastify.addSchema(PlanV1Schema);
+  fastify.addSchema(MonitorV1Schema);
   fastify.addSchema(BinaryPredicateSchema);
   fastify.addSchema(BinaryPredicateOperatorSchema);
   fastify.addSchema(UnaryPredicateSchema);
@@ -88,7 +88,7 @@ export default function (fastify: FastifyTypeBox) {
   fastify.post(
     "/",
     {
-      schema: CreatePlanEndpoint,
+      schema: CreateMonitorEndpoint,
       config: {
         auth: { required: true },
       },
@@ -98,14 +98,14 @@ export default function (fastify: FastifyTypeBox) {
       if (!organizationId) {
         return reply.code(401).send({ error: "Unauthorized" });
       }
-      const planData = request.body;
+      const monitorData = request.body;
 
       // Validate locations if specified
-      if (planData.locations && planData.locations.length > 0) {
+      if (monitorData.locations && monitorData.locations.length > 0) {
         const registeredLocations =
           await fastify.agentRegistry.getAllLocations();
 
-        const invalidLocations = planData.locations.filter(
+        const invalidLocations = monitorData.locations.filter(
           (loc) => !registeredLocations.includes(loc),
         );
 
@@ -116,16 +116,16 @@ export default function (fastify: FastifyTypeBox) {
         }
       }
 
-      // Store the plan using the repository
-      const savedPlan = await fastify.storage.plans.create({
-        ...planData,
+      // Store the monitor using the repository
+      const savedMonitor = await fastify.storage.monitors.create({
+        ...monitorData,
         organization: organizationId,
       });
 
       return reply.code(201).send({
         data: {
-          ...savedPlan,
-          locations: savedPlan.locations || [],
+          ...savedMonitor,
+          locations: savedMonitor.locations || [],
         },
       });
     },
@@ -133,7 +133,7 @@ export default function (fastify: FastifyTypeBox) {
   fastify.get(
     "/",
     {
-      schema: ListPlansEndpoint,
+      schema: ListMonitorsEndpoint,
       config: {
         auth: { required: true },
       },
@@ -147,23 +147,23 @@ export default function (fastify: FastifyTypeBox) {
 
       // Build where clause with optional filters
       const whereConditions = [];
-      if (projectId) whereConditions.push(eq(plansTable.project, projectId));
+      if (projectId) whereConditions.push(eq(monitorsTable.project, projectId));
       if (environment)
-        whereConditions.push(eq(plansTable.environment, environment));
+        whereConditions.push(eq(monitorsTable.environment, environment));
       if (organizationId)
-        whereConditions.push(eq(plansTable.organization, organizationId));
+        whereConditions.push(eq(monitorsTable.organization, organizationId));
 
-      const plans = await fastify.storage.plans.findMany({
+      const monitors = await fastify.storage.monitors.findMany({
         where: and(...whereConditions),
         limit,
         offset,
       });
-      const total = await fastify.storage.plans.count(and(...whereConditions));
+      const total = await fastify.storage.monitors.count(and(...whereConditions));
 
       return reply.send({
-        data: plans.map((plan) => ({
-          ...plan,
-          locations: plan.locations || [],
+        data: monitors.map((monitor) => ({
+          ...monitor,
+          locations: monitor.locations || [],
         })),
         total,
         limit,
@@ -175,14 +175,14 @@ export default function (fastify: FastifyTypeBox) {
   fastify.put(
     "/:id",
     {
-      schema: UpdatePlanEndpoint,
+      schema: UpdateMonitorEndpoint,
       config: {
         auth: { required: true },
       },
     },
     async (request, reply) => {
       const { id } = request.params;
-      const planData = request.body;
+      const monitorData = request.body;
 
       // TODO: Retrieve organization from token once auth is fully implemented
       const organizationId = request.auth.organizationId;
@@ -190,18 +190,18 @@ export default function (fastify: FastifyTypeBox) {
         return reply.code(401).send({ error: "Unauthorized" });
       }
 
-      // Verify plan exists
-      const existing = await fastify.storage.plans.findById(id);
+      // Verify monitor exists
+      const existing = await fastify.storage.monitors.findById(id);
       if (!existing) {
-        return reply.code(404).send({ error: "Plan not found" });
+        return reply.code(404).send({ error: "Monitor not found" });
       }
 
       // Validate locations if specified
-      if (planData.locations && planData.locations.length > 0) {
+      if (monitorData.locations && monitorData.locations.length > 0) {
         const registeredLocations =
           await fastify.agentRegistry.getAllLocations();
 
-        const invalidLocations = planData.locations.filter(
+        const invalidLocations = monitorData.locations.filter(
           (loc) => !registeredLocations.includes(loc),
         );
 
@@ -212,9 +212,9 @@ export default function (fastify: FastifyTypeBox) {
         }
       }
 
-      // Update the plan
-      const updated = await fastify.storage.plans.update(id, {
-        ...planData,
+      // Update the monitor
+      const updated = await fastify.storage.monitors.update(id, {
+        ...monitorData,
         organization: organizationId,
       });
 
@@ -230,7 +230,7 @@ export default function (fastify: FastifyTypeBox) {
   fastify.delete(
     "/:id",
     {
-      schema: DeletePlanEndpoint,
+      schema: DeleteMonitorEndpoint,
       config: {
         auth: { required: true },
       },
@@ -238,12 +238,12 @@ export default function (fastify: FastifyTypeBox) {
     async (request, reply) => {
       const { id } = request.params;
 
-      const existing = await fastify.storage.plans.findById(id);
+      const existing = await fastify.storage.monitors.findById(id);
       if (!existing) {
-        return reply.code(404).send({ error: "Plan not found" });
+        return reply.code(404).send({ error: "Monitor not found" });
       }
 
-      await fastify.storage.plans.delete(id);
+      await fastify.storage.monitors.delete(id);
       return reply.code(204).send(null);
     },
   );
@@ -251,7 +251,7 @@ export default function (fastify: FastifyTypeBox) {
   fastify.get(
     "/by-name",
     {
-      schema: GetPlanByNameEndpoint,
+      schema: GetMonitorByNameEndpoint,
       config: {
         auth: { required: true },
       },
@@ -259,30 +259,30 @@ export default function (fastify: FastifyTypeBox) {
     async (request, reply) => {
       const { projectId, environment, name, version } = request.query;
 
-      const plans = await fastify.storage.plans.findMany({
+      const monitors = await fastify.storage.monitors.findMany({
         where: and(
-          eq(plansTable.project, projectId),
-          eq(plansTable.environment, environment),
-          eq(plansTable.name, name),
+          eq(monitorsTable.project, projectId),
+          eq(monitorsTable.environment, environment),
+          eq(monitorsTable.name, name),
         ),
         limit: 1,
       });
 
-      if (plans.length === 0) {
-        return reply.code(404).send({ error: "Plan not found" });
+      if (monitors.length === 0) {
+        return reply.code(404).send({ error: "Monitor not found" });
       }
 
-      let plan = plans[0];
+      let monitor = monitors[0];
 
       // Migrate to latest if requested
-      if (version === "latest" && plan.version !== CURRENT_PLAN_VERSION) {
-        plan = migrateToLatest(plan as any) as typeof plan;
+      if (version === "latest" && monitor.version !== CURRENT_MONITOR_VERSION) {
+        monitor = migrateToLatest(monitor as any) as typeof monitor;
       }
 
       return reply.send({
         data: {
-          ...plan,
-          locations: plan.locations || [],
+          ...monitor,
+          locations: monitor.locations || [],
         },
       });
     },

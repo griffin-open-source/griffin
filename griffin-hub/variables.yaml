@@ -2,7 +2,7 @@
 # This file should be checked into version control
 #
 # Variables are resolved at test evaluation time (when the CLI imports test files)
-# and the resolved values are baked directly into the test plan JSON.
+# and the resolved values are baked directly into the test monitor JSON.
 #
 # Usage in test files:
 #   import { variable } from "griffin";

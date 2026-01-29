@@ -66,7 +66,7 @@ env
 const local = program.command("local").description("Local test execution");
 
 local
-  .command("run [env]")
+  .command("run <env>")
   .description("Run tests locally against an environment")
   .action(async (env, options) => {
     await executeRunLocal({ env });
@@ -104,7 +104,7 @@ hub
   });
 
 hub
-  .command("plan [env]")
+  .command("plan <env>")
   .description("Show what changes would be applied")
   .option("--json", "Output in JSON format")
   .action(async (env, options) => {
@@ -112,7 +112,7 @@ hub
   });
 
 hub
-  .command("apply [env]")
+  .command("apply <env>")
   .description("Apply changes to the hub")
   .option("--auto-approve", "Skip confirmation prompt")
   .option("--dry-run", "Show what would be done without making changes")

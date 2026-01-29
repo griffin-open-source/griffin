@@ -1,3 +1,5 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import {
   initState,
   stateExists,
@@ -6,6 +8,19 @@ import {
 } from "../core/state.js";
 import { detectProjectId } from "../core/project.js";
 import { terminal } from "../utils/terminal.js";
+
+const VARIABLES_FILE = "variables.yaml";
+
+const VARIABLES_TEMPLATE = `# Per-environment variables for test plans. Reference in plans with variable("key").
+# Edit values below for each environment.
+environments:
+  dev:
+    # api_key: "your-api-key"
+  staging:
+    # api_key: "your-staging-key"
+  production:
+    # api_key: "your-production-key"
+`;
 
 export interface InitOptions {
   project?: string;
@@ -44,26 +59,29 @@ export async function executeInit(options: InitOptions): Promise<void> {
   await addEnvironment("production", {});
   terminal.success("Created default environments (dev, staging, production)");
 
+  // Create variables.yaml if it doesn't exist
+  const variablesPath = path.join(process.cwd(), VARIABLES_FILE);
+  try {
+    await fs.access(variablesPath);
+    terminal.dim(`variables.yaml already exists, skipping`);
+  } catch {
+    await fs.writeFile(variablesPath, VARIABLES_TEMPLATE, "utf-8");
+    terminal.success(`Created ${terminal.colors.dim(VARIABLES_FILE)}`);
+  }
+
   terminal.blank();
   terminal.success("Initialization complete!");
   terminal.blank();
   terminal.info("Next steps:");
-  terminal.dim("  1. Create a variables.yaml file in the project root:");
-  terminal.dim("     environments:");
-  terminal.dim("       dev:");
-  terminal.dim("         api-service: http://localhost:3000");
-  terminal.dim("       staging:");
-  terminal.dim("         api-service: https://staging.api.com");
-  terminal.dim("       production:");
-  terminal.dim("         api-service: https://api.example.com");
+  terminal.dim("  1. Edit variables.yaml to set api_host and other variables per environment");
   terminal.dim(
-    "  2. Create test plans (*.griffin.ts files in __griffin__/ directories)",
+    "  2. Create test plans (*.ts files in __griffin__/ directories)",
   );
-  terminal.dim("  3. Run tests locally:");
-  terminal.dim("     griffin local run");
+  terminal.dim("  3. Run tests locally (pass environment name):");
+  terminal.dim("     griffin local run dev");
   terminal.dim("  4. Connect to hub (optional):");
   terminal.dim("     griffin hub connect --url <url> --token <token>");
   terminal.dim("  5. Deploy to hub:");
-  terminal.dim("     griffin hub apply");
+  terminal.dim("     griffin hub apply dev");
   terminal.blank();
 }

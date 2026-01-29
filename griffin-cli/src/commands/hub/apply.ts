@@ -12,7 +12,7 @@ import { resolvePlan } from "../../resolve.js";
 export interface ApplyOptions {
   autoApprove?: boolean;
   dryRun?: boolean;
-  env?: string;
+  env: string;
   prune?: boolean; // If true, delete remote plans not in local
 }
 

@@ -41,7 +41,7 @@
     "@fastify/swagger-ui": "^5.2.4",
     "@fastify/type-provider-typebox": "^6.1.0",
     "@griffin-app/griffin-plan-executor": "0.1.12",
-    "@griffin-app/griffin-ts": "0.1.10",
+    "@griffin-app/griffin-ts": "0.1.12",
     "@modelcontextprotocol/sdk": "^1.25.3",
     "axios": "^1.7.0",
     "better-auth": "^1.4.17",
@@ -54,7 +54,7 @@
   },
   "devDependencies": {
     "@flydotio/dockerfile": "^0.7.10",
-    "@griffin-app/griffin-cli": "1.0.5",
+    "@griffin-app/griffin-cli": "1.0.6",
     "@hey-api/openapi-ts": "^0.90.3",
     "@types/node": "^22.1.0",
     "@types/pg": "^8.16.0",

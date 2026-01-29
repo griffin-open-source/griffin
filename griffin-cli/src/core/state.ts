@@ -170,7 +170,7 @@ export async function resolveEnvironment(envFlag?: string): Promise<string> {
 
   if (!envName) {
     throw new Error(
-      "No environment specified. Use --env flag, GRIFFIN_ENV env var, or set a default with 'griffin env default <name>'",
+      "No environment specified. Pass the environment name as the first argument (e.g. griffin hub apply production). You can also set GRIFFIN_ENV or a default with 'griffin env default <name>'.",
     );
   }
 

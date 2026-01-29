@@ -5,12 +5,10 @@ import { terminal } from "../../utils/terminal.js";
 import { basename } from "path";
 
 export interface RunLocalOptions {
-  env?: string;
+  env: string;
 }
 
-export async function executeRunLocal(
-  options: RunLocalOptions = {},
-): Promise<void> {
+export async function executeRunLocal(options: RunLocalOptions): Promise<void> {
   try {
     // Resolve environment
     const envName = await resolveEnvironment(options.env);

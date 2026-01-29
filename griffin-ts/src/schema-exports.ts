@@ -19,6 +19,7 @@ export {
   XMLPathSchema,
   TextPathSchema,
   UnaryPredicateSchema,
+  UnaryPredicateOperatorSchema,
   BinaryPredicateOperatorSchema,
   BinaryPredicateSchema,
   AssertionSchema,

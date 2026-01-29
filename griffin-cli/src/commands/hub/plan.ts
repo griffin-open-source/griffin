@@ -9,7 +9,7 @@ import { resolvePlan } from "../../resolve.js";
 
 export interface PlanOptions {
   json?: boolean;
-  env?: string;
+  env: string;
 }
 
 /**

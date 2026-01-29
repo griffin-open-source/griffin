@@ -14,9 +14,9 @@ import {
   AssertionSchema,
   BinaryPredicateOperatorSchema,
   BinaryPredicateSchema,
+  UnaryPredicateOperatorSchema,
   UnaryPredicateSchema,
 } from "@griffin-app/griffin-ts/schema";
-import { UnaryPredicateOperatorSchema } from "../../../../griffin-ts/dist/schema.js";
 import { migrateToLatest, CURRENT_PLAN_VERSION } from "@griffin-app/griffin-ts";
 
 export const CreatePlanEndpoint = {

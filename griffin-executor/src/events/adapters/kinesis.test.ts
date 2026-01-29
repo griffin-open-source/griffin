@@ -15,11 +15,11 @@ describe("KinesisAdapter", () => {
       eventId: `event-${seq}`,
       seq,
       timestamp: Date.now(),
-      planId: "plan-1",
+      monitorId: "monitor-1",
       executionId,
       organizationId,
-      planName: "Test Plan",
-      planVersion: "1.0.0",
+      monitorName: "Test Monitor",
+      monitorVersion: "1.0.0",
       nodeCount: 1,
       edgeCount: 1,
     }) as ExecutionEvent;
@@ -40,7 +40,7 @@ describe("KinesisAdapter", () => {
         streamName: "test-stream",
       });
 
-      const events = [createMockEvent("PLAN_START", "exec-1", "org-1", 0)];
+      const events = [createMockEvent("MONITOR_START", "exec-1", "org-1", 0)];
 
       await adapter.publish(events);
 
@@ -83,7 +83,7 @@ describe("KinesisAdapter", () => {
 
       // Create 1250 events (should result in 3 batches: 500, 500, 250)
       const events = Array.from({ length: 1250 }, (_, i) =>
-        createMockEvent("PLAN_START", "exec-1", "org-1", i),
+        createMockEvent("MONITOR_START", "exec-1", "org-1", i),
       );
 
       await adapter.publish(events);
@@ -111,7 +111,9 @@ describe("KinesisAdapter", () => {
         streamName: "test-stream",
       });
 
-      const events = [createMockEvent("PLAN_START", "exec-123", "org-456", 0)];
+      const events = [
+        createMockEvent("MONITOR_START", "exec-123", "org-456", 0),
+      ];
 
       await adapter.publish(events);
 
@@ -135,7 +137,9 @@ describe("KinesisAdapter", () => {
         partitionKeyStrategy: "organizationId",
       });
 
-      const events = [createMockEvent("PLAN_START", "exec-123", "org-456", 0)];
+      const events = [
+        createMockEvent("MONITOR_START", "exec-123", "org-456", 0),
+      ];
 
       await adapter.publish(events);
 
@@ -159,7 +163,9 @@ describe("KinesisAdapter", () => {
         partitionKeyStrategy: "composite",
       });
 
-      const events = [createMockEvent("PLAN_START", "exec-123", "org-456", 0)];
+      const events = [
+        createMockEvent("MONITOR_START", "exec-123", "org-456", 0),
+      ];
 
       await adapter.publish(events);
 
@@ -177,9 +183,7 @@ describe("KinesisAdapter", () => {
           // First call: one record fails
           return Promise.resolve({
             FailedRecordCount: 1,
-            Records: [
-              { ErrorCode: "ProvisionedThroughputExceededException" },
-            ],
+            Records: [{ ErrorCode: "ProvisionedThroughputExceededException" }],
           });
         }
         // Second call: success
@@ -200,7 +204,7 @@ describe("KinesisAdapter", () => {
         retryDelayMs: 10, // Short delay for testing
       });
 
-      const events = [createMockEvent("PLAN_START", "exec-1", "org-1", 0)];
+      const events = [createMockEvent("MONITOR_START", "exec-1", "org-1", 0)];
 
       await adapter.publish(events);
 
@@ -210,9 +214,7 @@ describe("KinesisAdapter", () => {
     it("should stop retrying after max attempts", async () => {
       const mockSend = vi.fn().mockResolvedValue({
         FailedRecordCount: 1,
-        Records: [
-          { ErrorCode: "ProvisionedThroughputExceededException" },
-        ],
+        Records: [{ ErrorCode: "ProvisionedThroughputExceededException" }],
       });
 
       const mockClient = {
@@ -226,7 +228,7 @@ describe("KinesisAdapter", () => {
         retryDelayMs: 10,
       });
 
-      const events = [createMockEvent("PLAN_START", "exec-1", "org-1", 0)];
+      const events = [createMockEvent("MONITOR_START", "exec-1", "org-1", 0)];
 
       // Should not throw, but log errors
       await adapter.publish(events);
@@ -258,7 +260,7 @@ describe("KinesisAdapter", () => {
         retryDelayMs: 10,
       });
 
-      const events = [createMockEvent("PLAN_START", "exec-1", "org-1", 0)];
+      const events = [createMockEvent("MONITOR_START", "exec-1", "org-1", 0)];
 
       await adapter.publish(events);
 
@@ -279,7 +281,7 @@ describe("KinesisAdapter", () => {
         retryDelayMs: 10,
       });
 
-      const events = [createMockEvent("PLAN_START", "exec-1", "org-1", 0)];
+      const events = [createMockEvent("MONITOR_START", "exec-1", "org-1", 0)];
 
       await expect(adapter.publish(events)).rejects.toThrow("Network error");
       expect(mockSend).toHaveBeenCalledTimes(3); // Initial + 2 retries
@@ -302,18 +304,18 @@ describe("KinesisAdapter", () => {
         streamName: "test-stream",
       });
 
-      const event = createMockEvent("PLAN_START", "exec-1", "org-1", 0);
+      const event = createMockEvent("MONITOR_START", "exec-1", "org-1", 0);
       await adapter.publish([event]);
 
       const records = mockSend.mock.calls[0][0].input.Records;
       const data = records[0].Data;
-      
+
       // Decode the Uint8Array back to JSON
       const decoder = new TextDecoder();
       const json = decoder.decode(data);
       const parsed = JSON.parse(json);
 
-      expect(parsed.type).toBe("PLAN_START");
+      expect(parsed.type).toBe("MONITOR_START");
       expect(parsed.executionId).toBe("exec-1");
       expect(parsed.organizationId).toBe("org-1");
     });

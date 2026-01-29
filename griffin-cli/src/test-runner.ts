@@ -1,30 +1,30 @@
 import "tsx";
 import { Value } from "typebox/value";
 import {
-  executePlanV1,
+  executeMonitorV1,
   AxiosAdapter,
   ExecutionResult,
   EnvSecretProvider,
   SecretProviderRegistry,
 } from "@griffin-app/griffin-plan-executor";
-import { PlanDSLSchema } from "@griffin-app/griffin-ts/schema";
+import { MonitorDSLSchema } from "@griffin-app/griffin-ts/schema";
 import { randomUUID } from "crypto";
 import { loadVariables } from "./core/variables.js";
 import { getProjectId } from "./core/state.js";
-import { PlanDSL } from "@griffin-app/griffin-ts/types";
-import { resolvePlan } from "./resolve.js";
+import { MonitorDSL } from "@griffin-app/griffin-ts/types";
+import { resolveMonitor } from "./resolve.js";
 import { terminal } from "./utils/terminal.js";
 
-function validateDsl(plan: unknown): PlanDSL {
-  const errors = Value.Errors(PlanDSLSchema, plan);
+function validateDsl(monitor: unknown): MonitorDSL {
+  const errors = Value.Errors(MonitorDSLSchema, monitor);
   if (errors.length > 0) {
-    throw new Error(`Invalid plan: ${JSON.stringify([...errors], null, 2)}`);
+    throw new Error(`Invalid monitor: ${JSON.stringify([...errors], null, 2)}`);
   }
-  return plan as PlanDSL;
+  return monitor as MonitorDSL;
 }
 
 /**
- * Runs a TypeScript test file and executes the resulting JSON plan.
+ * Runs a TypeScript test file and executes the resulting JSON monitor.
  */
 export async function runTestFile(
   filePath: string,
@@ -33,17 +33,17 @@ export async function runTestFile(
   const variables = await loadVariables(envName);
   const projectId = await getProjectId();
   const defaultExport = await import(filePath);
-  const rawPlan = validateDsl(defaultExport.default);
+  const rawMonitor = validateDsl(defaultExport.default);
 
   terminal.dim(`Project ID: ${projectId}`);
-  const resolvedPlan = resolvePlan(rawPlan, projectId, envName, variables);
+  const resolvedMonitor = resolveMonitor(rawMonitor, projectId, envName, variables);
   const secretRegistry = new SecretProviderRegistry();
   secretRegistry.register(new EnvSecretProvider());
 
   try {
-    const result = await executePlanV1(
+    const result = await executeMonitorV1(
       {
-        ...resolvedPlan,
+        ...resolvedMonitor,
         id: randomUUID(),
       },
       "default-org",
@@ -56,7 +56,7 @@ export async function runTestFile(
     return result;
   } catch (error) {
     throw new Error(
-      `Error executing plan: ${error instanceof Error ? error.message : String(error)}`,
+      `Error executing monitor: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }

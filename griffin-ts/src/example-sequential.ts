@@ -42,7 +42,7 @@ const healthCheck = createTestBuilder({
   ])
   .build();
 
-console.log("Health Check Plan:");
+console.log("Health Check Monitor:");
 console.log(JSON.stringify(healthCheck, null, 2));
 
 // ============================================================================
@@ -98,7 +98,7 @@ const userJourney = createTestBuilder({
   ])
   .build();
 
-console.log("\nUser Journey Plan:");
+console.log("\nUser Journey Monitor:");
 console.log(JSON.stringify(userJourney, null, 2));
 
 // ============================================================================
@@ -132,7 +132,7 @@ const performanceCheck = createTestBuilder({
   ])
   .build();
 
-console.log("\nPerformance Check Plan:");
+console.log("\nPerformance Check Monitor:");
 console.log(JSON.stringify(performanceCheck, null, 2));
 
 // ============================================================================
@@ -187,5 +187,5 @@ const orderWorkflow = createTestBuilder({
   ])
   .build();
 
-console.log("\nOrder Workflow Plan:");
+console.log("\nOrder Workflow Monitor:");
 console.log(JSON.stringify(orderWorkflow, null, 2));

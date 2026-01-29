@@ -9,7 +9,7 @@ import {
   variable,
 } from "@griffin-app/griffin-ts";
 
-const plan = createGraphBuilder({
+const monitor = createGraphBuilder({
   name: "runner-health-check",
   frequency: Frequency.every(1).minute(),
 })
@@ -26,4 +26,4 @@ const plan = createGraphBuilder({
   .addEdge("root", END)
   .build();
 
-export default plan;
+export default monitor;

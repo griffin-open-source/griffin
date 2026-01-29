@@ -1,13 +1,13 @@
 # griffin Test System
 
-The griffin Test System provides a TypeScript DSL for defining API tests. Tests are written in TypeScript and output JSON test plans that can be executed by the plan executor.
+The griffin Test System provides a TypeScript DSL for defining API tests. Tests are written in TypeScript and output JSON test monitors that can be executed by the monitor executor.
 
 ## Features
 
 - TypeScript DSL for defining API checks
-- Chainable API for building test plans
+- Chainable API for building test monitors
 - Support for endpoints, waits, assertions, and edges
-- Outputs JSON test plans for execution
+- Outputs JSON test monitors for execution
 
 ## Installation
 
@@ -24,7 +24,7 @@ npm run build
 
 ## Usage
 
-Create test files in `__griffin__` directories. When executed, they output JSON test plans.
+Create test files in `__griffin__` directories. When executed, they output JSON test monitors.
 
 griffin provides two builder APIs:
 
@@ -38,7 +38,7 @@ The sequential builder automatically connects steps in order - no need to manage
 ```typescript
 import { GET, createTestBuilder, JSON, Frequency, Assert } from "griffin-ts";
 
-const plan = createTestBuilder({
+const monitor = createTestBuilder({
   name: "health-check",
   endpoint_host: "https://api.example.com",
 })
@@ -53,7 +53,7 @@ const plan = createTestBuilder({
   ])
   .build({ frequency: Frequency.every(1).minute() });
 
-export default plan;
+export default monitor;
 ```
 
 #### Sequential Example with Waits and Assertions
@@ -69,7 +69,7 @@ import {
   Assert,
 } from "griffin-ts";
 
-const plan = createTestBuilder({
+const monitor = createTestBuilder({
   name: "create-and-verify-user",
   endpoint_host: "https://api.example.com",
 })
@@ -96,7 +96,7 @@ const plan = createTestBuilder({
   ])
   .build({ frequency: Frequency.every(5).minute() });
 
-export default plan;
+export default monitor;
 ```
 
 ### Graph Builder (For Complex Workflows)
@@ -116,7 +116,7 @@ import {
   Assert,
 } from "griffin-ts";
 
-const plan = createGraphBuilder({
+const monitor = createGraphBuilder({
   name: "foo-bar-check",
   endpoint_host: "https://api.example.com",
 })
@@ -144,12 +144,12 @@ const plan = createGraphBuilder({
   .addEdge("check_response", END)
   .build({ frequency: Frequency.every(1).minute() });
 
-export default plan;
+export default monitor;
 ```
 
 ### Using Secrets
 
-griffin supports secure secret management for API keys, tokens, and other credentials. Secrets are referenced in your test plans and resolved at runtime by the configured secret providers.
+griffin supports secure secret management for API keys, tokens, and other credentials. Secrets are referenced in your test monitors and resolved at runtime by the configured secret providers.
 
 #### With Sequential Builder
 
@@ -163,7 +163,7 @@ import {
   Assert,
 } from "griffin-ts";
 
-const plan = createTestBuilder({
+const monitor = createTestBuilder({
   name: "authenticated-check",
   endpoint_host: "https://api.example.com",
 })
@@ -187,7 +187,7 @@ const plan = createTestBuilder({
   .assert((state) => [Assert(state["protected"].status).equals(200)])
   .build({ frequency: Frequency.every(5).minute() });
 
-export default plan;
+export default monitor;
 ```
 
 #### With Graph Builder
@@ -204,7 +204,7 @@ import {
   Assert,
 } from "griffin-ts";
 
-const plan = createGraphBuilder({
+const monitor = createGraphBuilder({
   name: "authenticated-check",
   endpoint_host: "https://api.example.com",
 })
@@ -225,7 +225,7 @@ const plan = createGraphBuilder({
   .addEdge("verify", END)
   .build({ frequency: Frequency.every(5).minute() });
 
-export default plan;
+export default monitor;
 ```
 
 #### Secret Providers
@@ -261,7 +261,7 @@ See the [griffin-runner CONFIG.md](../griffin-runner/CONFIG.md) for configuratio
 - **`.endpoint(id, config)`**: Add an HTTP endpoint request with a unique identifier
 - **`.wait(duration)`**: Add a delay (use `Wait.seconds(n)`, `Wait.minutes(n)`, or `Wait.milliseconds(n)`)
 - **`.assert(fn)`**: Add assertions using a function that receives the state proxy and returns an array of assertions
-- **`.build(options)`**: Generate the final test plan with frequency configuration
+- **`.build(options)`**: Generate the final test monitor with frequency configuration
 
 #### Graph Builder Methods
 
@@ -269,7 +269,7 @@ See the [griffin-runner CONFIG.md](../griffin-runner/CONFIG.md) for configuratio
 - **`.addWait(id, duration)`**: Add a wait node to the graph
 - **`.addAssertion(id, fn)`**: Add an assertion node using a function that receives the state proxy
 - **`.addEdge(from, to)`**: Connect two nodes (use `START` and `END` constants for entry/exit)
-- **`.build(options)`**: Generate the final test plan (validates all nodes are connected)
+- **`.build(options)`**: Generate the final test monitor (validates all nodes are connected)
 
 #### Assertions
 
@@ -302,7 +302,7 @@ See [ASSERTIONS_QUICK_REF.md](./ASSERTIONS_QUICK_REF.md) for the complete assert
 
 ## Output
 
-The test system outputs a JSON test plan to stdout when `plan.create()` is called. This JSON is consumed by the plan executor. Example output:
+The test system outputs a JSON test monitor to stdout when `monitor.create()` is called. This JSON is consumed by the monitor executor. Example output:
 
 ```json
 {

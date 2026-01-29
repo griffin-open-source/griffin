@@ -7,11 +7,11 @@ import {
 } from "./builder.js";
 import { START, END } from "./constants.js";
 import {
-  CURRENT_PLAN_VERSION,
+  CURRENT_MONITOR_VERSION,
   Edge,
   NodeDSL,
   Frequency,
-  PlanDSL,
+  MonitorDSL,
   ResponseFormat,
   type Assertion as AssertionType,
 } from "./schema.js";
@@ -96,12 +96,12 @@ export interface SequentialTestBuilder<NodeNames extends string = never> {
   ): SequentialTestBuilder<NodeNames>;
 
   /**
-   * Builds the final test plan.
+   * Builds the final test monitor.
    * Automatically connects all nodes in sequence: START → node1 → node2 → ... → END
    *
-   * @returns The completed TestPlan
+   * @returns The completed TestMonitor
    */
-  build(): PlanDSL;
+  build(): MonitorDSL;
 }
 
 /**
@@ -167,17 +167,17 @@ class SequentialTestBuilderImpl<
     return this as unknown as SequentialTestBuilder<NodeNames>;
   }
 
-  build(): PlanDSL {
+  build(): MonitorDSL {
     const { name, frequency, locations } = this.config;
     const edges: Edge[] = [];
 
-    // If no nodes, return empty plan with just START->END
+    // If no nodes, return empty monitor with just START->END
     if (this.nodes.length === 0) {
       return {
         name,
         frequency,
         locations,
-        version: CURRENT_PLAN_VERSION,
+        version: CURRENT_MONITOR_VERSION,
         nodes: [],
         edges: [{ from: START, to: END }],
       };
@@ -199,7 +199,7 @@ class SequentialTestBuilderImpl<
 
     return {
       name,
-      version: CURRENT_PLAN_VERSION,
+      version: CURRENT_MONITOR_VERSION,
       frequency,
       locations,
       nodes: this.nodes,
@@ -225,7 +225,7 @@ class SequentialTestBuilderImpl<
  * ```typescript
  * import { createTestBuilder, POST, GET, Json, Frequency, Assert } from "griffin-ts";
  *
- * const plan = createTestBuilder({
+ * const monitor = createTestBuilder({
  *   name: "create-and-verify-user",
  *   frequency: Frequency.every(5).minute(),
  *   locations: ["us-east-1", "eu-west-1"]

@@ -1,24 +1,24 @@
-# Test Plan Versioning Guide
+# Test Monitor Versioning Guide
 
-This document outlines the process for making breaking changes to the test plan schema while maintaining backward compatibility across all Griffin components.
+This document outlines the process for making breaking changes to the test monitor schema while maintaining backward compatibility across all Griffin components.
 
 ## Overview
 
 Griffin uses a **migrate-on-read** versioning strategy:
-- Plans are stored in their original version in the database
-- Plans are migrated to the latest version when loaded (if needed)
-- All components can handle multiple plan versions simultaneously
-- Migration functions transform plans between versions
+- Monitors are stored in their original version in the database
+- Monitors are migrated to the latest version when loaded (if needed)
+- All components can handle multiple monitor versions simultaneously
+- Migration functions transform monitors between versions
 
 ## Architecture
 
 The versioning system spans 5 packages:
 
 1. **griffin-ts** - Single source of truth for schemas and migrations
-2. **griffin-cli** - Validates and migrates DSL plans before sending to hub
-3. **griffin-hub** - Stores plans in original version, migrates on read
+2. **griffin-cli** - Validates and migrates DSL monitors before sending to hub
+3. **griffin-hub** - Stores monitors in original version, migrates on read
 4. **griffin-hub-sdk** - Auto-generated types from OpenAPI spec
-5. **griffin-executor** - Migrates plans to latest before execution
+5. **griffin-executor** - Migrates monitors to latest before execution
 
 ## Process: Making a Breaking Change
 
@@ -30,7 +30,7 @@ When you need to introduce a breaking schema change (e.g., adding a required fie
 
 1. Create a new version-specific DSL schema:
    ```typescript
-   export const PlanDSLSchemaV2 = Type.Object({
+   export const MonitorDSLSchemaV2 = Type.Object({
      locations: Type.Optional(Type.Array(Type.String())),
      name: Type.String(),
      version: Type.Literal("2.0"),  // New version
@@ -42,9 +42,9 @@ When you need to introduce a breaking schema change (e.g., adding a required fie
    });
    ```
 
-2. Create a new version-specific resolved plan schema:
+2. Create a new version-specific resolved monitor schema:
    ```typescript
-   export const ResolvedPlanV2Schema = Type.Object({
+   export const ResolvedMonitorV2Schema = Type.Object({
      project: Type.String(),
      locations: Type.Optional(Type.Array(Type.String())),
      id: Type.Readonly(Type.String()),
@@ -61,19 +61,19 @@ When you need to introduce a breaking schema change (e.g., adding a required fie
 3. Update the union schemas:
    ```typescript
    // Union of all supported DSL versions
-   export const PlanDSLSchema = Type.Union([PlanDSLSchemaV1, PlanDSLSchemaV2]);
+   export const MonitorDSLSchema = Type.Union([MonitorDSLSchemaV1, MonitorDSLSchemaV2]);
    
    // Union of all supported resolved versions
-   export const ResolvedPlanSchema = Type.Union([ResolvedPlanV1Schema, ResolvedPlanV2Schema]);
+   export const ResolvedMonitorSchema = Type.Union([ResolvedMonitorV1Schema, ResolvedMonitorV2Schema]);
    ```
 
 4. Update type exports:
    ```typescript
-   export type PlanDSLV2 = Static<typeof PlanDSLSchemaV2>;
-   export type PlanDSL = PlanDSLV1 | PlanDSLV2;
+   export type MonitorDSLV2 = Static<typeof MonitorDSLSchemaV2>;
+   export type MonitorDSL = MonitorDSLV1 | MonitorDSLV2;
    
-   export type ResolvedPlanV2 = Static<typeof ResolvedPlanV2Schema>;
-   export type ResolvedPlan = ResolvedPlanV1 | ResolvedPlanV2;
+   export type ResolvedMonitorV2 = Static<typeof ResolvedMonitorV2Schema>;
+   export type ResolvedMonitor = ResolvedMonitorV1 | ResolvedMonitorV2;
    ```
 
 ### Step 2: Write Migration Function
@@ -82,14 +82,14 @@ When you need to introduce a breaking schema change (e.g., adding a required fie
 
 1. Create the migration function:
    ```typescript
-   function migrateV1ToV2(plan: ResolvedPlanV1): ResolvedPlanV2 {
+   function migrateV1ToV2(monitor: ResolvedMonitorV1): ResolvedMonitorV2 {
      return {
-       ...plan,
+       ...monitor,
        version: "2.0",
        // Set default values for new required fields
        newRequiredField: "default-value",
        // Transform existing fields if needed
-       // existingField: transformField(plan.existingField),
+       // existingField: transformField(monitor.existingField),
      };
    }
    ```
@@ -102,20 +102,20 @@ When you need to introduce a breaking schema change (e.g., adding a required fie
    };
    ```
 
-3. Update the `VersionedPlan` type in `griffin-hub/src/storage/plan-mapper.ts`:
+3. Update the `VersionedMonitor` type in `griffin-hub/src/storage/monitor-mapper.ts`:
    ```typescript
-   export type VersionedPlan = PlanV1 | PlanV2;
+   export type VersionedMonitor = MonitorV1 | MonitorV2;
    ```
 
 4. Add the new case to the mapper switch:
    ```typescript
    switch (version) {
      case "1.0":
-       return { ...publicFields, version: "1.0", ... } as PlanV1;
+       return { ...publicFields, version: "1.0", ... } as MonitorV1;
      case "2.0":
-       return { ...publicFields, version: "2.0", ... } as PlanV2;
+       return { ...publicFields, version: "2.0", ... } as MonitorV2;
      default:
-       throw new UnsupportedPlanVersionError(version);
+       throw new UnsupportedMonitorVersionError(version);
    }
    ```
 
@@ -124,18 +124,18 @@ When you need to introduce a breaking schema change (e.g., adding a required fie
 **File:** `griffin-ts/src/schema.ts`
 
 ```typescript
-export const CURRENT_PLAN_VERSION = "2.0";  // Update to new version
-export const SUPPORTED_PLAN_VERSIONS = ["1.0", "2.0"] as const;  // Add new version
+export const CURRENT_MONITOR_VERSION = "2.0";  // Update to new version
+export const SUPPORTED_MONITOR_VERSIONS = ["1.0", "2.0"] as const;  // Add new version
 ```
 
 ### Step 4: Update Hub Schemas
 
-**File:** `griffin-hub/src/schemas/plans.ts`
+**File:** `griffin-hub/src/schemas/monitors.ts`
 
-1. Import the new resolved plan schema from griffin-ts
-2. Update `PlanV1Schema` to accept union of versions:
+1. Import the new resolved monitor schema from griffin-ts
+2. Update `MonitorV1Schema` to accept union of versions:
    ```typescript
-   const PlanVersionSchema = Type.Union([
+   const MonitorVersionSchema = Type.Union([
      Type.Literal("1.0"),
      Type.Literal("2.0"),  // Add new version
    ]);
@@ -161,10 +161,10 @@ npm run build
 
 If the DSL schema changed, update the builders to set the new version:
 ```typescript
-build(): PlanDSL {
+build(): MonitorDSL {
   return {
-    ...this.plan,
-    version: CURRENT_PLAN_VERSION,  // Will now be "2.0"
+    ...this.monitor,
+    version: CURRENT_MONITOR_VERSION,  // Will now be "2.0"
   };
 }
 ```
@@ -176,11 +176,11 @@ build(): PlanDSL {
 Add tests for the new migration:
 ```typescript
 describe("migrations", () => {
-  it("migrates v1 plan to v2", () => {
-    const v1Plan: ResolvedPlanV1 = {
+  it("migrates v1 monitor to v2", () => {
+    const v1Monitor: ResolvedMonitorV1 = {
       project: "test",
       id: "test-id",
-      name: "test-plan",
+      name: "test-monitor",
       version: "1.0",
       frequency: { every: 1, unit: "MINUTE" },
       environment: "default",
@@ -188,9 +188,9 @@ describe("migrations", () => {
       edges: [],
     };
     
-    const v2Plan = migratePlan<ResolvedPlanV2>(v1Plan, "2.0");
-    expect(v2Plan.version).toBe("2.0");
-    expect(v2Plan.newRequiredField).toBe("default-value");
+    const v2Monitor = migrateMonitor<ResolvedMonitorV2>(v1Monitor, "2.0");
+    expect(v2Monitor.version).toBe("2.0");
+    expect(v2Monitor.newRequiredField).toBe("default-value");
     // Assert other transformations
   });
 });
@@ -217,12 +217,12 @@ flowchart LR
 
 ## Example: Adding a Required Field
 
-Let's say you want to add a required `timeout` field to plans:
+Let's say you want to add a required `timeout` field to monitors:
 
 ### 1. Update Schema (`griffin-ts/src/schema.ts`)
 
 ```typescript
-export const PlanDSLSchemaV2 = Type.Object({
+export const MonitorDSLSchemaV2 = Type.Object({
   // ... existing fields ...
   version: Type.Literal("2.0"),
   timeout: Type.Number(),  // New required field
@@ -232,9 +232,9 @@ export const PlanDSLSchemaV2 = Type.Object({
 ### 2. Write Migration (`griffin-ts/src/migrations.ts`)
 
 ```typescript
-function migrateV1ToV2(plan: ResolvedPlanV1): ResolvedPlanV2 {
+function migrateV1ToV2(monitor: ResolvedMonitorV1): ResolvedMonitorV2 {
   return {
-    ...plan,
+    ...monitor,
     version: "2.0",
     timeout: 30000,  // Default timeout: 30 seconds
   };
@@ -245,7 +245,7 @@ function migrateV1ToV2(plan: ResolvedPlanV1): ResolvedPlanV2 {
 
 ```typescript
 export class TestBuilder {
-  private plan: Partial<PlanDSL> = {
+  private monitor: Partial<MonitorDSL> = {
     timeout: 30000,  // Set default in builder
   };
   
@@ -261,8 +261,8 @@ export class TestBuilder {
 - Test executor handles both versions
 
 ### Integration Tests
-- Create v1 plan, store in hub, verify executor runs it
-- Create v2 plan, store in hub, verify executor runs it
+- Create v1 monitor, store in hub, verify executor runs it
+- Create v2 monitor, store in hub, verify executor runs it
 - Test mixed-version scenarios during rolling deployment
 
 ## Rollback Strategy
@@ -270,7 +270,7 @@ export class TestBuilder {
 If a new version has issues:
 
 1. **Immediate:** Revert the deployment (packages can still read old versions)
-2. **Data:** No migration needed - plans stored in original version
+2. **Data:** No migration needed - monitors stored in original version
 3. **Code:** Revert version constants and remove migration function
 4. **Deploy:** Deploy in reverse order (CLI → Hub → Executor → SDK → TS)
 
@@ -280,16 +280,16 @@ If a new version has issues:
 |---------|-----------|---------|
 | griffin-ts | `src/schema.ts` | Schema definitions |
 | griffin-ts | `src/migrations.ts` | Migration functions |
-| griffin-hub | `src/storage/plan-mapper.ts` | DB → API contract mapping |
-| griffin-hub | `src/schemas/plans.ts` | API contract schemas |
-| griffin-hub | `src/routes/plan/index.ts` | API endpoints |
-| griffin-executor | `src/executor.ts` | Plan execution |
-| griffin-cli | `src/resolve.ts` | Plan resolution |
+| griffin-hub | `src/storage/monitor-mapper.ts` | DB → API contract mapping |
+| griffin-hub | `src/schemas/monitors.ts` | API contract schemas |
+| griffin-hub | `src/routes/monitor/index.ts` | API endpoints |
+| griffin-executor | `src/executor.ts` | Monitor execution |
+| griffin-cli | `src/resolve.ts` | Monitor resolution |
 
 ## Common Patterns
 
 ### Adding Optional Field
-- No migration needed (old plans work fine)
+- No migration needed (old monitors work fine)
 - Just add field to new schema version
 - Builders can set default value
 
@@ -313,5 +313,5 @@ If a new version has issues:
 If you're unsure about a breaking change:
 1. Check if it can be made non-breaking (additive changes)
 2. Consider a deprecation period
-3. Test migration with real plan data
+3. Test migration with real monitor data
 4. Review with team before deploying

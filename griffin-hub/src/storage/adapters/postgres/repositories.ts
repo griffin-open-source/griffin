@@ -5,115 +5,115 @@
 import type { SQL } from "drizzle-orm";
 import { and, asc, count, desc, eq, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
-import type { PlanV1 } from "../../../schemas/plans.js";
+import type { MonitorV1 } from "../../../schemas/monitors.js";
 import type { JobRun } from "../../../schemas/job-run.js";
 import type { Agent, AgentStatus } from "../../../schemas/agent.js";
 import type {
-  PlansRepository,
+  MonitorsRepository,
   RunsRepository,
   AgentsRepository,
   QueryOptions,
 } from "../../repositories.js";
 import type { DrizzleDatabase } from "../../../plugins/storage.js";
-import { agentsTable, plansTable, runsTable } from "./schema.js";
-import type { TestPlanDB } from "../../repositories.js";
+import { agentsTable, monitorsTable, runsTable } from "./schema.js";
+import type { TestMonitorDB } from "../../repositories.js";
 import {
-  mapDbPlanToVersionedPlan,
-  mapDbPlansToVersionedPlans,
-  type VersionedPlan,
-} from "../../plan-mapper.js";
+  mapDbMonitorToVersionedMonitor,
+  mapDbMonitorsToVersionedMonitors,
+  type VersionedMonitor,
+} from "../../monitor-mapper.js";
 
 // =============================================================================
-// Plans Repository
+// Monitors Repository
 // =============================================================================
 
-export class PostgresPlansRepository implements PlansRepository {
+export class PostgresMonitorsRepository implements MonitorsRepository {
   constructor(private db: DrizzleDatabase) {}
 
-  async create(data: Omit<TestPlanDB, "id">): Promise<VersionedPlan> {
+  async create(data: Omit<TestMonitorDB, "id">): Promise<VersionedMonitor> {
     const result = await this.db
-      .insert(plansTable)
+      .insert(monitorsTable)
       .values({
         ...data,
         id: randomUUID(),
       })
       .returning();
 
-    return mapDbPlanToVersionedPlan(result[0]);
+    return mapDbMonitorToVersionedMonitor(result[0]);
   }
 
-  async findById(id: string): Promise<VersionedPlan | null> {
-    const result = await this.db.query.plansTable.findFirst({
-      where: eq(plansTable.id, id),
+  async findById(id: string): Promise<VersionedMonitor | null> {
+    const result = await this.db.query.monitorsTable.findFirst({
+      where: eq(monitorsTable.id, id),
     });
 
     if (!result) {
       return null;
     }
 
-    return mapDbPlanToVersionedPlan(result);
+    return mapDbMonitorToVersionedMonitor(result);
   }
 
-  async findMany(options?: QueryOptions): Promise<VersionedPlan[]> {
-    const result = await this.db.query.plansTable.findMany({
+  async findMany(options?: QueryOptions): Promise<VersionedMonitor[]> {
+    const result = await this.db.query.monitorsTable.findMany({
       where: options?.where,
       orderBy: options?.orderBy,
       limit: options?.limit,
       offset: options?.offset,
     });
 
-    return mapDbPlansToVersionedPlans(result);
+    return mapDbMonitorsToVersionedMonitors(result);
   }
 
   async update(
     id: string,
-    data: Partial<Omit<TestPlanDB, "id">>,
-  ): Promise<VersionedPlan> {
+    data: Partial<Omit<TestMonitorDB, "id">>,
+  ): Promise<VersionedMonitor> {
     const result = await this.db
-      .update(plansTable)
+      .update(monitorsTable)
       .set(data)
-      .where(eq(plansTable.id, id))
+      .where(eq(monitorsTable.id, id))
       .returning();
 
-    return mapDbPlanToVersionedPlan(result[0]);
+    return mapDbMonitorToVersionedMonitor(result[0]);
   }
 
   async delete(id: string): Promise<void> {
-    await this.db.delete(plansTable).where(eq(plansTable.id, id));
+    await this.db.delete(monitorsTable).where(eq(monitorsTable.id, id));
   }
 
   async count(where?: SQL): Promise<number> {
-    return this.db.$count(plansTable, where);
+    return this.db.$count(monitorsTable, where);
   }
 
-  async findDue(): Promise<VersionedPlan[]> {
-    // Complex query: find plans that are due based on their frequency
-    // A plan is due if:
+  async findDue(): Promise<VersionedMonitor[]> {
+    // Complex query: find monitors that are due based on their frequency
+    // A monitor is due if:
     // 1. It has a frequency defined AND
     // 2. Either it has never run OR its next scheduled run time has passed
     //
-    // NOTE: We must use "plans.id" (not just "id") in the correlated subquery
+    // NOTE: We must use "monitors.id" (not just "id") in the correlated subquery
     // because the runs table also has an "id" column. Without the table qualifier,
     // PostgreSQL resolves "id" to runs.id, making the subquery always return NULL.
 
     const subquery = this.db
       .select({ startedAt: runsTable.startedAt })
       .from(runsTable)
-      .where(eq(runsTable.planId, plansTable.id))
+      .where(eq(runsTable.monitorId, monitorsTable.id))
       .orderBy(desc(runsTable.startedAt))
       .limit(1)
       .as("latest_run");
     const result = await this.db
       .select({
-        plans: plansTable,
+        monitors: monitorsTable,
       })
-      .from(plansTable)
+      .from(monitorsTable)
       .leftJoinLateral(subquery, sql`true`).where(sql`
         frequency IS NOT NULL
         AND (
-          (SELECT MAX(started_at) FROM ${runsTable} WHERE ${runsTable.planId} = ${plansTable.id}) IS NULL
+          (SELECT MAX(started_at) FROM ${runsTable} WHERE ${runsTable.monitorId} = ${monitorsTable.id}) IS NULL
           OR (
-            (SELECT MAX(started_at) FROM ${runsTable} WHERE ${runsTable.planId} = ${plansTable.id}) + make_interval(
+            (SELECT MAX(started_at) FROM ${runsTable} WHERE ${runsTable.monitorId} = ${monitorsTable.id}) + make_interval(
               mins => CASE WHEN (frequency->>'unit') = 'MINUTE' THEN (frequency->>'every')::int ELSE 0 END,
               hours => CASE WHEN (frequency->>'unit') = 'HOUR' THEN (frequency->>'every')::int ELSE 0 END,
               days => CASE WHEN (frequency->>'unit') = 'DAY' THEN (frequency->>'every')::int ELSE 0 END
@@ -122,7 +122,7 @@ export class PostgresPlansRepository implements PlansRepository {
         )
       `);
 
-    return mapDbPlansToVersionedPlans(result.map((r) => r.plans));
+    return mapDbMonitorsToVersionedMonitors(result.map((r) => r.monitors));
   }
 }
 
@@ -224,9 +224,9 @@ export class PostgresRunsRepository implements RunsRepository {
     return this.db.$count(runsTable, where);
   }
 
-  async findLatestForPlan(planId: string): Promise<JobRun | null> {
+  async findLatestForMonitor(monitorId: string): Promise<JobRun | null> {
     const result = await this.db.query.runsTable.findFirst({
-      where: eq(runsTable.planId, planId),
+      where: eq(runsTable.monitorId, monitorId),
       orderBy: [desc(runsTable.startedAt)],
     });
 

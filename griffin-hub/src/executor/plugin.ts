@@ -16,23 +16,23 @@ declare module "fastify" {
  *
  * The executor:
  * - Polls the job queue for execution jobs
- * - Executes test plans using the plan executor
+ * - Executes test monitors using the monitor executor
  * - Updates job runs via direct storage access (no HTTP)
  * - Uses the "local" location for job routing
  */
 const executorPlugin: FastifyPluginAsync = async (fastify) => {
-  const { worker: workerConfig, planExecution } = fastify.config;
+  const { worker: workerConfig, monitorExecution } = fastify.config;
 
   fastify.log.info("Initializing built-in executor service");
 
-  // Get the plan-executions queue
-  const queue = fastify.jobQueue.queue<ExecutionJobData>("plan-executions");
+  // Get the monitor-executions queue
+  const queue = fastify.jobQueue.queue<ExecutionJobData>("monitor-executions");
 
   // Create executor service
   const executor = new ExecutorService(queue, fastify.storage, {
     emptyDelay: workerConfig.emptyDelay,
     maxEmptyDelay: workerConfig.maxEmptyDelay,
-    timeout: planExecution.timeout,
+    timeout: monitorExecution.timeout,
     httpClient: new AxiosAdapter(),
     secretRegistry: fastify.secretRegistry,
   });

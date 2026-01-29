@@ -1,5 +1,5 @@
 /**
- * Event types for test plan execution.
+ * Event types for test monitor execution.
  *
  * All events are JSON-serializable for compatibility with various event buses.
  * Events include stable identifiers (executionId, eventId) and monotonic sequence
@@ -15,26 +15,26 @@ export interface BaseEvent {
   seq: number;
   /** Unix timestamp in milliseconds */
   timestamp: number;
-  /** ID of the test plan being executed */
-  planId: string;
+  /** ID of the test monitor being executed */
+  monitorId: string;
   /** Unique identifier for this execution run */
   executionId: string;
 
-  /** ID of the organization that the plan belongs to */
+  /** ID of the organization that the monitor belongs to */
   organizationId: string;
 }
 
-/** Plan-level events */
-export interface PlanStartEvent extends BaseEvent {
-  type: "PLAN_START";
-  planName: string;
-  planVersion: string;
+/** Monitor-level events */
+export interface MonitorStartEvent extends BaseEvent {
+  type: "MONITOR_START";
+  monitorName: string;
+  monitorVersion: string;
   nodeCount: number;
   edgeCount: number;
 }
 
-export interface PlanEndEvent extends BaseEvent {
-  type: "PLAN_END";
+export interface MonitorEndEvent extends BaseEvent {
+  type: "MONITOR_END";
   success: boolean;
   totalDuration_ms: number;
   nodeResultCount: number;
@@ -123,8 +123,8 @@ export interface ErrorEvent extends BaseEvent {
 
 /** Union type of all execution events */
 export type ExecutionEvent =
-  | PlanStartEvent
-  | PlanEndEvent
+  | MonitorStartEvent
+  | MonitorEndEvent
   | NodeStartEvent
   | NodeEndEvent
   | HttpRequestEvent

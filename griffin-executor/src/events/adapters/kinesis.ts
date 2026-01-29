@@ -69,7 +69,10 @@ export class KinesisAdapter implements DurableEventBusAdapter {
   private readonly streamName: string;
   private readonly maxRetries: number;
   private readonly retryDelayMs: number;
-  private readonly partitionKeyStrategy: "executionId" | "organizationId" | "composite";
+  private readonly partitionKeyStrategy:
+    | "executionId"
+    | "organizationId"
+    | "composite";
   private static readonly KINESIS_MAX_BATCH = 500;
 
   constructor(options: KinesisAdapterOptions) {
@@ -124,7 +127,7 @@ export class KinesisAdapter implements DurableEventBusAdapter {
           console.warn(
             `Retrying ${failedRecords.length} failed records (attempt ${attempt + 1}/${this.maxRetries}) after ${delay}ms`,
           );
-          
+
           await this.sleep(delay);
           await this.publishBatchWithRetry(failedRecords, attempt + 1);
         } else {
@@ -141,7 +144,7 @@ export class KinesisAdapter implements DurableEventBusAdapter {
           `Kinesis publish error, retrying (attempt ${attempt + 1}/${this.maxRetries}) after ${delay}ms:`,
           error,
         );
-        
+
         await this.sleep(delay);
         await this.publishBatchWithRetry(records, attempt + 1);
       } else {

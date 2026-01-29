@@ -20,7 +20,7 @@ import { utcNow } from "../../utils/dates.js";
 
 // Query parameters for listing runs
 const ListRunsQuerySchema = Type.Object({
-  planId: Type.Optional(Type.String()),
+  monitorId: Type.Optional(Type.String()),
   status: Type.Optional(JobRunStatusSchema),
   ...PaginationRequestOpts,
 });
@@ -28,7 +28,7 @@ const ListRunsQuerySchema = Type.Object({
 const GetRunResponseSchema = JobRunSchema;
 
 const TriggerExecutionParamsSchema = Type.Object({
-  planId: Type.String(),
+  monitorId: Type.String(),
 });
 
 const TriggerExecutionBodySchema = Type.Object({
@@ -56,11 +56,11 @@ export default function (fastify: FastifyTypeBox) {
       },
     },
     async (request, reply) => {
-      const { planId, status, limit = 50, offset = 0 } = request.query;
+      const { monitorId, status, limit = 50, offset = 0 } = request.query;
 
       // Build filter conditions
       const conditions = [];
-      if (planId) conditions.push(eq(runsTable.planId, planId));
+      if (monitorId) conditions.push(eq(runsTable.monitorId, monitorId));
       if (status) conditions.push(eq(runsTable.status, status));
 
       const whereClause =
@@ -165,11 +165,11 @@ export default function (fastify: FastifyTypeBox) {
   );
 
   /**
-   * POST /runs/trigger/:planId
-   * Manually trigger a plan execution
+   * POST /runs/trigger/:monitorId
+   * Manually trigger a monitor execution
    */
   fastify.post(
-    "/trigger/:planId",
+    "/trigger/:monitorId",
     {
       schema: {
         tags: ["runs"],
@@ -185,15 +185,15 @@ export default function (fastify: FastifyTypeBox) {
       },
     },
     async (request, reply) => {
-      const { planId } = request.params;
+      const { monitorId } = request.params;
       const { environment } = request.body;
-      const queue = fastify.jobQueue.queue("plan-executions");
+      const queue = fastify.jobQueue.queue("monitor-executions");
 
-      // Check if plan exists
-      const plan = await fastify.storage.plans.findById(planId);
-      if (!plan) {
+      // Check if monitor exists
+      const monitor = await fastify.storage.monitors.findById(monitorId);
+      if (!monitor) {
         return reply.code(404).send({
-          error: `Plan not found: ${planId}`,
+          error: `Monitor not found: ${monitorId}`,
         });
       }
 
@@ -204,7 +204,7 @@ export default function (fastify: FastifyTypeBox) {
       const location = "local";
 
       const jobRun = await fastify.storage.runs.create({
-        planId: plan.id,
+        monitorId: monitor.id,
         executionGroupId,
         location,
         environment,
@@ -216,8 +216,8 @@ export default function (fastify: FastifyTypeBox) {
       // Enqueue the job
       await queue.enqueue(
         {
-          type: "execute-plan",
-          planId: plan.id,
+          type: "execute-monitor",
+          monitorId: monitor.id,
           jobRunId: jobRun.id,
           environment,
           scheduledAt: now,

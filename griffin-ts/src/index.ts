@@ -76,8 +76,8 @@ export type {
 // ============================================================================
 
 export {
-  CURRENT_PLAN_VERSION,
-  SUPPORTED_PLAN_VERSIONS,
+  CURRENT_MONITOR_VERSION,
+  SUPPORTED_MONITOR_VERSIONS,
 } from "./schema-exports.js";
 
 // ============================================================================
@@ -85,16 +85,16 @@ export {
 // ============================================================================
 
 export {
-  migratePlan,
+  migrateMonitor,
   migrateToLatest,
   isSupportedVersion,
   getSupportedVersions,
 } from "./migrations.js";
 
 export type {
-  PlanDSL,
-  ResolvedPlan,
-  ResolvedPlanV1,
+  MonitorDSL,
+  ResolvedMonitor,
+  ResolvedMonitorV1,
   NodeDSL,
   NodeResolved,
   HttpRequestDSL,

@@ -1,13 +1,13 @@
 import { loadState, resolveEnvironment } from "../../core/state.js";
-import { discoverPlans, formatDiscoveryErrors } from "../../core/discovery.js";
+import { discoverMonitors, formatDiscoveryErrors } from "../../core/discovery.js";
 import { createSdkWithCredentials } from "../../core/sdk.js";
 import { computeDiff, formatDiff, formatDiffJson } from "../../core/diff.js";
 import { terminal } from "../../utils/terminal.js";
 import { withSDKErrorHandling } from "../../utils/sdk-error.js";
 import { loadVariables } from "../../core/variables.js";
-import { resolvePlan } from "../../resolve.js";
+import { resolveMonitor } from "../../resolve.js";
 
-export interface PlanOptions {
+export interface MonitorOptions {
   json?: boolean;
   env: string;
 }
@@ -15,7 +15,7 @@ export interface PlanOptions {
 /**
  * Show what changes would be applied
  */
-export async function executePlan(options: PlanOptions): Promise<void> {
+export async function executeMonitor(options: MonitorOptions): Promise<void> {
   try {
     // Load state
     const state = await loadState();
@@ -30,7 +30,7 @@ export async function executePlan(options: PlanOptions): Promise<void> {
       terminal.exit(1);
     }
 
-    // Discover local plans
+    // Discover local monitors
     const discoveryPattern =
       state.discovery?.pattern || "**/__griffin__/*.{ts,js}";
     const discoveryIgnore = state.discovery?.ignore || [
@@ -38,8 +38,8 @@ export async function executePlan(options: PlanOptions): Promise<void> {
       "dist/**",
     ];
 
-    const spinner = terminal.spinner("Discovering local plans...").start();
-    const { plans, errors } = await discoverPlans(
+    const spinner = terminal.spinner("Discovering local monitors...").start();
+    const { monitors, errors } = await discoverMonitors(
       discoveryPattern,
       discoveryIgnore,
     );
@@ -50,34 +50,34 @@ export async function executePlan(options: PlanOptions): Promise<void> {
       terminal.exit(1);
     }
 
-    spinner.succeed(`Found ${plans.length} local plan(s)`);
+    spinner.succeed(`Found ${monitors.length} local monitor(s)`);
 
     // Create SDK clients with credentials
     const sdk = await createSdkWithCredentials(state.hub!.baseUrl);
 
-    // Fetch remote plans for this project + environment
-    const fetchSpinner = terminal.spinner("Fetching remote plans...").start();
+    // Fetch remote monitors for this project + environment
+    const fetchSpinner = terminal.spinner("Fetching remote monitors...").start();
     const response = await withSDKErrorHandling(
       () =>
-        sdk.getPlan({
+        sdk.getMonitor({
           query: {
             projectId: state.projectId,
             environment: envName,
           },
         }),
-      "Failed to fetch remote plans",
+      "Failed to fetch remote monitors",
     );
-    const remotePlans = response?.data?.data!;
-    fetchSpinner.succeed(`Found ${remotePlans.length} remote plan(s)`);
+    const remoteMonitors = response?.data?.data!;
+    fetchSpinner.succeed(`Found ${remoteMonitors.length} remote monitor(s)`);
 
-    // Load variables and resolve local plans before computing diff
+    // Load variables and resolve local monitors before computing diff
     const variables = await loadVariables(envName);
-    const resolvedPlans = plans.map((p) =>
-      resolvePlan(p.plan, state.projectId, envName, variables),
+    const resolvedMonitors = monitors.map((p) =>
+      resolveMonitor(p.monitor, state.projectId, envName, variables),
     );
 
     // Compute diff (no deletions shown by default)
-    const diff = computeDiff(resolvedPlans, remotePlans, {
+    const diff = computeDiff(resolvedMonitors, remoteMonitors, {
       includeDeletions: false,
     });
 

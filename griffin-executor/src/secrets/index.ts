@@ -1,10 +1,10 @@
 /**
- * Secret management for griffin plan executor.
+ * Secret management for griffin monitor executor.
  *
  * This module provides:
  * - SecretProvider interface for implementing custom providers
  * - SecretProviderRegistry for managing multiple providers
- * - Secret resolution utilities for test plans
+ * - Secret resolution utilities for test monitors
  * - Built-in providers: env, aws, vault
  */
 
@@ -24,8 +24,8 @@ export { SecretProviderRegistry } from "./registry.js";
 
 // Resolution utilities
 export {
-  resolveSecretsInPlan,
-  collectSecretsFromPlan,
+  resolveSecretsInMonitor,
+  collectSecretsFromMonitor,
   planHasSecrets,
 } from "./resolver.js";
 

@@ -3,11 +3,11 @@ import { isSecretRef, isStringLiteral } from "./types.js";
 import { SecretProviderRegistry } from "./registry.js";
 import { EnvSecretProvider } from "./providers/env.js";
 import {
-  resolveSecretsInPlan,
-  collectSecretsFromPlan,
+  resolveSecretsInMonitor,
+  collectSecretsFromMonitor,
   planHasSecrets,
 } from "./resolver.js";
-import { PlanV1 } from "@griffin-app/griffin-hub-sdk";
+import { MonitorV1 } from "@griffin-app/griffin-hub-sdk";
 
 // Helper to create a secret ref (mirrors the DSL's secret function)
 function createSecretRef(path: string) {
@@ -137,13 +137,13 @@ describe("EnvSecretProvider", () => {
   });
 });
 
-describe("Plan Secret Resolution", () => {
-  const createTestPlan = (
+describe("Monitor Secret Resolution", () => {
+  const createTestMonitor = (
     headers?: Record<string, any>,
     body?: any,
-  ): PlanV1 => ({
-    id: "test-plan-1",
-    name: "Test Plan",
+  ): MonitorV1 => ({
+    id: "test-monitor-1",
+    name: "Test Monitor",
     version: "1.0",
     environment: "default",
     project: "test-project",
@@ -167,48 +167,48 @@ describe("Plan Secret Resolution", () => {
   });
 
   describe("planHasSecrets", () => {
-    it("should return false for plans without secrets or literals", () => {
-      const plan = createTestPlan({ "Content-Type": "application/json" });
-      expect(planHasSecrets(plan)).toBe(false);
+    it("should return false for monitors without secrets or literals", () => {
+      const monitor = createTestMonitor({ "Content-Type": "application/json" });
+      expect(planHasSecrets(monitor)).toBe(false);
     });
 
-    it("should return true for plans with secret refs in headers", () => {
-      const plan = createTestPlan({
+    it("should return true for monitors with secret refs in headers", () => {
+      const monitor = createTestMonitor({
         Authorization: createSecretRef("env:API_KEY"),
       });
-      expect(planHasSecrets(plan)).toBe(true);
+      expect(planHasSecrets(monitor)).toBe(true);
     });
 
-    it("should return true for plans with secret refs in body", () => {
-      const plan = createTestPlan(undefined, {
+    it("should return true for monitors with secret refs in body", () => {
+      const monitor = createTestMonitor(undefined, {
         token: createSecretRef("env:TOKEN"),
       });
-      expect(planHasSecrets(plan)).toBe(true);
+      expect(planHasSecrets(monitor)).toBe(true);
     });
 
-    it("should return true for plans with string literals in headers", () => {
-      const plan = createTestPlan({
+    it("should return true for monitors with string literals in headers", () => {
+      const monitor = createTestMonitor({
         "Content-Type": createStringLiteral("application/json"),
       });
-      expect(planHasSecrets(plan)).toBe(true);
+      expect(planHasSecrets(monitor)).toBe(true);
     });
 
-    it("should return true for plans with string literals in body", () => {
-      const plan = createTestPlan(undefined, {
+    it("should return true for monitors with string literals in body", () => {
+      const monitor = createTestMonitor(undefined, {
         type: createStringLiteral("test"),
       });
-      expect(planHasSecrets(plan)).toBe(true);
+      expect(planHasSecrets(monitor)).toBe(true);
     });
   });
 
-  describe("collectSecretsFromPlan", () => {
+  describe("collectSecretsFromMonitor", () => {
     it("should collect secrets from headers", () => {
-      const plan = createTestPlan({
+      const monitor = createTestMonitor({
         Authorization: createSecretRef("env:API_KEY"),
         "X-Custom": createSecretRef("aws:custom-secret"),
       });
 
-      const collected = collectSecretsFromPlan(plan);
+      const collected = collectSecretsFromMonitor(monitor);
 
       expect(collected.refs).toHaveLength(2);
       expect(collected.refs).toContainEqual({
@@ -222,14 +222,14 @@ describe("Plan Secret Resolution", () => {
     });
 
     it("should collect secrets from nested body", () => {
-      const plan = createTestPlan(undefined, {
+      const monitor = createTestMonitor(undefined, {
         auth: {
           token: createSecretRef("env:TOKEN"),
         },
         items: [{ key: createSecretRef("env:ITEM_KEY") }],
       });
 
-      const collected = collectSecretsFromPlan(plan);
+      const collected = collectSecretsFromMonitor(monitor);
 
       expect(collected.refs).toHaveLength(2);
       expect(collected.refs).toContainEqual({ provider: "env", ref: "TOKEN" });
@@ -240,24 +240,24 @@ describe("Plan Secret Resolution", () => {
     });
 
     it("should deduplicate secret refs", () => {
-      const plan = createTestPlan({
+      const monitor = createTestMonitor({
         Authorization: createSecretRef("env:API_KEY"),
         "X-Backup-Auth": createSecretRef("env:API_KEY"),
       });
 
-      const collected = collectSecretsFromPlan(plan);
+      const collected = collectSecretsFromMonitor(monitor);
 
       expect(collected.refs).toHaveLength(1);
       expect(collected.paths).toHaveLength(2);
     });
 
     it("should collect string literals from headers", () => {
-      const plan = createTestPlan({
+      const monitor = createTestMonitor({
         "Content-Type": createStringLiteral("application/json"),
         Accept: createStringLiteral("application/xml"),
       });
 
-      const collected = collectSecretsFromPlan(plan);
+      const collected = collectSecretsFromMonitor(monitor);
 
       expect(collected.refs).toHaveLength(0);
       expect(collected.literalPaths).toHaveLength(2);
@@ -272,12 +272,12 @@ describe("Plan Secret Resolution", () => {
     });
 
     it("should collect both secrets and literals", () => {
-      const plan = createTestPlan({
+      const monitor = createTestMonitor({
         Authorization: createSecretRef("env:API_KEY"),
         "Content-Type": createStringLiteral("application/json"),
       });
 
-      const collected = collectSecretsFromPlan(plan);
+      const collected = collectSecretsFromMonitor(monitor);
 
       expect(collected.refs).toHaveLength(1);
       expect(collected.refs).toContainEqual({
@@ -292,9 +292,9 @@ describe("Plan Secret Resolution", () => {
     });
   });
 
-  describe("resolveSecretsInPlan", () => {
+  describe("resolveSecretsInMonitor", () => {
     it("should resolve secrets in headers", async () => {
-      const plan = createTestPlan({
+      const monitor = createTestMonitor({
         Authorization: createSecretRef("env:API_KEY"),
         "Content-Type": "application/json",
       });
@@ -306,7 +306,7 @@ describe("Plan Secret Resolution", () => {
         }),
       );
 
-      const resolved = await resolveSecretsInPlan(plan, registry);
+      const resolved = await resolveSecretsInMonitor(monitor, registry);
 
       const endpoint = resolved.nodes[0];
       if (endpoint.type !== "HTTP_REQUEST") {
@@ -317,7 +317,7 @@ describe("Plan Secret Resolution", () => {
     });
 
     it("should resolve secrets in body", async () => {
-      const plan = createTestPlan(undefined, {
+      const monitor = createTestMonitor(undefined, {
         token: createSecretRef("env:TOKEN"),
         data: "plain-value",
       });
@@ -329,7 +329,7 @@ describe("Plan Secret Resolution", () => {
         }),
       );
 
-      const resolved = await resolveSecretsInPlan(plan, registry);
+      const resolved = await resolveSecretsInMonitor(monitor, registry);
 
       const endpoint = resolved.nodes[0];
       if (endpoint.type !== "HTTP_REQUEST") {
@@ -339,8 +339,8 @@ describe("Plan Secret Resolution", () => {
       expect((endpoint.body as { data: string }).data).toBe("plain-value");
     });
 
-    it("should not modify original plan", async () => {
-      const plan = createTestPlan({
+    it("should not modify original monitor", async () => {
+      const monitor = createTestMonitor({
         Authorization: createSecretRef("env:API_KEY"),
       });
 
@@ -351,10 +351,10 @@ describe("Plan Secret Resolution", () => {
         }),
       );
 
-      const resolved = await resolveSecretsInPlan(plan, registry);
+      const resolved = await resolveSecretsInMonitor(monitor, registry);
 
       // Original should still have secret ref
-      const originalEndpoint = plan.nodes[0];
+      const originalEndpoint = monitor.nodes[0];
       if (originalEndpoint.type !== "HTTP_REQUEST") {
         throw new Error("HttpRequest not found");
       }
@@ -371,40 +371,40 @@ describe("Plan Secret Resolution", () => {
     });
 
     it("should throw for unregistered provider", async () => {
-      const plan = createTestPlan({
+      const monitor = createTestMonitor({
         Authorization: createSecretRef("unknown:API_KEY"),
       });
 
       const registry = new SecretProviderRegistry();
       registry.register(new EnvSecretProvider({ env: {} }));
 
-      await expect(resolveSecretsInPlan(plan, registry)).rejects.toThrow(
+      await expect(resolveSecretsInMonitor(monitor, registry)).rejects.toThrow(
         /not configured/,
       );
     });
 
     it("should throw for missing secret", async () => {
-      const plan = createTestPlan({
+      const monitor = createTestMonitor({
         Authorization: createSecretRef("env:MISSING_KEY"),
       });
 
       const registry = new SecretProviderRegistry();
       registry.register(new EnvSecretProvider({ env: {} }));
 
-      await expect(resolveSecretsInPlan(plan, registry)).rejects.toThrow(
+      await expect(resolveSecretsInMonitor(monitor, registry)).rejects.toThrow(
         /not set/,
       );
     });
 
     it("should unwrap string literals in headers", async () => {
-      const plan = createTestPlan({
+      const monitor = createTestMonitor({
         "Content-Type": createStringLiteral("application/json"),
         Accept: createStringLiteral("application/xml"),
       });
 
       const registry = new SecretProviderRegistry();
 
-      const resolved = await resolveSecretsInPlan(plan, registry);
+      const resolved = await resolveSecretsInMonitor(monitor, registry);
 
       const endpoint = resolved.nodes[0];
       if (endpoint.type !== "HTTP_REQUEST") {
@@ -415,14 +415,14 @@ describe("Plan Secret Resolution", () => {
     });
 
     it("should unwrap string literals in body", async () => {
-      const plan = createTestPlan(undefined, {
+      const monitor = createTestMonitor(undefined, {
         type: createStringLiteral("test-type"),
         data: "plain-value",
       });
 
       const registry = new SecretProviderRegistry();
 
-      const resolved = await resolveSecretsInPlan(plan, registry);
+      const resolved = await resolveSecretsInMonitor(monitor, registry);
 
       const endpoint = resolved.nodes[0];
       if (endpoint.type !== "HTTP_REQUEST") {
@@ -433,7 +433,7 @@ describe("Plan Secret Resolution", () => {
     });
 
     it("should resolve both secrets and literals", async () => {
-      const plan = createTestPlan({
+      const monitor = createTestMonitor({
         Authorization: createSecretRef("env:API_KEY"),
         "Content-Type": createStringLiteral("application/json"),
       });
@@ -445,7 +445,7 @@ describe("Plan Secret Resolution", () => {
         }),
       );
 
-      const resolved = await resolveSecretsInPlan(plan, registry);
+      const resolved = await resolveSecretsInMonitor(monitor, registry);
 
       const endpoint = resolved.nodes[0];
       if (endpoint.type !== "HTTP_REQUEST") {
@@ -455,17 +455,17 @@ describe("Plan Secret Resolution", () => {
       expect(endpoint.headers?.["Content-Type"]).toBe("application/json");
     });
 
-    it("should not modify original plan with literals", async () => {
-      const plan = createTestPlan({
+    it("should not modify original monitor with literals", async () => {
+      const monitor = createTestMonitor({
         "Content-Type": createStringLiteral("application/json"),
       });
 
       const registry = new SecretProviderRegistry();
 
-      const resolved = await resolveSecretsInPlan(plan, registry);
+      const resolved = await resolveSecretsInMonitor(monitor, registry);
 
       // Original should still have literal wrapper
-      const originalEndpoint = plan.nodes[0];
+      const originalEndpoint = monitor.nodes[0];
       if (originalEndpoint.type !== "HTTP_REQUEST") {
         throw new Error("HttpRequest not found");
       }

@@ -7,7 +7,7 @@ import type { SQL } from "drizzle-orm";
 import * as schema from "./adapters/postgres/schema.js";
 import type { JobRun } from "../schemas/job-run.js";
 import type { Agent } from "../schemas/agent.js";
-import type { VersionedPlan } from "./plan-mapper.js";
+import type { VersionedMonitor } from "./monitor-mapper.js";
 
 // =============================================================================
 // Query Options
@@ -22,31 +22,31 @@ export interface QueryOptions {
   limit?: number;
   offset?: number;
 }
-export type TestPlanDB = typeof schema.plansTable.$inferInsert;
+export type TestMonitorDB = typeof schema.monitorsTable.$inferInsert;
 
 // =============================================================================
 // Repository Interfaces
 // =============================================================================
 
 /**
- * Repository for test plans
+ * Repository for test monitors
  */
-export interface PlansRepository {
-  create(data: Omit<TestPlanDB, "id">): Promise<VersionedPlan>;
-  findById(id: string): Promise<VersionedPlan | null>;
-  findMany(options?: QueryOptions): Promise<VersionedPlan[]>;
+export interface MonitorsRepository {
+  create(data: Omit<TestMonitorDB, "id">): Promise<VersionedMonitor>;
+  findById(id: string): Promise<VersionedMonitor | null>;
+  findMany(options?: QueryOptions): Promise<VersionedMonitor[]>;
   update(
     id: string,
-    data: Partial<Omit<TestPlanDB, "id">>,
-  ): Promise<VersionedPlan>;
+    data: Partial<Omit<TestMonitorDB, "id">>,
+  ): Promise<VersionedMonitor>;
   delete(id: string): Promise<void>;
   count(where?: SQL): Promise<number>;
 
   /**
-   * Find plans that are due for execution based on their frequency.
-   * Returns plans that have never run or whose next run time has passed.
+   * Find monitors that are due for execution based on their frequency.
+   * Returns monitors that have never run or whose next run time has passed.
    */
-  findDue(): Promise<VersionedPlan[]>;
+  findDue(): Promise<VersionedMonitor[]>;
 }
 
 /**
@@ -61,10 +61,10 @@ export interface RunsRepository {
   count(where?: SQL): Promise<number>;
 
   /**
-   * Find the most recent run for a given plan ID.
-   * Returns null if no runs exist for the plan.
+   * Find the most recent run for a given monitor ID.
+   * Returns null if no runs exist for the monitor.
    */
-  findLatestForPlan(planId: string): Promise<JobRun | null>;
+  findLatestForMonitor(monitorId: string): Promise<JobRun | null>;
 }
 
 /**
@@ -94,7 +94,7 @@ export interface AgentsRepository {
  * Replaces the generic RepositoryBackend with specific, type-safe repository accessors.
  */
 export interface Storage {
-  plans: PlansRepository;
+  monitors: MonitorsRepository;
   runs: RunsRepository;
   agents: AgentsRepository;
 

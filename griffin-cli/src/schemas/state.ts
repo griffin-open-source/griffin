@@ -4,7 +4,7 @@ import { Type, type Static } from "typebox";
  * State file schema for tracking project configuration
  * Stored in .griffin/state.json
  *
- * Note: The hub is now the source of truth for plans.
+ * Note: The hub is now the source of truth for monitors.
  * This file only stores configuration (project, environments, runner connection).
  */
 
@@ -26,7 +26,7 @@ export const DiscoveryConfigSchema = Type.Object({
 
 export type DiscoveryConfig = Static<typeof DiscoveryConfigSchema>;
 
-// State schema (hub is source of truth for plans)
+// State schema (hub is source of truth for monitors)
 export const StateFileSchema = Type.Object({
   stateVersion: Type.Literal(1),
   projectId: Type.String(),

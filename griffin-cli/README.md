@@ -6,9 +6,9 @@ Command-line interface for managing API monitoring tests as code.
 
 Griffin CLI enables monitoring-as-code with support for both local test execution and hub-based orchestration. It provides a declarative workflow:
 
-1. Write test plans in TypeScript/JavaScript
+1. Write test monitors in TypeScript/JavaScript
 2. Run tests locally against configured targets
-3. Preview changes with `griffin hub plan`
+3. Preview changes with `griffin hub monitor`
 4. Apply changes to hub with `griffin hub apply`
 5. Monitor execution with `griffin hub runs`
 
@@ -30,7 +30,7 @@ This creates `.griffin/state.json` which tracks:
 
 - Project ID (auto-detected from package.json or directory name)
 - Environment configurations with their targets
-- Synced plan state
+- Synced monitor state
 - Hub connection settings (optional)
 
 Override project ID with `--project <name>`.
@@ -43,9 +43,9 @@ View configured environments:
 griffin env list
 ```
 
-### 3. Create Test Plans
+### 3. Create Test Monitors
 
-Create test files in `__griffin__/` directories. These files export test plans that can be run locally or synced to the hub.
+Create test files in `__griffin__/` directories. These files export test monitors that can be run locally or synced to the hub.
 
 ### 4. Run Tests Locally
 
@@ -64,8 +64,8 @@ griffin hub connect --url https://hub.example.com --token <token>
 ### 6. Preview Hub Changes
 
 ```bash
-griffin hub plan
-griffin hub plan production
+griffin hub monitor
+griffin hub monitor production
 ```
 
 Shows what will be created, updated, or deleted on the hub for the specified environment.
@@ -77,15 +77,15 @@ griffin hub apply
 griffin hub apply production
 ```
 
-Syncs plans to the hub for the specified environment.
+Syncs monitors to the hub for the specified environment.
 
 ### 8. Trigger Hub Run
 
 ```bash
-griffin hub run production --plan <name>
+griffin hub run production --monitor <name>
 ```
 
-Triggers a plan execution on the hub in the specified environment.
+Triggers a monitor execution on the hub in the specified environment.
 
 ## Commands
 
@@ -94,7 +94,7 @@ Commands are organized into four groups:
 - **Top-level**: Project initialization and utilities
 - **env**: Environment management
 - **local**: Local test execution
-- **hub**: Hub operations (plan sync, remote execution)
+- **hub**: Hub operations (monitor sync, remote execution)
 
 ### Top-Level Commands
 
@@ -115,7 +115,7 @@ griffin init --project my-service
 
 #### `griffin validate`
 
-Validate test plan files without syncing.
+Validate test monitor files without syncing.
 
 **Example:**
 
@@ -222,17 +222,17 @@ Show recent runs from the hub.
 
 **Options:**
 
-- `--plan <name>` - Filter by plan name
+- `--monitor <name>` - Filter by monitor name
 - `--limit <number>` - Number of runs to show (default: 10)
 
 **Example:**
 
 ```bash
 griffin hub runs
-griffin hub runs --plan health-check --limit 5
+griffin hub runs --monitor health-check --limit 5
 ```
 
-#### `griffin hub plan [env]`
+#### `griffin hub monitor [env]`
 
 Show what changes would be applied to the hub. Environment can be specified as a positional argument, or uses the default environment if omitted.
 
@@ -243,9 +243,9 @@ Show what changes would be applied to the hub. Environment can be specified as a
 **Example:**
 
 ```bash
-griffin hub plan
-griffin hub plan production
-griffin hub plan staging --json
+griffin hub monitor
+griffin hub monitor production
+griffin hub monitor staging --json
 ```
 
 **Exit codes:**
@@ -262,7 +262,7 @@ Apply changes to the hub. Environment can be specified as a positional argument,
 
 - `--auto-approve` - Skip confirmation prompt
 - `--dry-run` - Show what would be done without making changes
-- `--prune` - Delete plans on hub that don't exist locally
+- `--prune` - Delete monitors on hub that don't exist locally
 
 **Example:**
 
@@ -275,20 +275,20 @@ griffin hub apply production --prune
 
 #### `griffin hub run <env>`
 
-Trigger a plan run on the hub in the specified environment.
+Trigger a monitor run on the hub in the specified environment.
 
 **Options:**
 
-- `--plan <name>` - Plan name to run (required)
+- `--monitor <name>` - Monitor name to run (required)
 - `--wait` - Wait for run to complete
-- `--force` - Run even if local plan differs from hub
+- `--force` - Run even if local monitor differs from hub
 
 **Example:**
 
 ```bash
-griffin hub run production --plan health-check
-griffin hub run staging --plan health-check --wait
-griffin hub run production --plan api-check --force
+griffin hub run production --monitor health-check
+griffin hub run staging --monitor health-check --wait
+griffin hub run production --monitor api-check --force
 ```
 
 ## Configuration
@@ -375,22 +375,22 @@ griffin local run staging
 griffin hub apply production
 ```
 
-## Test Plan Discovery
+## Test Monitor Discovery
 
-By default, Griffin discovers test plans from files in `__griffin__/` directories matching `**/__griffin__/*.{ts,js}`.
+By default, Griffin discovers test monitors from files in `__griffin__/` directories matching `**/__griffin__/*.{ts,js}`.
 
-Test files should be TypeScript or JavaScript files that export test plan objects.
+Test files should be TypeScript or JavaScript files that export test monitor objects.
 
 ## Diff Rules
 
 Griffin computes changes using:
 
-- **CREATE**: Plan exists locally but not in state
-- **UPDATE**: Plan exists in both, but hash differs
-- **DELETE**: Plan exists in state but not locally
-- **NOOP**: Plan exists in both with same hash
+- **CREATE**: Monitor exists locally but not in state
+- **UPDATE**: Monitor exists in both, but hash differs
+- **DELETE**: Monitor exists in state but not locally
+- **NOOP**: Monitor exists in both with same hash
 
-Change detection uses a SHA-256 hash of the normalized plan payload.
+Change detection uses a SHA-256 hash of the normalized monitor payload.
 
 ## Hub API Compatibility
 
@@ -398,11 +398,11 @@ Griffin CLI is compatible with Griffin Hub API v1.
 
 Required endpoints:
 
-- `POST /plan` - Create/update plan
-- `GET /plan` - List plans
+- `POST /monitor` - Create/update monitor
+- `GET /monitor` - List monitors
 - `GET /runs` - List runs
 - `GET /runs/:id` - Get run details
-- `POST /runs/trigger/:planId` - Trigger run
+- `POST /runs/trigger/:monitorId` - Trigger run
 
 ## Development
 
@@ -432,7 +432,7 @@ griffin-cli/
 │   │   │   ├── connect.ts
 │   │   │   ├── status.ts
 │   │   │   ├── runs.ts
-│   │   │   ├── plan.ts
+│   │   │   ├── monitor.ts
 │   │   │   ├── apply.ts
 │   │   │   └── run.ts
 │   │   ├── env.ts          # Environment commands
@@ -443,7 +443,7 @@ griffin-cli/
 │   │   ├── sdk.ts         # Hub SDK client
 │   │   ├── apply.ts       # Apply engine
 │   │   ├── diff.ts        # Diff computation
-│   │   ├── discovery.ts   # Plan discovery
+│   │   ├── discovery.ts   # Monitor discovery
 │   │   ├── state.ts       # State management
 │   │   ├── variables.ts   # Variable resolution
 │   │   └── project.ts     # Project detection

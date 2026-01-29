@@ -57,12 +57,12 @@ export interface RunStatusUpdate {
  */
 export interface StatusCallbacks {
   /**
-   * Called when plan execution starts (after secret resolution, before graph execution).
+   * Called when monitor execution starts (after secret resolution, before graph execution).
    */
   onStart?: () => Promise<void>;
 
   /**
-   * Called when plan execution completes (success or failure).
+   * Called when monitor execution completes (success or failure).
    */
   onComplete?: (update: RunStatusUpdate) => Promise<void>;
 }

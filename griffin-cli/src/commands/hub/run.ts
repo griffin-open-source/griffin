@@ -1,22 +1,22 @@
 import { loadState, resolveEnvironment } from "../../core/state.js";
-import type { PlanV1 } from "@griffin-app/griffin-hub-sdk";
+import type { MonitorV1 } from "@griffin-app/griffin-hub-sdk";
 import { createSdkWithCredentials } from "../../core/sdk.js";
-import { discoverPlans, formatDiscoveryErrors } from "../../core/discovery.js";
+import { discoverMonitors, formatDiscoveryErrors } from "../../core/discovery.js";
 import { computeDiff } from "../../core/diff.js";
 import { terminal } from "../../utils/terminal.js";
 import { withSDKErrorHandling } from "../../utils/sdk-error.js";
 import { loadVariables } from "../../core/variables.js";
-import { resolvePlan } from "../../resolve.js";
+import { resolveMonitor } from "../../resolve.js";
 
 export interface RunOptions {
-  plan: string;
+  monitor: string;
   env: string;
   wait?: boolean;
   force?: boolean;
 }
 
 /**
- * Trigger a plan run on the hub
+ * Trigger a monitor run on the hub
  */
 export async function executeRun(options: RunOptions): Promise<void> {
   try {
@@ -36,7 +36,7 @@ export async function executeRun(options: RunOptions): Promise<void> {
     // Create SDK clients with credentials
     const sdk = await createSdkWithCredentials(state.hub!.baseUrl);
 
-    // Discover local plans
+    // Discover local monitors
     const discoveryPattern =
       state.discovery?.pattern || "**/__griffin__/*.{ts,js}";
     const discoveryIgnore = state.discovery?.ignore || [
@@ -44,8 +44,8 @@ export async function executeRun(options: RunOptions): Promise<void> {
       "dist/**",
     ];
 
-    const spinner = terminal.spinner("Discovering local plans...").start();
-    const { plans: discoveredPlans, errors } = await discoverPlans(
+    const spinner = terminal.spinner("Discovering local monitors...").start();
+    const { monitors: discoveredMonitors, errors } = await discoverMonitors(
       discoveryPattern,
       discoveryIgnore,
     );
@@ -56,53 +56,53 @@ export async function executeRun(options: RunOptions): Promise<void> {
       terminal.exit(1);
     }
 
-    // Find local plan by name
-    const localPlan = discoveredPlans.find((p) => p.plan.name === options.plan);
-    if (!localPlan) {
-      spinner.fail(`Plan "${options.plan}" not found locally`);
+    // Find local monitor by name
+    const localMonitor = discoveredMonitors.find((p) => p.monitor.name === options.monitor);
+    if (!localMonitor) {
+      spinner.fail(`Monitor "${options.monitor}" not found locally`);
       terminal.blank();
-      terminal.info("Available plans:");
-      for (const p of discoveredPlans) {
-        terminal.dim(`  - ${p.plan.name}`);
+      terminal.info("Available monitors:");
+      for (const p of discoveredMonitors) {
+        terminal.dim(`  - ${p.monitor.name}`);
       }
       terminal.exit(1);
     }
-    spinner.succeed(`Found local plan: ${terminal.colors.cyan(options.plan)}`);
+    spinner.succeed(`Found local monitor: ${terminal.colors.cyan(options.monitor)}`);
 
-    // Fetch remote plans for this project + environment
+    // Fetch remote monitors for this project + environment
     const fetchSpinner = terminal.spinner("Checking hub...").start();
     const response = await withSDKErrorHandling(
       () =>
-        sdk.getPlan({
+        sdk.getMonitor({
           query: {
             projectId: state.projectId,
             environment: envName,
           },
         }),
-      "Failed to fetch plans from hub",
+      "Failed to fetch monitors from hub",
     );
-    const remotePlans = response?.data?.data!;
+    const remoteMonitors = response?.data?.data!;
 
-    // Find remote plan by name
-    const remotePlan = remotePlans.find((p) => p.name === options.plan);
-    if (!remotePlan) {
-      fetchSpinner.fail(`Plan "${options.plan}" not found on hub`);
-      terminal.dim("Run 'griffin hub apply' to sync your plans first");
+    // Find remote monitor by name
+    const remoteMonitor = remoteMonitors.find((p) => p.name === options.monitor);
+    if (!remoteMonitor) {
+      fetchSpinner.fail(`Monitor "${options.monitor}" not found on hub`);
+      terminal.dim("Run 'griffin hub apply' to sync your monitors first");
       terminal.exit(1);
     }
-    fetchSpinner.succeed("Plan found on hub");
+    fetchSpinner.succeed("Monitor found on hub");
 
-    // Load variables and resolve local plan before computing diff
+    // Load variables and resolve local monitor before computing diff
     const variables = await loadVariables(envName);
-    const resolvedLocalPlan = resolvePlan(
-      localPlan!.plan,
+    const resolvedLocalMonitor = resolveMonitor(
+      localMonitor!.monitor,
       state.projectId,
       envName,
       variables,
     );
 
-    // Compute diff to check if local plan differs from remote
-    const diff = computeDiff([resolvedLocalPlan], [remotePlan!] as PlanV1[], {
+    // Compute diff to check if local monitor differs from remote
+    const diff = computeDiff([resolvedLocalMonitor], [remoteMonitor!] as MonitorV1[], {
       includeDeletions: false,
     });
 
@@ -111,10 +111,10 @@ export async function executeRun(options: RunOptions): Promise<void> {
       diff.actions.some((a) => a.type === "update" || a.type === "create");
 
     if (hasDiff && !options.force) {
-      terminal.error(`Local plan "${options.plan}" differs from hub`);
+      terminal.error(`Local monitor "${options.monitor}" differs from hub`);
       terminal.blank();
       terminal.warn(
-        "The plan on the hub is different from your local version.",
+        "The monitor on the hub is different from your local version.",
       );
       terminal.dim(
         "Run 'griffin hub apply' to sync, or use --force to run anyway.",
@@ -125,7 +125,7 @@ export async function executeRun(options: RunOptions): Promise<void> {
     // Trigger the run
     terminal.blank();
     terminal.info(
-      `Triggering run for plan: ${terminal.colors.cyan(options.plan)}`,
+      `Triggering run for monitor: ${terminal.colors.cyan(options.monitor)}`,
     );
     terminal.log(`Target environment: ${terminal.colors.cyan(envName)}`);
 
@@ -136,9 +136,9 @@ export async function executeRun(options: RunOptions): Promise<void> {
     const triggerSpinner = terminal.spinner("Triggering run...").start();
     const runResponse = await withSDKErrorHandling(
       () =>
-        sdk.postRunsTriggerByPlanId({
+        sdk.postRunsTriggerByMonitorId({
           path: {
-            planId: remotePlan!.id,
+            monitorId: remoteMonitor!.id,
           },
           body: {
             environment: envName,

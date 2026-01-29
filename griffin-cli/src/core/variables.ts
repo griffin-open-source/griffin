@@ -122,16 +122,16 @@ function resolveVariable(
 }
 
 /**
- * Recursively walk a plan object and resolve all variable references.
+ * Recursively walk a monitor object and resolve all variable references.
  *
- * This function deeply traverses the plan structure, replacing any
+ * This function deeply traverses the monitor structure, replacing any
  * { $variable: { key, template? } } objects with resolved string values.
  *
- * @param obj - The plan object or value to resolve
+ * @param obj - The monitor object or value to resolve
  * @param variables - Map of variable key-value pairs
- * @returns The plan with all variables resolved to strings
+ * @returns The monitor with all variables resolved to strings
  */
-export function resolveVariablesInPlan(
+export function resolveVariablesInMonitor(
   obj: unknown,
   variables: Record<string, string>,
 ): unknown {
@@ -145,14 +145,14 @@ export function resolveVariablesInPlan(
 
   // Recursively process arrays
   if (Array.isArray(obj)) {
-    return obj.map((item) => resolveVariablesInPlan(item, variables));
+    return obj.map((item) => resolveVariablesInMonitor(item, variables));
   }
 
   // Recursively process objects
   if (typeof obj === "object" && obj !== null) {
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
-      result[key] = resolveVariablesInPlan(value, variables);
+      result[key] = resolveVariablesInMonitor(value, variables);
     }
     return result;
   }

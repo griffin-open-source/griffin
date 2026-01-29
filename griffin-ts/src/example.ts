@@ -1,7 +1,7 @@
 /**
  * Example usage of the griffin Test System DSL
  *
- * This file demonstrates how to create a test plan using the DSL.
+ * This file demonstrates how to create a test monitor using the DSL.
  * In practice, test files would be placed in __griffin__ subdirectories
  * and discovered by the CLI tool.
  */
@@ -21,7 +21,7 @@ import {
   variable,
 } from "./index.js";
 
-const plan = createGraphBuilder({
+const monitor = createGraphBuilder({
   name: "foo-bar-check",
   frequency: Frequency.every(1).minute(),
 })
@@ -52,4 +52,4 @@ const plan = createGraphBuilder({
   .addEdge("first_wait", END)
   .build();
 
-console.log(JSON.stringify(plan, null, 2));
+console.log(JSON.stringify(monitor, null, 2));

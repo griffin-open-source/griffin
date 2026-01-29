@@ -1,19 +1,19 @@
 import { loadState, resolveEnvironment } from "../../core/state.js";
-import type { PlanV1 } from "@griffin-app/griffin-hub-sdk";
-import { discoverPlans, formatDiscoveryErrors } from "../../core/discovery.js";
+import type { MonitorV1 } from "@griffin-app/griffin-hub-sdk";
+import { discoverMonitors, formatDiscoveryErrors } from "../../core/discovery.js";
 import { computeDiff, formatDiff } from "../../core/diff.js";
 import { applyDiff, formatApplyResult } from "../../core/apply.js";
 import { createSdkWithCredentials } from "../../core/sdk.js";
 import { terminal } from "../../utils/terminal.js";
 import { withSDKErrorHandling } from "../../utils/sdk-error.js";
 import { loadVariables } from "../../core/variables.js";
-import { resolvePlan } from "../../resolve.js";
+import { resolveMonitor } from "../../resolve.js";
 
 export interface ApplyOptions {
   autoApprove?: boolean;
   dryRun?: boolean;
   env: string;
-  prune?: boolean; // If true, delete remote plans not in local
+  prune?: boolean; // If true, delete remote monitors not in local
 }
 
 /**
@@ -41,7 +41,7 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
     // Create SDK clients with credentials
     const sdk = await createSdkWithCredentials(state.hub!.baseUrl);
 
-    // Discover local plans
+    // Discover local monitors
     const discoveryPattern =
       state.discovery?.pattern || "**/__griffin__/*.{ts,js}";
     const discoveryIgnore = state.discovery?.ignore || [
@@ -49,8 +49,8 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
       "dist/**",
     ];
 
-    const spinner = terminal.spinner("Discovering local plans...").start();
-    const { plans, errors } = await discoverPlans(
+    const spinner = terminal.spinner("Discovering local monitors...").start();
+    const { monitors, errors } = await discoverMonitors(
       discoveryPattern,
       discoveryIgnore,
     );
@@ -61,35 +61,35 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
       terminal.exit(1);
     }
 
-    spinner.succeed(`Found ${plans.length} local plan(s)`);
+    spinner.succeed(`Found ${monitors.length} local monitor(s)`);
 
-    // Fetch remote plans for this project + environment
-    const fetchSpinner = terminal.spinner("Fetching remote plans...").start();
+    // Fetch remote monitors for this project + environment
+    const fetchSpinner = terminal.spinner("Fetching remote monitors...").start();
     const response = await withSDKErrorHandling(
       () =>
-        sdk.getPlan({
+        sdk.getMonitor({
           query: {
             projectId: state.projectId,
             environment: envName,
           },
         }),
-      "Failed to fetch remote plans",
+      "Failed to fetch remote monitors",
     );
-    const remotePlans = response?.data?.data!;
-    fetchSpinner.succeed(`Found ${remotePlans.length} remote plan(s)`);
+    const remoteMonitors = response?.data?.data!;
+    fetchSpinner.succeed(`Found ${remoteMonitors.length} remote monitor(s)`);
 
-    // Load variables and resolve local plans before computing diff
+    // Load variables and resolve local monitors before computing diff
     const variables = await loadVariables(envName);
-    const resolvedPlans = plans.map((p) =>
-      resolvePlan(p.plan, state.projectId, envName, variables),
+    const resolvedMonitors = monitors.map((p) =>
+      resolveMonitor(p.monitor, state.projectId, envName, variables),
     );
 
     // Compute diff (include deletions if --prune)
-    const diff = computeDiff(resolvedPlans, remotePlans, {
+    const diff = computeDiff(resolvedMonitors, remoteMonitors, {
       includeDeletions: options.prune || false,
     });
 
-    // Show plan
+    // Show monitor
     terminal.blank();
     terminal.log(formatDiff(diff));
     terminal.blank();
@@ -106,7 +106,7 @@ export async function executeApply(options: ApplyOptions): Promise<void> {
     // Show deletions warning if --prune
     if (options.prune && diff.summary.deletes > 0) {
       terminal.warn(
-        `--prune will DELETE ${diff.summary.deletes} plan(s) from the hub`,
+        `--prune will DELETE ${diff.summary.deletes} monitor(s) from the hub`,
       );
       terminal.blank();
     }

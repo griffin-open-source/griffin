@@ -9,7 +9,7 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-import { type Frequency, type Node } from "../../../schemas/plans.js";
+import { type Frequency, type Node } from "../../../schemas/monitors.js";
 import { type Edge } from "@griffin-app/griffin-ts/types";
 import { JobStatus } from "../../../job-queue/ports.js";
 import { JobRunStatus, TriggerType } from "../../../schemas/job-run.js";
@@ -38,7 +38,7 @@ export const agentStatusEnum = pgEnum("agent_status", [
   AgentStatus.OFFLINE,
 ]);
 
-export const plansTable = pgTable("plans", {
+export const monitorsTable = pgTable("monitors", {
   organization: text("organization").notNull(),
   project: text("project").notNull(),
   id: text("id").primaryKey(),
@@ -59,8 +59,8 @@ export const plansTable = pgTable("plans", {
 
 export const runsTable = pgTable("runs", {
   id: text("id").primaryKey(),
-  planId: text("plan_id")
-    .references(() => plansTable.id)
+  monitorId: text("monitor_id")
+    .references(() => monitorsTable.id)
     .notNull(),
   executionGroupId: text("execution_group_id").notNull(),
   location: text("location").notNull(),

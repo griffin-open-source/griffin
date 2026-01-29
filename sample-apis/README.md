@@ -88,7 +88,7 @@ const builder = new ApiCheckBuilder({
   endpoint_host: "http://localhost:3000"
 });
 
-const plan = builder
+const monitor = builder
   .addEndpoint("health", {
     method: GET,
     response_format: JSON,
@@ -103,7 +103,7 @@ const plan = builder
   .addEdge("health", "get_items")
   .addEdge("get_items", END);
 
-plan.create({
+monitor.create({
   frequency: Frequency.every(1).minute()
 });
 ```

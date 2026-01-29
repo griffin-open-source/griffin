@@ -9,13 +9,13 @@ import {
   HttpMethod,
   ResponseFormat,
   NodeType,
-  CURRENT_PLAN_VERSION,
+  CURRENT_MONITOR_VERSION,
 } from "./schema.js";
 
 describe("Sequential Test Builder", () => {
   describe("Basic Sequential Tests", () => {
     it("should build a minimal sequential test", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "simple-check",
         frequency: Frequency.every(5).minutes(),
       })
@@ -27,18 +27,18 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      expect(plan.name).toBe("simple-check");
-      expect(plan.version).toBe(CURRENT_PLAN_VERSION);
-      expect(plan.frequency).toEqual({ every: 5, unit: "MINUTE" });
-      expect(plan.nodes).toHaveLength(1);
-      expect(plan.edges).toEqual([
+      expect(monitor.name).toBe("simple-check");
+      expect(monitor.version).toBe(CURRENT_MONITOR_VERSION);
+      expect(monitor.frequency).toEqual({ every: 5, unit: "MINUTE" });
+      expect(monitor.nodes).toHaveLength(1);
+      expect(monitor.edges).toEqual([
         { from: START, to: "health" },
         { from: "health", to: END },
       ]);
     });
 
     it("should auto-generate edges for multiple requests", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "multi-step",
         frequency: Frequency.every(10).minutes(),
       })
@@ -62,8 +62,8 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      expect(plan.nodes).toHaveLength(3);
-      expect(plan.edges).toEqual([
+      expect(monitor.nodes).toHaveLength(3);
+      expect(monitor.edges).toEqual([
         { from: START, to: "step1" },
         { from: "step1", to: "step2" },
         { from: "step2", to: "step3" },
@@ -72,17 +72,17 @@ describe("Sequential Test Builder", () => {
     });
 
     it("should build empty test with no nodes", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "empty-test",
         frequency: Frequency.every(1).hour(),
       }).build();
 
-      expect(plan.nodes).toHaveLength(0);
-      expect(plan.edges).toEqual([{ from: START, to: END }]);
+      expect(monitor.nodes).toHaveLength(0);
+      expect(monitor.edges).toEqual([{ from: START, to: END }]);
     });
 
     it("should include locations when specified", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "distributed-test",
         frequency: Frequency.every(5).minutes(),
         locations: ["us-east-1", "eu-west-1"],
@@ -95,13 +95,13 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      expect(plan.locations).toEqual(["us-east-1", "eu-west-1"]);
+      expect(monitor.locations).toEqual(["us-east-1", "eu-west-1"]);
     });
   });
 
   describe("Request Methods", () => {
     it("should support all HTTP methods", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "http-methods",
         frequency: Frequency.every(5).minutes(),
       })
@@ -140,16 +140,16 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      expect(plan.nodes).toHaveLength(5);
-      expect((plan.nodes[0] as any).method).toBe(HttpMethod.GET);
-      expect((plan.nodes[1] as any).method).toBe(HttpMethod.POST);
-      expect((plan.nodes[2] as any).method).toBe(HttpMethod.PUT);
-      expect((plan.nodes[3] as any).method).toBe(HttpMethod.PATCH);
-      expect((plan.nodes[4] as any).method).toBe(HttpMethod.DELETE);
+      expect(monitor.nodes).toHaveLength(5);
+      expect((monitor.nodes[0] as any).method).toBe(HttpMethod.GET);
+      expect((monitor.nodes[1] as any).method).toBe(HttpMethod.POST);
+      expect((monitor.nodes[2] as any).method).toBe(HttpMethod.PUT);
+      expect((monitor.nodes[3] as any).method).toBe(HttpMethod.PATCH);
+      expect((monitor.nodes[4] as any).method).toBe(HttpMethod.DELETE);
     });
 
     it("should include headers in requests", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "with-headers",
         frequency: Frequency.every(5).minutes(),
       })
@@ -165,7 +165,7 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      const endpoint = plan.nodes[0] as any;
+      const endpoint = monitor.nodes[0] as any;
       expect(endpoint.headers).toEqual({
         Authorization: "Bearer token123",
         "X-Custom": "value",
@@ -173,7 +173,7 @@ describe("Sequential Test Builder", () => {
     });
 
     it("should include body in requests", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "with-body",
         frequency: Frequency.every(5).minutes(),
       })
@@ -192,7 +192,7 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      const endpoint = plan.nodes[0] as any;
+      const endpoint = monitor.nodes[0] as any;
       expect(endpoint.body).toEqual({
         name: "Test User",
         email: "test@example.com",
@@ -205,7 +205,7 @@ describe("Sequential Test Builder", () => {
 
   describe("Wait Nodes", () => {
     it("should add wait with milliseconds", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "with-wait",
         frequency: Frequency.every(5).minutes(),
       })
@@ -224,13 +224,13 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      expect(plan.nodes).toHaveLength(3);
-      expect(plan.nodes[1]).toEqual({
+      expect(monitor.nodes).toHaveLength(3);
+      expect(monitor.nodes[1]).toEqual({
         id: "pause",
         type: NodeType.WAIT,
         duration_ms: 2000,
       });
-      expect(plan.edges).toEqual([
+      expect(monitor.edges).toEqual([
         { from: START, to: "step1" },
         { from: "step1", to: "pause" },
         { from: "pause", to: "step2" },
@@ -239,7 +239,7 @@ describe("Sequential Test Builder", () => {
     });
 
     it("should add wait with seconds", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "with-wait-seconds",
         frequency: Frequency.every(5).minutes(),
       })
@@ -258,7 +258,7 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      expect(plan.nodes[1]).toEqual({
+      expect(monitor.nodes[1]).toEqual({
         id: "pause",
         type: NodeType.WAIT,
         duration_ms: 5000,
@@ -266,7 +266,7 @@ describe("Sequential Test Builder", () => {
     });
 
     it("should add wait with minutes", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "with-wait-minutes",
         frequency: Frequency.every(5).minutes(),
       })
@@ -285,7 +285,7 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      expect(plan.nodes[1]).toEqual({
+      expect(monitor.nodes[1]).toEqual({
         id: "pause",
         type: NodeType.WAIT,
         duration_ms: 120000,
@@ -295,7 +295,7 @@ describe("Sequential Test Builder", () => {
 
   describe("Assertions", () => {
     it("should add assertions with auto-generated node name", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "with-assertions",
         frequency: Frequency.every(5).minutes(),
       })
@@ -308,13 +308,13 @@ describe("Sequential Test Builder", () => {
         .assert((state) => [Assert(state.call.status).equals(200)])
         .build();
 
-      expect(plan.nodes).toHaveLength(2);
-      expect(plan.nodes[1].type).toBe(NodeType.ASSERTION);
-      expect(plan.nodes[1].id).toMatch(/^step_\d+$/);
+      expect(monitor.nodes).toHaveLength(2);
+      expect(monitor.nodes[1].type).toBe(NodeType.ASSERTION);
+      expect(monitor.nodes[1].id).toMatch(/^step_\d+$/);
     });
 
     it("should create assertions with type-safe state access", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "typed-assertions",
         frequency: Frequency.every(5).minutes(),
       })
@@ -342,15 +342,15 @@ describe("Sequential Test Builder", () => {
         ])
         .build();
 
-      expect(plan.nodes).toHaveLength(4);
-      expect(plan.nodes[0].id).toBe("create_user");
-      expect(plan.nodes[1].type).toBe(NodeType.ASSERTION);
-      expect(plan.nodes[2].id).toBe("get_user");
-      expect(plan.nodes[3].type).toBe(NodeType.ASSERTION);
+      expect(monitor.nodes).toHaveLength(4);
+      expect(monitor.nodes[0].id).toBe("create_user");
+      expect(monitor.nodes[1].type).toBe(NodeType.ASSERTION);
+      expect(monitor.nodes[2].id).toBe("get_user");
+      expect(monitor.nodes[3].type).toBe(NodeType.ASSERTION);
     });
 
     it("should properly chain assertions with requests and waits", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "complex-chain",
         frequency: Frequency.every(15).minutes(),
       })
@@ -375,8 +375,8 @@ describe("Sequential Test Builder", () => {
         ])
         .build();
 
-      expect(plan.nodes).toHaveLength(5);
-      expect(plan.edges).toEqual([
+      expect(monitor.nodes).toHaveLength(5);
+      expect(monitor.edges).toEqual([
         { from: START, to: "create" },
         { from: "create", to: "step_0" },
         { from: "step_0", to: "pause" },
@@ -389,7 +389,7 @@ describe("Sequential Test Builder", () => {
 
   describe("Secrets and Variables", () => {
     it("should support secrets in headers", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "secret-headers",
         frequency: Frequency.every(5).minutes(),
       })
@@ -404,7 +404,7 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      const endpoint = plan.nodes[0] as any;
+      const endpoint = monitor.nodes[0] as any;
       expect(endpoint.headers.Authorization).toEqual({
         $secret: {
           provider: "env",
@@ -414,7 +414,7 @@ describe("Sequential Test Builder", () => {
     });
 
     it("should support secrets in body", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "secret-body",
         frequency: Frequency.every(5).minutes(),
       })
@@ -429,7 +429,7 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      const endpoint = plan.nodes[0] as any;
+      const endpoint = monitor.nodes[0] as any;
       expect(endpoint.body.apiKey).toEqual({
         $secret: {
           provider: "aws",
@@ -439,7 +439,7 @@ describe("Sequential Test Builder", () => {
     });
 
     it("should support variables for base URL", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "variable-base",
         frequency: Frequency.every(5).minutes(),
       })
@@ -451,7 +451,7 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      const endpoint = plan.nodes[0] as any;
+      const endpoint = monitor.nodes[0] as any;
       expect(endpoint.base).toEqual({
         $variable: {
           key: "api-host",
@@ -460,7 +460,7 @@ describe("Sequential Test Builder", () => {
     });
 
     it("should support templated variable paths", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "template-path",
         frequency: Frequency.every(5).minutes(),
       })
@@ -472,7 +472,7 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      const endpoint = plan.nodes[0] as any;
+      const endpoint = monitor.nodes[0] as any;
       expect(endpoint.path).toEqual({
         $variable: {
           key: "api-version",
@@ -484,7 +484,7 @@ describe("Sequential Test Builder", () => {
 
   describe("Response Formats", () => {
     it("should support JSON response format", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "json-response",
         frequency: Frequency.every(5).minutes(),
       })
@@ -496,11 +496,11 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      expect((plan.nodes[0] as any).response_format).toBe(ResponseFormat.JSON);
+      expect((monitor.nodes[0] as any).response_format).toBe(ResponseFormat.JSON);
     });
 
     it("should support XML response format", () => {
-      const plan = createTestBuilder({
+      const monitor = createTestBuilder({
         name: "xml-response",
         frequency: Frequency.every(5).minutes(),
       })
@@ -512,13 +512,13 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      expect((plan.nodes[0] as any).response_format).toBe(ResponseFormat.XML);
+      expect((monitor.nodes[0] as any).response_format).toBe(ResponseFormat.XML);
     });
   });
 
   describe("Frequency Configurations", () => {
     it("should support different frequency units", () => {
-      const minutePlan = createTestBuilder({
+      const minuteMonitor = createTestBuilder({
         name: "minute-freq",
         frequency: Frequency.every(5).minutes(),
       })
@@ -530,7 +530,7 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      const hourPlan = createTestBuilder({
+      const hourMonitor = createTestBuilder({
         name: "hour-freq",
         frequency: Frequency.every(2).hours(),
       })
@@ -542,7 +542,7 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      const dayPlan = createTestBuilder({
+      const dayMonitor = createTestBuilder({
         name: "day-freq",
         frequency: Frequency.every(1).day(),
       })
@@ -554,9 +554,9 @@ describe("Sequential Test Builder", () => {
         })
         .build();
 
-      expect(minutePlan.frequency).toEqual({ every: 5, unit: "MINUTE" });
-      expect(hourPlan.frequency).toEqual({ every: 2, unit: "HOUR" });
-      expect(dayPlan.frequency).toEqual({ every: 1, unit: "DAY" });
+      expect(minuteMonitor.frequency).toEqual({ every: 5, unit: "MINUTE" });
+      expect(hourMonitor.frequency).toEqual({ every: 2, unit: "HOUR" });
+      expect(dayMonitor.frequency).toEqual({ every: 1, unit: "DAY" });
     });
   });
 });

@@ -1,12 +1,12 @@
-//import type { TestPlanV1 } from "griffin-hub-sdk";
+//import type { TestMonitorV1 } from "griffin-hub-sdk";
 import type {
-  PlanDSL,
+  MonitorDSL,
   NodeDSL,
   Edge,
   HttpRequestDSL,
 } from "@griffin-app/griffin-ts/types";
 import {
-  PlanV1,
+  MonitorV1,
   Node,
   HttpRequest,
   Wait,
@@ -45,9 +45,9 @@ export interface EdgeChange {
 }
 
 /**
- * Complete set of changes between local and remote plans
+ * Complete set of changes between local and remote monitors
  */
-export interface PlanChanges {
+export interface MonitorChanges {
   hasChanges: boolean;
   nodes: NodeChange[];
   edges: EdgeChange[];
@@ -55,10 +55,10 @@ export interface PlanChanges {
 }
 
 /**
- * Compare two test plans and return granular changes.
- * Local plan should be resolved (variables replaced with actual values).
+ * Compare two test monitors and return granular changes.
+ * Local monitor should be resolved (variables replaced with actual values).
  */
-export function comparePlans(local: PlanV1, remote: PlanV1): PlanChanges {
+export function compareMonitors(local: MonitorV1, remote: MonitorV1): MonitorChanges {
   const nodeChanges = compareNodes(local.nodes, remote.nodes);
   const edgeChanges = compareEdges(local.edges, remote.edges);
   const topLevelChanges = compareTopLevel(local, remote);
@@ -77,7 +77,7 @@ export function comparePlans(local: PlanV1, remote: PlanV1): PlanChanges {
 }
 
 /**
- * Compare nodes between local and remote plans
+ * Compare nodes between local and remote monitors
  */
 function compareNodes(localNodes: Node[], remoteNodes: Node[]): NodeChange[] {
   const changes: NodeChange[] = [];
@@ -270,7 +270,7 @@ function compareAssertionFields(
 }
 
 /**
- * Compare edges between local and remote plans
+ * Compare edges between local and remote monitors
  */
 function compareEdges(localEdges: Edge[], remoteEdges: Edge[]): EdgeChange[] {
   const changes: EdgeChange[] = [];
@@ -316,7 +316,7 @@ function compareEdges(localEdges: Edge[], remoteEdges: Edge[]): EdgeChange[] {
 /**
  * Compare top-level fields: frequency, version, locations
  */
-function compareTopLevel(local: PlanV1, remote: PlanV1): FieldChange[] {
+function compareTopLevel(local: MonitorV1, remote: MonitorV1): FieldChange[] {
   const changes: FieldChange[] = [];
 
   // Compare frequency

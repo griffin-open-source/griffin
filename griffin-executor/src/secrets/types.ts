@@ -1,7 +1,7 @@
 import { StringLiteral } from "@griffin-app/griffin-hub-sdk";
 
 /**
- * Data structure for a secret reference as it appears in a plan.
+ * Data structure for a secret reference as it appears in a monitor.
  */
 export interface SecretRefData {
   provider: string;
@@ -11,7 +11,7 @@ export interface SecretRefData {
 }
 
 /**
- * Secret reference marker in plan JSON.
+ * Secret reference marker in monitor JSON.
  */
 export interface SecretRef {
   $secret: SecretRefData;

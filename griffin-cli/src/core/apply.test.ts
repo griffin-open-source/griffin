@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
 import { applyDiff } from "./apply.js";
 import type { DiffResult } from "./diff.js";
-import type { PlanV1 } from "@griffin-app/griffin-hub-sdk";
-import type { PlanDSL } from "@griffin-app/griffin-ts/types";
+import type { MonitorV1 } from "@griffin-app/griffin-hub-sdk";
+import type { MonitorDSL } from "@griffin-app/griffin-ts/types";
 import type { GriffinHubSdk } from "@griffin-app/griffin-hub-sdk";
-// Helper to create a minimal test plan
-function createPlan(name: string): PlanV1 {
+// Helper to create a minimal test monitor
+function createMonitor(name: string): MonitorV1 {
   return {
-    id: `plan-${name}`,
+    id: `monitor-${name}`,
     name,
     project: "test-project",
     environment: "test",
@@ -25,9 +25,9 @@ describe("applyDiff", () => {
       summary: { creates: 0, updates: 0, deletes: 0, noops: 0 },
     };
 
-    const mockPlanApi = {} as GriffinHubSdk;
+    const mockMonitorApi = {} as GriffinHubSdk;
 
-    const result = await applyDiff(diff, mockPlanApi);
+    const result = await applyDiff(diff, mockMonitorApi);
 
     expect(result.success).toBe(true);
     expect(result.applied).toHaveLength(0);
@@ -35,60 +35,60 @@ describe("applyDiff", () => {
   });
 
   it("should skip noop actions", async () => {
-    const plan = createPlan("health-check");
+    const monitor = createMonitor("health-check");
     const diff: DiffResult = {
       actions: [
         {
           type: "noop",
-          plan: plan,
-          remotePlan: plan,
+          monitor: monitor,
+          remoteMonitor: monitor,
           reason: "unchanged",
         },
       ],
       summary: { creates: 0, updates: 0, deletes: 0, noops: 1 },
     };
 
-    const mockPlanApi = {} as GriffinHubSdk;
+    const mockMonitorApi = {} as GriffinHubSdk;
 
-    const result = await applyDiff(diff, mockPlanApi);
+    const result = await applyDiff(diff, mockMonitorApi);
 
     expect(result.success).toBe(true);
     expect(result.applied).toHaveLength(0);
   });
 
   it("should apply create action", async () => {
-    const plan = createPlan("new-plan");
+    const monitor = createMonitor("new-monitor");
     const diff: DiffResult = {
       actions: [
         {
           type: "create",
-          plan: plan,
-          remotePlan: null,
+          monitor: monitor,
+          remoteMonitor: null,
           reason: "new",
         },
       ],
       summary: { creates: 1, updates: 0, deletes: 0, noops: 0 },
     };
 
-    const mockPlanApi = {
-      postPlan: vi.fn().mockResolvedValue({
-        data: { data: { ...plan, id: "created-id" } },
+    const mockMonitorApi = {
+      postMonitor: vi.fn().mockResolvedValue({
+        data: { data: { ...monitor, id: "created-id" } },
       }),
     } as unknown as GriffinHubSdk;
 
-    const result = await applyDiff(diff, mockPlanApi);
+    const result = await applyDiff(diff, mockMonitorApi);
 
     expect(result.success).toBe(true);
     expect(result.applied).toHaveLength(1);
     expect(result.applied[0].type).toBe("create");
-    expect(result.applied[0].planName).toBe("new-plan");
+    expect(result.applied[0].monitorName).toBe("new-monitor");
     expect(result.applied[0].success).toBe(true);
 
     // Verify the API was called with injected project and environment
-    expect(mockPlanApi.postPlan).toHaveBeenCalledWith(
+    expect(mockMonitorApi.postMonitor).toHaveBeenCalledWith(
       expect.objectContaining({
         body: expect.objectContaining({
-          name: "new-plan",
+          name: "new-monitor",
           project: "test-project",
           environment: "test",
         }),
@@ -97,39 +97,39 @@ describe("applyDiff", () => {
   });
 
   it("should apply update action", async () => {
-    const localPlan = createPlan("existing-plan");
-    const remotePlan = { ...localPlan, id: "remote-id" };
+    const localMonitor = createMonitor("existing-monitor");
+    const remoteMonitor = { ...localMonitor, id: "remote-id" };
     const diff: DiffResult = {
       actions: [
         {
           type: "update",
-          plan: localPlan,
-          remotePlan: remotePlan,
+          monitor: localMonitor,
+          remoteMonitor: remoteMonitor,
           reason: "changed",
         },
       ],
       summary: { creates: 0, updates: 1, deletes: 0, noops: 0 },
     };
 
-    const mockPlanApi = {
-      putPlanById: vi.fn().mockResolvedValue({
-        data: { data: remotePlan },
+    const mockMonitorApi = {
+      putMonitorById: vi.fn().mockResolvedValue({
+        data: { data: remoteMonitor },
       }),
     } as unknown as GriffinHubSdk;
 
-    const result = await applyDiff(diff, mockPlanApi);
+    const result = await applyDiff(diff, mockMonitorApi);
 
     expect(result.success).toBe(true);
     expect(result.applied).toHaveLength(1);
     expect(result.applied[0].type).toBe("update");
-    expect(result.applied[0].planName).toBe("existing-plan");
+    expect(result.applied[0].monitorName).toBe("existing-monitor");
     expect(result.applied[0].success).toBe(true);
 
-    // Verify the API was called with the remote plan's ID
-    expect(mockPlanApi.putPlanById).toHaveBeenCalledWith(
+    // Verify the API was called with the remote monitor's ID
+    expect(mockMonitorApi.putMonitorById).toHaveBeenCalledWith(
       expect.objectContaining({
         body: expect.objectContaining({
-          name: "existing-plan",
+          name: "existing-monitor",
           project: "test-project",
           environment: "test",
         }),
@@ -141,51 +141,51 @@ describe("applyDiff", () => {
   });
 
   it("should apply delete action", async () => {
-    const remotePlan = createPlan("old-plan");
+    const remoteMonitor = createMonitor("old-monitor");
     const diff: DiffResult = {
-      actions: [{ type: "delete", plan: null, remotePlan, reason: "removed" }],
+      actions: [{ type: "delete", monitor: null, remoteMonitor, reason: "removed" }],
       summary: { creates: 0, updates: 0, deletes: 1, noops: 0 },
     };
 
-    const mockPlanApi = {
-      deletePlanById: vi.fn().mockResolvedValue({}),
+    const mockMonitorApi = {
+      deleteMonitorById: vi.fn().mockResolvedValue({}),
     } as unknown as GriffinHubSdk;
 
-    const result = await applyDiff(diff, mockPlanApi);
+    const result = await applyDiff(diff, mockMonitorApi);
 
     expect(result.success).toBe(true);
     expect(result.applied).toHaveLength(1);
     expect(result.applied[0].type).toBe("delete");
-    expect(result.applied[0].planName).toBe("old-plan");
+    expect(result.applied[0].monitorName).toBe("old-monitor");
     expect(result.applied[0].success).toBe(true);
 
-    // Verify the API was called with the remote plan's ID
-    expect(mockPlanApi.deletePlanById).toHaveBeenCalledWith({
+    // Verify the API was called with the remote monitor's ID
+    expect(mockMonitorApi.deleteMonitorById).toHaveBeenCalledWith({
       path: {
-        id: remotePlan.id,
+        id: remoteMonitor.id,
       },
     });
   });
 
   it("should handle errors gracefully", async () => {
-    const plan = createPlan("failing-plan");
+    const monitor = createMonitor("failing-monitor");
     const diff: DiffResult = {
       actions: [
         {
           type: "create",
-          plan: plan,
-          remotePlan: null,
+          monitor: monitor,
+          remoteMonitor: null,
           reason: "new",
         },
       ],
       summary: { creates: 1, updates: 0, deletes: 0, noops: 0 },
     };
 
-    const mockPlanApi = {
-      postPlan: vi.fn().mockRejectedValue(new Error("API Error")),
+    const mockMonitorApi = {
+      postMonitor: vi.fn().mockRejectedValue(new Error("API Error")),
     } as unknown as GriffinHubSdk;
 
-    const result = await applyDiff(diff, mockPlanApi);
+    const result = await applyDiff(diff, mockMonitorApi);
 
     expect(result.success).toBe(false);
     expect(result.errors).toHaveLength(1);
@@ -195,29 +195,29 @@ describe("applyDiff", () => {
   });
 
   it("should skip actions in dry-run mode", async () => {
-    const plan = createPlan("dry-run-plan");
+    const monitor = createMonitor("dry-run-monitor");
     const diff: DiffResult = {
       actions: [
         {
           type: "create",
-          plan: plan,
-          remotePlan: null,
+          monitor: monitor,
+          remoteMonitor: null,
           reason: "new",
         },
       ],
       summary: { creates: 1, updates: 0, deletes: 0, noops: 0 },
     };
 
-    const mockPlanApi = {
-      postPlan: vi.fn(),
+    const mockMonitorApi = {
+      postMonitor: vi.fn(),
     } as unknown as GriffinHubSdk;
 
-    const result = await applyDiff(diff, mockPlanApi, {
+    const result = await applyDiff(diff, mockMonitorApi, {
       dryRun: true,
     });
 
     expect(result.success).toBe(true);
     expect(result.applied).toHaveLength(0);
-    expect(mockPlanApi.postPlan).not.toHaveBeenCalled();
+    expect(mockMonitorApi.postMonitor).not.toHaveBeenCalled();
   });
 });

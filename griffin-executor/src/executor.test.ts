@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { executePlanV1 } from "./executor.js";
+import { executeMonitorV1 } from "./executor.js";
 import { StubAdapter } from "./adapters/stub.js";
 import {
   FrequencyUnit,
   HttpMethod,
   ResponseFormat,
 } from "@griffin-app/griffin-hub-sdk";
-import { PlanV1 } from "@griffin-app/griffin-hub-sdk";
+import { MonitorV1 } from "@griffin-app/griffin-hub-sdk";
 import { START, END, type ExecutionOptions } from "./types.js";
 import { LocalEventEmitter, type ExecutionEvent } from "./events";
 import { SecretProviderRegistry } from "./secrets/registry.js";
 import { EnvSecretProvider } from "./secrets/providers/env.js";
 
-describe("executePlanV1", () => {
+describe("executeMonitorV1", () => {
   let stubClient: StubAdapter;
   let options: ExecutionOptions;
   let organizationId: string = "test-org";
@@ -30,8 +30,8 @@ describe("executePlanV1", () => {
 
   describe("Single HttpRequest Execution", () => {
     it("should execute a simple GET request successfully", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-1",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-1",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "Simple GET Test",
@@ -68,7 +68,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.errors).toHaveLength(0);
@@ -82,8 +82,8 @@ describe("executePlanV1", () => {
     });
 
     it("should execute a POST request with body and headers", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-2",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-2",
         name: "POST Test",
         version: "1.0",
         environment: "default",
@@ -126,7 +126,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results[0].response).toEqual({
@@ -137,8 +137,8 @@ describe("executePlanV1", () => {
     });
 
     it("should handle JSON string responses by parsing them", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-3",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-3",
         name: "JSON String Response Test",
         version: "1.0",
         environment: "default",
@@ -175,15 +175,15 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results[0].response).toEqual({ message: "hello" });
     });
 
     it("should override endpoint_host with baseUrl option", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-4",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-4",
         name: "BaseUrl Override Test",
         version: "1.0",
         environment: "default",
@@ -220,7 +220,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(true);
     });
@@ -228,8 +228,8 @@ describe("executePlanV1", () => {
 
   describe("Multiple HTTP Methods", () => {
     it("should handle PUT requests", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-5",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-5",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "PUT Test",
@@ -267,7 +267,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results[0].response).toEqual({
@@ -277,8 +277,8 @@ describe("executePlanV1", () => {
     });
 
     it("should handle DELETE requests", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-6",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-6",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "DELETE Test",
@@ -315,15 +315,15 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results[0].response).toBeNull();
     });
 
     it("should handle PATCH requests", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-7",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-7",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "PATCH Test",
@@ -361,7 +361,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(true);
     });
@@ -369,8 +369,8 @@ describe("executePlanV1", () => {
 
   describe("Sequential Execution", () => {
     it("should execute two endpoints in sequence", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-8",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-8",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "Sequential Test",
@@ -428,7 +428,7 @@ describe("executePlanV1", () => {
           },
         });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results).toHaveLength(2);
@@ -439,8 +439,8 @@ describe("executePlanV1", () => {
     });
 
     it("should execute a linear chain of multiple endpoints", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-9",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-9",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "Multi-Step Linear Test",
@@ -522,7 +522,7 @@ describe("executePlanV1", () => {
           response: { status: 200, statusText: "OK", data: { step: 4 } },
         });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results).toHaveLength(4);
@@ -535,8 +535,8 @@ describe("executePlanV1", () => {
 
   describe("Wait Node", () => {
     it("should execute a wait node successfully", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-10",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-10",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "Wait Test",
@@ -562,7 +562,7 @@ describe("executePlanV1", () => {
       };
 
       const startTime = Date.now();
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
       const endTime = Date.now();
 
       expect(result.success).toBe(true);
@@ -574,8 +574,8 @@ describe("executePlanV1", () => {
     });
 
     it("should execute endpoints with waits in between", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-11",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-11",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "HttpRequest-Wait-HttpRequest Test",
@@ -634,7 +634,7 @@ describe("executePlanV1", () => {
           response: { status: 200, statusText: "OK", data: { step: 2 } },
         });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results).toHaveLength(3);
@@ -645,8 +645,8 @@ describe("executePlanV1", () => {
 
   describe("Assertion Node", () => {
     it("should execute an assertion node (currently no-op)", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-12",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-12",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "Assertion Test",
@@ -692,7 +692,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results).toHaveLength(2);
@@ -703,8 +703,8 @@ describe("executePlanV1", () => {
 
   describe("Error Handling", () => {
     it("should handle failed HTTP requests gracefully", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-13",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-13",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "Failed Request Test",
@@ -734,7 +734,7 @@ describe("executePlanV1", () => {
 
       // Don't add a stub - this will cause the request to fail
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(false);
       expect(result.errors).toHaveLength(1);
@@ -745,8 +745,8 @@ describe("executePlanV1", () => {
     });
 
     it("should handle disconnected nodes gracefully", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-14",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-14",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "Disconnected Nodes Test",
@@ -786,7 +786,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       // Graph can execute but disconnected nodes are not executed
       expect(result.success).toBe(true);
@@ -794,8 +794,8 @@ describe("executePlanV1", () => {
     });
 
     it("should continue execution after a failed node", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-15",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-15",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "Continue After Failure Test",
@@ -841,7 +841,7 @@ describe("executePlanV1", () => {
       });
       // No stub for /fail - it will fail
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(false);
       expect(result.results).toHaveLength(2);
@@ -852,8 +852,8 @@ describe("executePlanV1", () => {
 
   describe("Response Storage", () => {
     it("should store successful responses for downstream nodes", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-16",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-16",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "Response Storage Test",
@@ -911,7 +911,7 @@ describe("executePlanV1", () => {
           },
         });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results[0].response).toEqual({ userId: 123 });
@@ -919,8 +919,8 @@ describe("executePlanV1", () => {
     });
 
     it("should not store failed responses", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-17",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-17",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "Failed Response Not Stored Test",
@@ -950,7 +950,7 @@ describe("executePlanV1", () => {
 
       // No stub configured - will fail
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(false);
       expect(result.results[0].response).toBeUndefined();
@@ -959,8 +959,8 @@ describe("executePlanV1", () => {
 
   describe("Timing and Performance", () => {
     it("should track total execution duration", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-18",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-18",
         name: "Timing Test",
         version: "1.0",
         environment: "default",
@@ -997,7 +997,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.totalDuration_ms).toBeGreaterThanOrEqual(0);
       expect(result.totalDuration_ms).toBeGreaterThanOrEqual(
@@ -1006,8 +1006,8 @@ describe("executePlanV1", () => {
     });
 
     it("should track individual node durations", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-19",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-19",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "Node Duration Test",
@@ -1066,7 +1066,7 @@ describe("executePlanV1", () => {
           response: { status: 200, statusText: "OK", data: {} },
         });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(true);
       result.results.forEach((nodeResult) => {
@@ -1077,12 +1077,12 @@ describe("executePlanV1", () => {
   });
 
   describe("Edge Cases", () => {
-    it("should handle empty plan (no nodes)", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-20",
+    it("should handle empty monitor (no nodes)", async () => {
+      const monitor: MonitorV1 = {
+        id: "test-monitor-20",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
-        name: "Empty Plan Test",
+        name: "Empty Monitor Test",
         version: "1.0",
         environment: "default",
         nodes: [],
@@ -1094,17 +1094,17 @@ describe("executePlanV1", () => {
         ],
       };
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
-      // Empty plan with just START->END should succeed with no results
+      // Empty monitor with just START->END should succeed with no results
       expect(result.success).toBe(true);
       expect(result.results).toHaveLength(0);
       expect(result.errors).toHaveLength(0);
     });
 
     it("should handle single node with no edges", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-21",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-21",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "Single Node Test",
@@ -1141,15 +1141,15 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results).toHaveLength(1);
     });
 
     it("should handle complex response data types", async () => {
-      const plan: PlanV1 = {
-        id: "test-plan-22",
+      const monitor: MonitorV1 = {
+        id: "test-monitor-22",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
         name: "Complex Data Test",
@@ -1199,7 +1199,7 @@ describe("executePlanV1", () => {
         },
       });
 
-      const result = await executePlanV1(plan, organizationId, options);
+      const result = await executeMonitorV1(monitor, organizationId, options);
 
       expect(result.success).toBe(true);
       expect(result.results[0].response).toEqual(complexData);
@@ -1216,12 +1216,12 @@ describe("executePlanV1", () => {
       emitter.subscribe((event) => events.push(event));
     });
 
-    it("should emit PLAN_START and PLAN_END events", async () => {
-      const plan: PlanV1 = {
+    it("should emit MONITOR_START and MONITOR_END events", async () => {
+      const monitor: MonitorV1 = {
         id: "event-test-1",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
-        name: "Event Test Plan",
+        name: "Event Test Monitor",
         version: "1.0",
         environment: "default",
         nodes: [
@@ -1251,30 +1251,30 @@ describe("executePlanV1", () => {
         response: { status: 200, statusText: "OK", data: { ok: true } },
       });
 
-      await executePlanV1(plan, organizationId, {
+      await executeMonitorV1(monitor, organizationId, {
         ...options,
         eventEmitter: emitter,
       });
 
-      const planStartEvents = events.filter((e) => e.type === "PLAN_START");
-      const planEndEvents = events.filter((e) => e.type === "PLAN_END");
+      const planStartEvents = events.filter((e) => e.type === "MONITOR_START");
+      const planEndEvents = events.filter((e) => e.type === "MONITOR_END");
 
       expect(planStartEvents).toHaveLength(1);
       expect(planEndEvents).toHaveLength(1);
 
       const planStart = planStartEvents[0];
       expect(planStart).toMatchObject({
-        type: "PLAN_START",
-        planId: "event-test-1",
-        planName: "Event Test Plan",
-        planVersion: "1.0",
+        type: "MONITOR_START",
+        monitorId: "event-test-1",
+        monitorName: "Event Test Monitor",
+        monitorVersion: "1.0",
         nodeCount: 1,
         edgeCount: 2,
       });
 
       const planEnd = planEndEvents[0];
       expect(planEnd).toMatchObject({
-        type: "PLAN_END",
+        type: "MONITOR_END",
         success: true,
         nodeResultCount: 1,
         errorCount: 0,
@@ -1282,7 +1282,7 @@ describe("executePlanV1", () => {
     });
 
     it("should emit NODE_START and NODE_END events for each node", async () => {
-      const plan: PlanV1 = {
+      const monitor: MonitorV1 = {
         id: "event-test-2",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
@@ -1342,7 +1342,7 @@ describe("executePlanV1", () => {
           response: { status: 200, statusText: "OK", data: { step: 2 } },
         });
 
-      await executePlanV1(plan, organizationId, {
+      await executeMonitorV1(monitor, organizationId, {
         ...options,
         eventEmitter: emitter,
       });
@@ -1369,7 +1369,7 @@ describe("executePlanV1", () => {
     });
 
     it("should emit HTTP_REQUEST and HTTP_RESPONSE events for endpoint nodes", async () => {
-      const plan: PlanV1 = {
+      const monitor: MonitorV1 = {
         id: "event-test-3",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
@@ -1405,7 +1405,7 @@ describe("executePlanV1", () => {
         response: { status: 201, statusText: "Created", data: { id: 123 } },
       });
 
-      await executePlanV1(plan, organizationId, {
+      await executeMonitorV1(monitor, organizationId, {
         ...options,
         eventEmitter: emitter,
       });
@@ -1444,7 +1444,7 @@ describe("executePlanV1", () => {
     });
 
     it("should emit WAIT_START event for wait nodes", async () => {
-      const plan: PlanV1 = {
+      const monitor: MonitorV1 = {
         id: "event-test-4",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
@@ -1470,7 +1470,7 @@ describe("executePlanV1", () => {
         ],
       };
 
-      await executePlanV1(plan, organizationId, {
+      await executeMonitorV1(monitor, organizationId, {
         ...options,
         eventEmitter: emitter,
       });
@@ -1486,7 +1486,7 @@ describe("executePlanV1", () => {
     });
 
     it("should emit ERROR event on HTTP request failure", async () => {
-      const plan: PlanV1 = {
+      const monitor: MonitorV1 = {
         id: "event-test-5",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
@@ -1517,7 +1517,7 @@ describe("executePlanV1", () => {
 
       // No stub - request will fail
 
-      const result = await executePlanV1(plan, organizationId, {
+      const result = await executeMonitorV1(monitor, organizationId, {
         ...options,
         eventEmitter: emitter,
       });
@@ -1529,7 +1529,7 @@ describe("executePlanV1", () => {
     });
 
     it("should maintain monotonic sequence numbers", async () => {
-      const plan: PlanV1 = {
+      const monitor: MonitorV1 = {
         id: "event-test-6",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
@@ -1563,7 +1563,7 @@ describe("executePlanV1", () => {
         response: { status: 200, statusText: "OK", data: {} },
       });
 
-      await executePlanV1(plan, organizationId, {
+      await executeMonitorV1(monitor, organizationId, {
         ...options,
         eventEmitter: emitter,
       });
@@ -1585,7 +1585,7 @@ describe("executePlanV1", () => {
     it("should use provided executionId if given", async () => {
       const customExecutionId = "custom-exec-id-123";
 
-      const plan: PlanV1 = {
+      const monitor: MonitorV1 = {
         id: "event-test-7",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
@@ -1619,7 +1619,7 @@ describe("executePlanV1", () => {
         response: { status: 200, statusText: "OK", data: {} },
       });
 
-      await executePlanV1(plan, organizationId, {
+      await executeMonitorV1(monitor, organizationId, {
         ...options,
         eventEmitter: emitter,
         executionId: customExecutionId,
@@ -1632,7 +1632,7 @@ describe("executePlanV1", () => {
     });
 
     it("should emit events in correct order", async () => {
-      const plan: PlanV1 = {
+      const monitor: MonitorV1 = {
         id: "event-test-8",
         project: "test-project",
         frequency: { every: 1, unit: "MINUTE" },
@@ -1666,24 +1666,24 @@ describe("executePlanV1", () => {
         response: { status: 200, statusText: "OK", data: {} },
       });
 
-      await executePlanV1(plan, organizationId, {
+      await executeMonitorV1(monitor, organizationId, {
         ...options,
         eventEmitter: emitter,
       });
 
       const eventTypes = events.map((e) => e.type);
 
-      // Expected order: PLAN_START, NODE_START, HTTP_REQUEST, HTTP_RESPONSE, NODE_END, PLAN_END
-      expect(eventTypes[0]).toBe("PLAN_START");
+      // Expected order: MONITOR_START, NODE_START, HTTP_REQUEST, HTTP_RESPONSE, NODE_END, MONITOR_END
+      expect(eventTypes[0]).toBe("MONITOR_START");
       expect(eventTypes[1]).toBe("NODE_START");
       expect(eventTypes[2]).toBe("HTTP_REQUEST");
       expect(eventTypes[3]).toBe("HTTP_RESPONSE");
       expect(eventTypes[4]).toBe("NODE_END");
-      expect(eventTypes[5]).toBe("PLAN_END");
+      expect(eventTypes[5]).toBe("MONITOR_END");
     });
 
     it("should handle failed HTTP requests correctly", async () => {
-      const plan: PlanV1 = {
+      const monitor: MonitorV1 = {
         id: "event-test-9",
         name: "Failed Request Event Test",
         version: "1.0",
@@ -1714,7 +1714,7 @@ describe("executePlanV1", () => {
 
       // No stub - request will fail
 
-      await executePlanV1(plan, organizationId, {
+      await executeMonitorV1(monitor, organizationId, {
         ...options,
         eventEmitter: emitter,
       });

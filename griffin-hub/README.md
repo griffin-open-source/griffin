@@ -5,7 +5,7 @@ The griffin Runner is the orchestration service responsible for scheduling and e
 ## Features
 
 - Schedules tests based on frequency configuration
-- Executes test plans using the plan executor
+- Executes test monitors using the monitor executor
 - Stores execution results and logs in PostgreSQL (or SQLite for development)
 - Provides REST API for CLI interactions
 - Supports multiple secret providers (env, AWS Secrets Manager, HashiCorp Vault)
@@ -68,7 +68,7 @@ Run the test suite.
 
 ## Secrets Management
 
-The runner supports secure secret management for API keys, tokens, and other credentials used in test plans. Secrets are resolved at runtime before test execution.
+The runner supports secure secret management for API keys, tokens, and other credentials used in test monitors. Secrets are resolved at runtime before test execution.
 
 **Supported Providers:**
 
@@ -82,7 +82,7 @@ See [CONFIG.md](./CONFIG.md) for detailed secrets configuration.
 
 The runner provides a REST API for:
 
-- Submitting test plans for execution
+- Submitting test monitors for execution
 - Viewing execution results and logs
 - Managing scheduled jobs
 
